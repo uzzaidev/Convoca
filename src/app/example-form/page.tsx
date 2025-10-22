@@ -6,8 +6,16 @@ export default async function ExampleFormPage() {
   // Server Action para criar comentário
   async function createComment(formData: FormData) {
     "use server";
+    let sql;
+    try {
+      sql = getDb();
+    } catch (err: any) {
+      // DATABASE_URL likely not configured in this environment. Log and skip insert.
+      logger.warn({ err }, "DB not configured — skipping comment insert");
+      redirect("/example-form");
+      return;
+    }
 
-    const sql = getDb();
     const comment = formData.get("comment") as string;
 
     if (comment) {
@@ -26,9 +34,9 @@ export default async function ExampleFormPage() {
   }
 
   // Buscar comentários existentes (tornar resiliente a tabela ausente)
-  const sql = getDb();
   let comments: Array<{ id: number; comment: string; created_at: string }> = [];
   try {
+    const sql = getDb();
     comments = (await sql`
       SELECT id, comment, created_at
       FROM comments
@@ -36,7 +44,7 @@ export default async function ExampleFormPage() {
       LIMIT 10
     `) as Array<{ id: number; comment: string; created_at: string }>;
   } catch (err: any) {
-    // If the table doesn't exist, log and continue with empty comments list.
+    // If the DB isn't configured or the table doesn't exist, log and continue with empty list.
     logger.warn({ err }, "Could not fetch comments — continuing with empty list");
   }
 

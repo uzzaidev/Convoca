@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* lighter, warmer neutrals and softer accents */
+    --background: 210 20% 98%; /* very light blue-gray */
+    --foreground: 210 10% 12%; /* soft near-black */
+    --card: 210 20% 100%;
+    --card-foreground: 210 10% 12%;
+    --popover: 210 20% 100%;
+    --popover-foreground: 210 10% 12%;
+  --primary: 140 60% 35%; /* pitch green */
+  --primary-foreground: 210 100% 100%;
+    --secondary: 210 14% 96%;
+    --secondary-foreground: 210 10% 12%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 210 8% 45%;
+  --accent: 42 95% 55%; /* warm yellow (goals / accents) */
+    --accent-foreground: 210 100% 100%;
+    --destructive: 10 80% 56%;
+    --destructive-foreground: 210 100% 100%;
+    --border: 210 14% 88%;
+    --input: 210 16% 94%;
+    --ring: 215 90% 60%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem; /* softer rounding */
+    --shadow-sm: 0 1px 2px rgba(16,24,40,0.04);
+    --shadow-md: 0 6px 18px rgba(16,24,40,0.06);
+    --shadow-lg: 0 20px 40px rgba(16,24,40,0.08);
+    --transition-fast: 150ms cubic-bezier(.4,0,.2,1);
+  }
+  .dark {
+    --background: 210 10% 8%;
+    --foreground: 210 10% 96%;
+    --card: 210 10% 6%;
+    --card-foreground: 210 10% 96%;
+    --popover: 210 10% 6%;
+    --popover-foreground: 210 10% 96%;
+    --primary: 215 80% 60%;
+    --primary-foreground: 210 100% 6%;
+    --secondary: 210 10% 12%;
+    --secondary-foreground: 210 100% 96%;
+    --muted: 210 8% 16%;
+    --muted-foreground: 210 6% 64%;
+    --accent: 200 80% 48%;
+    --accent-foreground: 210 100% 96%;
+    --destructive: 10 70% 46%;
+    --destructive-foreground: 210 100% 96%;
+    --border: 210 10% 14%;
+    --input: 210 10% 14%;
+    --ring: 215 90% 70%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 8px 20px rgba(0,0,0,0.45);
+    --shadow-lg: 0 30px 60px rgba(0,0,0,0.5);
+    --transition-fast: 150ms cubic-bezier(.4,0,.2,1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border; /* keep borders enabled but subtle */
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+}

@@ -6,36 +6,37 @@ import { logger } from "@/lib/logger";
 // which can fail if the production DB or tables are not available.
 export const dynamic = "force-dynamic";
 
-export default async function ExampleFormPage() {
-  // Server Action para criar comentário
-  async function createComment(formData: FormData) {
-    "use server";
-    let sql;
-    try {
-      sql = getDb();
-    } catch (err: any) {
-      // DATABASE_URL likely not configured in this environment. Log and skip insert.
-      logger.warn({ err }, "DB not configured — skipping comment insert");
-      redirect("/example-form");
-      return;
-    }
-
-    const comment = formData.get("comment") as string;
-
-    if (comment) {
-      try {
-        await sql`
-          INSERT INTO comments (comment, created_at)
-          VALUES (${comment}, NOW())
-        `;
-      } catch (err: any) {
-        // Log the error but don't crash the server action
-        logger.error({ err }, "Failed to insert comment");
-      }
-    }
-
+// Server Action - moved outside component to avoid issues
+async function createComment(formData: FormData) {
+  "use server";
+  let sql;
+  try {
+    sql = getDb();
+  } catch (err: any) {
+    // DATABASE_URL likely not configured in this environment. Log and skip insert.
+    logger.warn({ err }, "DB not configured — skipping comment insert");
     redirect("/example-form");
+    return;
   }
+
+  const comment = formData.get("comment") as string;
+
+  if (comment) {
+    try {
+      await sql`
+        INSERT INTO comments (comment, created_at)
+        VALUES (${comment}, NOW())
+      `;
+    } catch (err: any) {
+      // Log the error but don't crash the server action
+      logger.error({ err }, "Failed to insert comment");
+    }
+  }
+
+  redirect("/example-form");
+}
+
+export default async function ExampleFormPage() {
 
   // Buscar comentários existentes (tornar resiliente a tabela ausente)
   let comments: Array<{ id: number; comment: string; created_at: string }> = [];

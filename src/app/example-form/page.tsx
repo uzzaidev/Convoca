@@ -39,17 +39,29 @@ export default async function ExampleFormPage() {
 
   // Buscar comentários existentes (tornar resiliente a tabela ausente)
   let comments: Array<{ id: number; comment: string; created_at: string }> = [];
+  
+  // Wrap entire DB access in try-catch to prevent page crashes
+  let sql;
   try {
-    const sql = getDb();
-    comments = (await sql`
-      SELECT id, comment, created_at
-      FROM comments
-      ORDER BY created_at DESC
-      LIMIT 10
-    `) as Array<{ id: number; comment: string; created_at: string }>;
+    sql = getDb();
   } catch (err: any) {
-    // If the DB isn't configured or the table doesn't exist, log and continue with empty list.
-    logger.warn({ err }, "Could not fetch comments — continuing with empty list");
+    // DB not configured - log and continue with empty comments
+    logger.warn({ err }, "DB not configured — page will render with empty comments");
+    sql = null;
+  }
+
+  if (sql) {
+    try {
+      comments = (await sql`
+        SELECT id, comment, created_at
+        FROM comments
+        ORDER BY created_at DESC
+        LIMIT 10
+      `) as Array<{ id: number; comment: string; created_at: string }>;
+    } catch (err: any) {
+      // If the table doesn't exist, log and continue with empty list.
+      logger.warn({ err }, "Could not fetch comments — continuing with empty list");
+    }
   }
 
   return (

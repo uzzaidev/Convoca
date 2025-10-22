@@ -1,37 +1,49 @@
 import { getDb } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 export default async function ExampleFormPage() {
   // Server Action para criar comentário
   async function createComment(formData: FormData) {
     "use server";
-    
+
     const sql = getDb();
     const comment = formData.get("comment") as string;
-    
+
     if (comment) {
-      await sql`
-        INSERT INTO comments (comment, created_at)
-        VALUES (${comment}, NOW())
-      `;
+      try {
+        await sql`
+          INSERT INTO comments (comment, created_at)
+          VALUES (${comment}, NOW())
+        `;
+      } catch (err: any) {
+        // Log the error but don't crash the server action
+        logger.error({ err }, "Failed to insert comment");
+      }
     }
-    
+
     redirect("/example-form");
   }
-  
-  // Buscar comentários existentes
+
+  // Buscar comentários existentes (tornar resiliente a tabela ausente)
   const sql = getDb();
-  const comments = await sql`
-    SELECT id, comment, created_at
-    FROM comments
-    ORDER BY created_at DESC
-    LIMIT 10
-  ` as Array<{ id: number; comment: string; created_at: string }>;
+  let comments: Array<{ id: number; comment: string; created_at: string }> = [];
+  try {
+    comments = (await sql`
+      SELECT id, comment, created_at
+      FROM comments
+      ORDER BY created_at DESC
+      LIMIT 10
+    `) as Array<{ id: number; comment: string; created_at: string }>;
+  } catch (err: any) {
+    // If the table doesn't exist, log and continue with empty comments list.
+    logger.warn({ err }, "Could not fetch comments — continuing with empty list");
+  }
 
   return (
     <main className="container max-w-2xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold">Exemplo de Server Actions com Neon</h1>
-      
+
       {/* Formulário */}
       <form action={createComment} className="space-y-4">
         <div>

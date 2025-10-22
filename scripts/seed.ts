@@ -35,6 +35,24 @@ async function main() {
   `;
   
   console.log("✓ Evento criado para:", tomorrow.toLocaleString("pt-BR"));
+  
+  // Garantir que a tabela de comentários exista (útil para o exemplo-form)
+  await sql`
+    CREATE TABLE IF NOT EXISTS comments (
+      id SERIAL PRIMARY KEY,
+      comment TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  // Inserir alguns comentários de exemplo
+  await sql`
+    INSERT INTO comments (comment, created_at)
+    VALUES
+      ('Primeiro comentário de exemplo', NOW()),
+      ('Outro comentário para testar a lista', NOW())
+  `;
+  console.log("✓ Tabela 'comments' criada (se inexistente) e comentários de exemplo inseridos.");
   console.log("\n🎉 Seed completo!");
   console.log(`\nAcesse /dashboard para ver o grupo e evento criados.`);
 }

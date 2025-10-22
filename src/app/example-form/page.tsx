@@ -2,6 +2,10 @@ import { getDb } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { logger } from "@/lib/logger";
 
+// Force runtime SSR for this page to avoid build-time prerendering
+// which can fail if the production DB or tables are not available.
+export const dynamic = "force-dynamic";
+
 export default async function ExampleFormPage() {
   // Server Action para criar comentário
   async function createComment(formData: FormData) {

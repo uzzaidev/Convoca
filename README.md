@@ -7,17 +7,15 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
 - **Database**: Neon (Postgres Serverless)
-- **Auth**: Stack Auth (Neon Auth) + Zustand
+- **Auth**: NextAuth v5 (Auth.js) com credenciais
 - **Deploy**: Vercel
 
 ## Setup
 
-> **🔧 Resolvendo Problemas**:
-> - **Erro 403 ao fazer login?** Veja [SOLUCAO_ERRO_LOGIN.md](./SOLUCAO_ERRO_LOGIN.md) para resolver
-> - **Configurar Stack Auth?** Veja [STACK_AUTH_DASHBOARD_CONFIG.md](./STACK_AUTH_DASHBOARD_CONFIG.md)
-> - **Erro 404 no Vercel?** Veja [FIX_404_PERSISTENTE.md](./FIX_404_PERSISTENTE.md) para a solução completa
-> - **Guia Rápido**: [QUICK_FIX_GUIDE.md](./QUICK_FIX_GUIDE.md)
-> - **Primeira Correção**: [VERCEL_FIX.md](./VERCEL_FIX.md)
+> **🔧 Documentação Importante**:
+> - **Autenticação**: Veja [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md) para o guia completo
+> - **Migração do Banco**: Veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md)
+> - **Documentação antiga**: Arquivos com prefixo `DEPRECATED_` são mantidos apenas para referência
 
 ### 1. Instalar dependências
 
@@ -53,18 +51,29 @@ Execute o arquivo SQL de migrations no Neon Console ou via CLI:
 neon sql < src/db/schema.sql
 ```
 
-### 5. Configurar Stack Auth (Neon Auth)
+**Importante:** Se você está migrando de uma versão anterior com Stack Auth, veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md).
 
-A autenticação é fornecida pelo Stack Auth, integrado com o Neon Database.
+### 5. Configurar NextAuth
 
-**Variáveis necessárias** (já configuradas no `.env`):
-- `NEXT_PUBLIC_STACK_PROJECT_ID`
-- `NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY`
-- `STACK_SECRET_SERVER_KEY`
+A autenticação usa NextAuth v5 (Auth.js) com autenticação por credenciais (email e senha).
 
-Veja o guia completo em [STACK_AUTH_GUIDE.md](./STACK_AUTH_GUIDE.md)
+**Variáveis necessárias** (adicionar no `.env.local`):
+- `NEXTAUTH_URL=http://localhost:3000`
+- `NEXTAUTH_SECRET=` (gerar com `openssl rand -base64 32`)
 
-### 6. Desenvolvimento
+Veja o guia completo em [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md)
+
+### 6. Criar usuário inicial
+
+Para criar seu primeiro usuário, acesse:
+
+```
+http://localhost:3000/auth/signup
+```
+
+Ou use a API diretamente (veja [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md) para detalhes).
+
+### 7. Desenvolvimento
 
 ```bash
 npm run dev
@@ -78,18 +87,19 @@ Abra [http://localhost:3000](http://localhost:3000)
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes
-│   ├── auth/              # Auth pages (Stack Auth)
+│   │   └── auth/          # Auth API (signup, NextAuth handler)
+│   ├── auth/              # Auth pages (signin, signup)
 │   ├── dashboard/         # Dashboard
 │   └── groups/            # Grupos e eventos
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components
-│   └── providers/        # React providers (Stack Auth)
+│   ├── layout/           # Layout components (header, etc)
+│   └── providers/        # React providers (SessionProvider)
 ├── db/                    # Database
 │   ├── schema.sql        # SQL schema
 │   └── client.ts         # Neon client
 └── lib/                   # Utilities
-    ├── stack.ts          # Stack Auth (server)
-    ├── stack-client.ts   # Stack Auth (client)
+    ├── auth.ts           # NextAuth configuration
     ├── auth-helpers.ts   # Auth helpers para APIs
     ├── stores/           # Zustand stores
     └── utils.ts          # Helpers

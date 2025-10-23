@@ -12,6 +12,8 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 
 ## Setup
 
+> **🔧 Resolvendo Problemas**: Se você está tendo erro 404 no Vercel, veja [VERCEL_FIX.md](./VERCEL_FIX.md)
+
 ### 1. Instalar dependências
 
 ```bash

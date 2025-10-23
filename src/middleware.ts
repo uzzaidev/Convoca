@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { stackServerApp } from "@/lib/stack";
+import { auth } from "@/lib/auth";
 
 export async function middleware(req: NextRequest) {
-  const user = await stackServerApp.getUser();
-  const isLoggedIn = !!user;
+  const session = await auth();
+  const isLoggedIn = !!session;
   const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
   const isErrorPage = req.nextUrl.pathname === "/auth/error";
   const isPublicPage = req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/simple-test";
-  const isHandlerRoute = req.nextUrl.pathname.startsWith("/handler");
+  const isApiRoute = req.nextUrl.pathname.startsWith("/api");
 
   // Allow unauthenticated access to public pages
   if (isPublicPage) {
     return NextResponse.next();
   }
 
-  // Allow handler routes to process without authentication checks
-  if (isHandlerRoute) {
+  // Allow API routes to handle their own authentication
+  if (isApiRoute) {
     return NextResponse.next();
   }
 

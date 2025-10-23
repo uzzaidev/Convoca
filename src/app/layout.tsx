@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import StackClientProvider from "@/components/providers/stack-provider";
 
 export const metadata: Metadata = {
   title: "Peladeiros - Gestão de Peladas",
@@ -15,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="font-sans">
-        <StackClientProvider>{children}</StackClientProvider>
+        {children}
       </body>
     </html>
   );

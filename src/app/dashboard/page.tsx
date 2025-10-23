@@ -34,45 +34,58 @@ export default async function DashboardPage() {
     redirect("/auth/signin");
   }
 
-  // Get user's groups
-  const groupsRaw = await sql`
-    SELECT
-      g.id,
-      g.name,
-      g.description,
-      gm.role,
-      (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
-    FROM groups g
-    INNER JOIN group_members gm ON g.id = gm.group_id
-    WHERE gm.user_id = ${session.user.id}
-    ORDER BY g.created_at DESC
-  `;
-  const groups = groupsRaw as Group[];
+  let groups: Group[] = [];
+  let upcomingEvents: Event[] = [];
 
-  // Get upcoming events across all groups
-  const upcomingEventsRaw = await sql`
-    SELECT
-      e.id,
-      e.starts_at,
-      e.status,
-      g.name as group_name,
-      g.id as group_id,
-      v.name as venue_name,
-      (SELECT COUNT(*) FROM event_attendance WHERE event_id = e.id AND status = 'yes') as confirmed_count,
-      e.max_players,
-      ea.status as user_status
-    FROM events e
-    INNER JOIN groups g ON e.group_id = g.id
-    INNER JOIN group_members gm ON g.id = gm.group_id
-    LEFT JOIN venues v ON e.venue_id = v.id
-    LEFT JOIN event_attendance ea ON e.id = ea.event_id AND ea.user_id = ${session.user.id}
-    WHERE gm.user_id = ${session.user.id}
-      AND e.starts_at > NOW()
-      AND e.status = 'scheduled'
-    ORDER BY e.starts_at ASC
-    LIMIT 10
-  `;
-  const upcomingEvents = upcomingEventsRaw as Event[];
+  try {
+    // Get user's groups
+    const groupsRaw = await sql`
+      SELECT
+        g.id,
+        g.name,
+        g.description,
+        gm.role,
+        (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
+      FROM groups g
+      INNER JOIN group_members gm ON g.id = gm.group_id
+      WHERE gm.user_id = ${session.user.id}
+      ORDER BY g.created_at DESC
+    `;
+    groups = groupsRaw as Group[];
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    // Continue with empty groups array
+  }
+
+  try {
+    // Get upcoming events across all groups
+    const upcomingEventsRaw = await sql`
+      SELECT
+        e.id,
+        e.starts_at,
+        e.status,
+        g.name as group_name,
+        g.id as group_id,
+        v.name as venue_name,
+        (SELECT COUNT(*) FROM event_attendance WHERE event_id = e.id AND status = 'yes') as confirmed_count,
+        e.max_players,
+        ea.status as user_status
+      FROM events e
+      INNER JOIN groups g ON e.group_id = g.id
+      INNER JOIN group_members gm ON g.id = gm.group_id
+      LEFT JOIN venues v ON e.venue_id = v.id
+      LEFT JOIN event_attendance ea ON e.id = ea.event_id AND ea.user_id = ${session.user.id}
+      WHERE gm.user_id = ${session.user.id}
+        AND e.starts_at > NOW()
+        AND e.status = 'scheduled'
+      ORDER BY e.starts_at ASC
+      LIMIT 10
+    `;
+    upcomingEvents = upcomingEventsRaw as Event[];
+  } catch (error) {
+    console.error("Error fetching upcoming events:", error);
+    // Continue with empty events array
+  }
 
   return (
     <div className="min-h-screen bg-background">

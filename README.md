@@ -12,7 +12,9 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 
 ## Setup
 
-> **🔧 Resolvendo Problemas de Deploy**:
+> **🔧 Resolvendo Problemas**:
+> - **Erro 403 ao fazer login?** Veja [SOLUCAO_ERRO_LOGIN.md](./SOLUCAO_ERRO_LOGIN.md) para resolver
+> - **Configurar Stack Auth?** Veja [STACK_AUTH_DASHBOARD_CONFIG.md](./STACK_AUTH_DASHBOARD_CONFIG.md)
 > - **Erro 404 no Vercel?** Veja [FIX_404_PERSISTENTE.md](./FIX_404_PERSISTENTE.md) para a solução completa
 > - **Guia Rápido**: [QUICK_FIX_GUIDE.md](./QUICK_FIX_GUIDE.md)
 > - **Primeira Correção**: [VERCEL_FIX.md](./VERCEL_FIX.md)

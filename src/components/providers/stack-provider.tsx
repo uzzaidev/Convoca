@@ -1,6 +1,6 @@
 "use client";
 
-import { StackProvider } from "@stackframe/stack";
+import { StackProvider, StackTheme } from "@stackframe/stack";
 import { stackClientApp } from "@/lib/stack-client";
 
 export default function StackClientProvider({
@@ -10,7 +10,9 @@ export default function StackClientProvider({
 }) {
   return (
     <StackProvider app={stackClientApp}>
-      {children}
+      <StackTheme>
+        {children}
+      </StackTheme>
     </StackProvider>
   );
 }

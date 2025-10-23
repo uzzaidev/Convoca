@@ -264,6 +264,20 @@ function MyComponent() {
 
 ## Troubleshooting
 
+### Erro: "OTP sign-in is not enabled for this project" (403)
+
+**Causa:** O método de autenticação Magic Link / OTP não está habilitado no projeto Stack Auth.
+
+**Solução:**
+1. Acesse o [Stack Auth Dashboard](https://app.stack-auth.com)
+2. Selecione o projeto Peladeiros
+3. Vá para **Authentication** > **Sign-in Methods**
+4. Habilite **Magic Link / OTP**
+5. Configure as URLs de redirecionamento
+6. Salve as alterações
+
+**Veja o guia completo em:** `STACK_AUTH_DASHBOARD_CONFIG.md`
+
 ### Erro: "Erro ao enviar link de login" ou ERR_BLOCKED_BY_CLIENT
 
 **Causa:** Ad blockers ou extensões de navegador bloqueando requisições para Stack Auth.

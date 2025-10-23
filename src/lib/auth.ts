@@ -4,16 +4,24 @@ import { sql } from "@/db/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    // Placeholder credentials provider to prevent auth initialization errors
-    // TODO: Replace with Email Magic Link provider
+    // Temporary credentials provider for development/testing
+    // TODO: Replace with Email Magic Link provider for production
     Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
       },
-      async authorize() {
-        // This is a placeholder and should not be used in production
-        // Will be replaced with proper Email Magic Link authentication
+      async authorize(credentials) {
+        // Development mode: allow any email to sign in
+        // This creates a user in the database if they don't exist
+        if (credentials?.email && typeof credentials.email === "string") {
+          const email = credentials.email;
+          return {
+            id: email, // Temporary ID, will be replaced with DB ID in session callback
+            email: email,
+            name: email.split("@")[0],
+          };
+        }
         return null;
       },
     }),

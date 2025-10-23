@@ -37,12 +37,15 @@ src/
 │       └── auth-store.ts     # Zustand store para estado de auth
 ├── components/
 │   └── providers/
-│       └── stack-provider.tsx # Provider React do Stack Auth
+│       └── stack-provider.tsx # Provider React do Stack Auth (com StackTheme)
 ├── app/
 │   ├── layout.tsx            # Root layout com StackProvider
+│   ├── handler/
+│   │   └── [...stack]/
+│   │       └── page.tsx      # Handler para callbacks de autenticação (OBRIGATÓRIO)
 │   ├── auth/
 │   │   └── signin/
-│   │       └── page.tsx      # Página de login
+│   │       └── page.tsx      # Página de login customizada
 │   └── api/                  # Rotas da API usando auth-helpers
 └── middleware.ts             # Middleware de autenticação
 ```
@@ -74,7 +77,27 @@ export function MyComponent() {
 }
 ```
 
-#### 3. Auth Helpers (`src/lib/auth-helpers.ts`)
+#### 3. Handler Route (`src/app/handler/[...stack]/page.tsx`) **OBRIGATÓRIO**
+
+Rota que processa todos os callbacks de autenticação do Stack Auth, incluindo:
+- Magic link callback
+- OAuth callback
+- Email verification
+- Password reset
+- Sign in/sign up pages
+
+```typescript
+import { StackHandler } from "@stackframe/stack";
+import { stackServerApp } from "@/lib/stack";
+
+export default function Handler(props: unknown) {
+  return <StackHandler fullPage app={stackServerApp} routeProps={props} />;
+}
+```
+
+**Importante:** Sem esta rota, o magic link e outras funcionalidades de autenticação **não funcionarão**.
+
+#### 4. Auth Helpers (`src/lib/auth-helpers.ts`)
 
 Funções auxiliares para autenticação nas rotas da API:
 
@@ -96,7 +119,7 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-#### 4. Zustand Store (`src/lib/stores/auth-store.ts`)
+#### 5. Zustand Store (`src/lib/stores/auth-store.ts`)
 
 Store Zustand para gerenciar estado de autenticação no cliente:
 
@@ -236,10 +259,36 @@ function MyComponent() {
 ### Agora (Stack Auth)
 - Apenas variáveis do Neon (já configuradas)
 - Magic link out-of-the-box
-- Nenhuma rota de auth necessária
+- Rota handler em `/handler/[...stack]/page.tsx` (obrigatória)
 - Sincronização automática com DB
 
 ## Troubleshooting
+
+### Erro: "Erro ao enviar link de login" ou ERR_BLOCKED_BY_CLIENT
+
+**Causa:** Ad blockers ou extensões de navegador bloqueando requisições para Stack Auth.
+
+**Soluções:**
+1. Desabilite ad blockers para o site
+2. Adicione à whitelist: `api.stack-auth.com` e `app.stack-auth.com`
+3. Tente em modo anônimo do navegador
+4. Use outro navegador temporariamente
+
+**Veja mais detalhes em:** `MAGIC_LINK_TROUBLESHOOTING.md`
+
+### Erro: Handler route não encontrado
+
+**Causa:** Falta a rota `/handler/[...stack]/page.tsx`
+
+**Solução:** Verifique se o arquivo existe com o conteúdo correto:
+```typescript
+import { StackHandler } from "@stackframe/stack";
+import { stackServerApp } from "@/lib/stack";
+
+export default function Handler(props: unknown) {
+  return <StackHandler fullPage app={stackServerApp} routeProps={props} />;
+}
+```
 
 ### Erro: "Não autenticado" em todas as rotas
 

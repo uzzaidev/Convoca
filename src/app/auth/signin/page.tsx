@@ -20,10 +20,20 @@ export default function SignInPage() {
 
     try {
       // Stack Auth envia um magic link por email
-      await app.signInWithMagicLink(email);
+      // O callbackUrl é onde o usuário será redirecionado após clicar no link
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const result = await app.sendMagicLinkEmail(email, {
+        callbackUrl: `${baseUrl}/handler/magic-link-callback`,
+      });
       
-      // Mostrar mensagem de sucesso
-      setError("Link mágico enviado! Verifique seu email.");
+      if (result.status === "ok") {
+        // Mostrar mensagem de sucesso
+        setError("Link mágico enviado! Verifique seu email.");
+      } else {
+        // Tratar erro específico
+        console.error("Erro ao enviar magic link:", result.error);
+        setError("Erro ao enviar link de login. Tente novamente.");
+      }
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setError("Erro ao enviar link de login. Tente novamente.");

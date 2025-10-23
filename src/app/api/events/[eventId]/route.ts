@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 
@@ -12,10 +12,7 @@ export async function GET(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const [event] = await sql`
       SELECT
@@ -36,7 +33,7 @@ export async function GET(
     // Check if user is member of the group
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${session.user.id}
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
     `;
 
     if (!membership) {
@@ -102,6 +99,9 @@ export async function GET(
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error fetching event details");
     return NextResponse.json(
       { error: "Erro ao buscar detalhes do evento" },

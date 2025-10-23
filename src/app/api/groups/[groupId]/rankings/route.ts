@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 
@@ -12,15 +12,12 @@ export async function GET(
 ) {
   try {
     const { groupId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     // Check if user is member
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${session.user.id}
+      WHERE group_id = ${groupId} AND user_id = ${user.id}
     `;
 
     if (!membership) {
@@ -89,6 +86,9 @@ export async function GET(
 
     return NextResponse.json({ rankings });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error fetching rankings");
     return NextResponse.json(
       { error: "Erro ao buscar rankings" },

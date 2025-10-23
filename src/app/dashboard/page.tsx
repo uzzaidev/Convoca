@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -28,9 +28,9 @@ type Event = {
 };
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const user = await getCurrentUser();
 
-  if (!session?.user?.id) {
+  if (!user) {
     redirect("/auth/signin");
   }
 
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
         (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
       FROM groups g
       INNER JOIN group_members gm ON g.id = gm.group_id
-      WHERE gm.user_id = ${session.user.id}
+      WHERE gm.user_id = ${user.id}
       ORDER BY g.created_at DESC
     `;
     groups = groupsRaw as Group[];
@@ -74,8 +74,8 @@ export default async function DashboardPage() {
       INNER JOIN groups g ON e.group_id = g.id
       INNER JOIN group_members gm ON g.id = gm.group_id
       LEFT JOIN venues v ON e.venue_id = v.id
-      LEFT JOIN event_attendance ea ON e.id = ea.event_id AND ea.user_id = ${session.user.id}
-      WHERE gm.user_id = ${session.user.id}
+      LEFT JOIN event_attendance ea ON e.id = ea.event_id AND ea.user_id = ${user.id}
+      WHERE gm.user_id = ${user.id}
         AND e.starts_at > NOW()
         AND e.status = 'scheduled'
       ORDER BY e.starts_at ASC
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
-              Bem-vindo, {session.user.name || session.user.email}
+              Bem-vindo, {user.name || user.email}
             </p>
           </div>
           <Button asChild>

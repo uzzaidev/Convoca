@@ -82,11 +82,11 @@ src/
 
 ### Fase 1 - MVP (6-8 semanas)
 - ✅ Setup do projeto
-- [ ] CRUD de grupos e eventos
-- [ ] Sistema de RSVP
-- [ ] Sorteio de times
-- [ ] Registro de gols/assistências
-- [ ] Rankings básicos
+- ✅ CRUD de grupos e eventos
+- ✅ Sistema de RSVP
+- ✅ Sorteio de times
+- ✅ Registro de gols/assistências
+- ✅ Rankings básicos
 
 ### Fase 2 - Realtime (6-10 semanas)
 - [ ] Placar ao vivo

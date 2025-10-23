@@ -1,9 +1,22 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import { sql } from "@/db/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    // Email Magic Link provider será adicionado em seguida
+    // Placeholder credentials provider to prevent auth initialization errors
+    // TODO: Replace with Email Magic Link provider
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+      },
+      async authorize() {
+        // This is a placeholder and should not be used in production
+        // Will be replaced with proper Email Magic Link authentication
+        return null;
+      },
+    }),
     // OAuth providers opcionais (Google, etc) podem ser adicionados aqui
   ],
   callbacks: {

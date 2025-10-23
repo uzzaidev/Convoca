@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { createEventSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
@@ -7,10 +7,7 @@ import logger from "@/lib/logger";
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const body = await request.json();
     const validation = createEventSchema.safeParse(body);
@@ -27,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Check if user is admin of the group
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${session.user.id}
+      WHERE group_id = ${groupId} AND user_id = ${user.id}
     `;
 
     if (!membership || membership.role !== "admin") {
@@ -54,15 +51,18 @@ export async function POST(request: NextRequest) {
         ${maxPlayers},
         ${maxGoalkeepers},
         ${waitlistEnabled},
-        ${session.user.id}
+        ${user.id}
       )
       RETURNING *
     `;
 
-    logger.info({ eventId: event.id, groupId, userId: session.user.id }, "Event created");
+    logger.info({ eventId: event.id, groupId, userId: user.id }, "Event created");
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error creating event");
     return NextResponse.json(
       { error: "Erro ao criar evento" },

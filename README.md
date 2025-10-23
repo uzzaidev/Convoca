@@ -7,7 +7,7 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
 - **Database**: Neon (Postgres Serverless)
-- **Auth**: NextAuth v5
+- **Auth**: Stack Auth (Neon Auth) + Zustand
 - **Deploy**: Vercel
 
 ## Setup
@@ -51,7 +51,18 @@ Execute o arquivo SQL de migrations no Neon Console ou via CLI:
 neon sql < src/db/schema.sql
 ```
 
-### 5. Desenvolvimento
+### 5. Configurar Stack Auth (Neon Auth)
+
+A autenticação é fornecida pelo Stack Auth, integrado com o Neon Database.
+
+**Variáveis necessárias** (já configuradas no `.env`):
+- `NEXT_PUBLIC_STACK_PROJECT_ID`
+- `NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY`
+- `STACK_SECRET_SERVER_KEY`
+
+Veja o guia completo em [STACK_AUTH_GUIDE.md](./STACK_AUTH_GUIDE.md)
+
+### 6. Desenvolvimento
 
 ```bash
 npm run dev
@@ -65,16 +76,20 @@ Abra [http://localhost:3000](http://localhost:3000)
 src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes
-│   ├── (auth)/            # Auth pages
+│   ├── auth/              # Auth pages (Stack Auth)
 │   ├── dashboard/         # Dashboard
 │   └── groups/            # Grupos e eventos
 ├── components/            # React components
-│   └── ui/               # shadcn/ui components
+│   ├── ui/               # shadcn/ui components
+│   └── providers/        # React providers (Stack Auth)
 ├── db/                    # Database
 │   ├── schema.sql        # SQL schema
 │   └── client.ts         # Neon client
 └── lib/                   # Utilities
-    ├── auth.ts           # NextAuth config
+    ├── stack.ts          # Stack Auth (server)
+    ├── stack-client.ts   # Stack Auth (client)
+    ├── auth-helpers.ts   # Auth helpers para APIs
+    ├── stores/           # Zustand stores
     └── utils.ts          # Helpers
 ```
 

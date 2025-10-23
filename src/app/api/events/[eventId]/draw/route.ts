@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 
@@ -43,10 +43,7 @@ export async function POST(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const body = await request.json();
     const { numTeams = 2 } = body;
@@ -63,7 +60,7 @@ export async function POST(
     // Check if user is admin of the group
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${session.user.id}
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
     `;
 
     if (!membership || membership.role !== "admin") {
@@ -127,10 +124,13 @@ export async function POST(
       });
     }
 
-    logger.info({ eventId, userId: session.user.id }, "Teams drawn");
+    logger.info({ eventId, userId: user.id }, "Teams drawn");
 
     return NextResponse.json({ teams: createdTeams });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error drawing teams");
     return NextResponse.json(
       { error: "Erro ao sortear times" },

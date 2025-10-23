@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { playerRatingSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
@@ -13,10 +13,7 @@ export async function GET(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const [event] = await sql`
       SELECT group_id FROM events WHERE id = ${eventId}
@@ -29,7 +26,7 @@ export async function GET(
     // Check if user is member
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${session.user.id}
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
     `;
 
     if (!membership) {
@@ -57,6 +54,9 @@ export async function GET(
 
     return NextResponse.json({ ratings });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error fetching ratings");
     return NextResponse.json(
       { error: "Erro ao buscar avaliações" },
@@ -72,10 +72,7 @@ export async function POST(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const body = await request.json();
     const validation = playerRatingSchema.safeParse({ ...body, eventId });
@@ -100,7 +97,7 @@ export async function POST(
     // Check if user is member and attended
     const [attendance] = await sql`
       SELECT * FROM event_attendance
-      WHERE event_id = ${eventId} AND user_id = ${session.user.id} AND status = 'yes'
+      WHERE event_id = ${eventId} AND user_id = ${user.id} AND status = 'yes'
     `;
 
     if (!attendance) {
@@ -111,7 +108,7 @@ export async function POST(
     }
 
     // Can't rate yourself
-    if (ratedUserId === session.user.id) {
+    if (ratedUserId === user.id) {
       return NextResponse.json(
         { error: "Você não pode se autoavaliar" },
         { status: 400 }
@@ -128,7 +125,7 @@ export async function POST(
       )
       VALUES (
         ${eventId},
-        ${session.user.id},
+        ${user.id},
         ${ratedUserId},
         ${score},
         ${tags ? tags : null}
@@ -141,12 +138,15 @@ export async function POST(
     `;
 
     logger.info(
-      { eventId, raterUserId: session.user.id, ratedUserId, score },
+      { eventId, raterUserId: user.id, ratedUserId, score },
       "Player rated"
     );
 
     return NextResponse.json({ rating });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error submitting rating");
     return NextResponse.json(
       { error: "Erro ao avaliar jogador" },

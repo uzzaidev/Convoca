@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { eventActionSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
@@ -13,10 +13,7 @@ export async function GET(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const [event] = await sql`
       SELECT group_id FROM events WHERE id = ${eventId}
@@ -29,7 +26,7 @@ export async function GET(
     // Check if user is member
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${session.user.id}
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
     `;
 
     if (!membership) {
@@ -54,6 +51,9 @@ export async function GET(
 
     return NextResponse.json({ actions });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error fetching event actions");
     return NextResponse.json(
       { error: "Erro ao buscar ações do evento" },
@@ -69,10 +69,7 @@ export async function POST(
 ) {
   try {
     const { eventId } = await params;
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     const body = await request.json();
     const validation = eventActionSchema.safeParse({ ...body, eventId });
@@ -97,7 +94,7 @@ export async function POST(
     // Check if user is admin
     const [membership] = await sql`
       SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${session.user.id}
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
     `;
 
     if (!membership || membership.role !== "admin") {
@@ -136,6 +133,9 @@ export async function POST(
 
     return NextResponse.json({ action }, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
     logger.error(error, "Error creating event action");
     return NextResponse.json(
       { error: "Erro ao criar ação" },

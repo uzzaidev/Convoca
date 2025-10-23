@@ -1,8 +1,10 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { stackServerApp } from "@/lib/stack";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
+export async function middleware(req: NextRequest) {
+  const user = await stackServerApp.getUser();
+  const isLoggedIn = !!user;
   const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
   const isErrorPage = req.nextUrl.pathname === "/auth/error";
   const isPublicPage = req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/simple-test";
@@ -23,7 +25,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

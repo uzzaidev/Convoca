@@ -380,6 +380,58 @@ Submete avaliação de um jogador (apenas participantes confirmados).
 
 ---
 
+## Rankings
+
+### `GET /api/groups/:groupId/rankings`
+
+Lista o ranking dos jogadores de um grupo com estatísticas agregadas.
+
+**Response:**
+```json
+{
+  "rankings": [
+    {
+      "user_id": "uuid",
+      "player_name": "João Silva",
+      "player_image": "https://...",
+      "base_rating": 7,
+      "games_played": 15,
+      "goals": 23,
+      "assists": 12,
+      "avg_rating": "8.50",
+      "wins": 10,
+      "win_rate": "66.67",
+      "mvp_count": 3,
+      "performance_score": "245.50"
+    }
+  ]
+}
+```
+
+**Métricas Calculadas:**
+- `games_played` - Número de jogos disputados
+- `goals` - Total de gols marcados
+- `assists` - Total de assistências
+- `avg_rating` - Média de avaliações recebidas (0-10)
+- `wins` - Número de vitórias
+- `win_rate` - Percentual de vitórias (%)
+- `mvp_count` - Número de vezes escolhido como MVP
+- `performance_score` - Score ponderado:
+  - Jogos: 1 ponto cada
+  - Gols: 3 pontos cada
+  - Assistências: 2 pontos cada
+  - Rating médio: 5 pontos por ponto de rating
+  - Vitórias: 5 pontos cada
+  - MVPs: 10 pontos cada
+
+**Ordenação:** Por `performance_score` (decrescente), depois `avg_rating`, depois `goals`
+
+**Notas:**
+- Apenas jogadores com pelo menos 1 jogo disputado aparecem no ranking
+- Requer ser membro do grupo
+
+---
+
 ## Códigos de Status HTTP
 
 - `200` - Sucesso
@@ -426,7 +478,6 @@ Submete avaliação de um jogador (apenas participantes confirmados).
 
 ### Fase 2
 - `POST /api/notifications/subscribe` - Subscrever notificações push
-- `GET /api/groups/:groupId/leaderboards` - Rankings do grupo
 - `POST /api/finance/charges` - Criar cobrança
 - `POST /api/finance/transactions` - Registrar pagamento
 

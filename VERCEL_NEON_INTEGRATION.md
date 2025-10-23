@@ -2,6 +2,9 @@
 
 Este guia explica como configurar a integração entre Vercel e Neon para o Peladeiros App.
 
+> **⚠️ IMPORTANTE**: Este projeto agora usa `vercel.json` vazio para permitir auto-detecção do Next.js.
+> Se você está enfrentando erros 404 no Vercel, consulte [VERCEL_FIX.md](./VERCEL_FIX.md) para mais detalhes.
+
 ## Por que usar a Integração?
 
 A integração Vercel-Neon automatiza:

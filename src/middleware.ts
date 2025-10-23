@@ -8,9 +8,15 @@ export async function middleware(req: NextRequest) {
   const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
   const isErrorPage = req.nextUrl.pathname === "/auth/error";
   const isPublicPage = req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/simple-test";
+  const isHandlerRoute = req.nextUrl.pathname.startsWith("/handler");
 
   // Allow unauthenticated access to public pages
   if (isPublicPage) {
+    return NextResponse.next();
+  }
+
+  // Allow handler routes to process without authentication checks
+  if (isHandlerRoute) {
     return NextResponse.next();
   }
 

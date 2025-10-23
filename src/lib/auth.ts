@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { sql } from "@/db/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true, // Required for NextAuth v5 with Next.js 15
   providers: [
     // Temporary credentials provider for development/testing
     // TODO: Replace with Email Magic Link provider for production

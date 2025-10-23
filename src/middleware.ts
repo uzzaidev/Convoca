@@ -7,10 +7,17 @@ export default auth((req) => {
   const isErrorPage = req.nextUrl.pathname === "/auth/error";
   const isPublicPage = req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/simple-test";
 
-  if (!isLoggedIn && !isAuthPage && !isPublicPage) {
+  // Allow unauthenticated access to public pages
+  if (isPublicPage) {
+    return NextResponse.next();
+  }
+
+  // Redirect unauthenticated users to signin (except on auth pages)
+  if (!isLoggedIn && !isAuthPage) {
     return NextResponse.redirect(new URL("/auth/signin", req.url));
   }
 
+  // Redirect authenticated users away from signin/signup pages (but allow error page)
   if (isLoggedIn && isAuthPage && !isErrorPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

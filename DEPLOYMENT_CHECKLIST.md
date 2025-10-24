@@ -111,9 +111,10 @@ Se ainda não configurado, adicione no Vercel Dashboard:
    - Production: `https://seu-dominio.vercel.app`
    - Preview: deixe vazio (auto-detectado)
 
-3. **NEXTAUTH_SECRET**
+3. **AUTH_SECRET** ou **NEXTAUTH_SECRET** (NextAuth v5)
    - Gere com: `openssl rand -base64 32`
    - Adicione em todos os ambientes
+   - Use `AUTH_SECRET` (recomendado) ou `NEXTAUTH_SECRET` (compatibilidade)
 
 ## 🔍 Troubleshooting
 

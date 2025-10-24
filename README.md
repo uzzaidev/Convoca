@@ -59,7 +59,8 @@ A autenticação usa NextAuth v5 (Auth.js) com autenticação por credenciais (e
 
 **Variáveis necessárias** (adicionar no `.env.local`):
 - `NEXTAUTH_URL=http://localhost:3000`
-- `NEXTAUTH_SECRET=` (gerar com `openssl rand -base64 32`)
+- `AUTH_SECRET=` (gerar com `openssl rand -base64 32`) - NextAuth v5 recomendado
+  - Ou `NEXTAUTH_SECRET=` para compatibilidade
 
 Veja o guia completo em [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md)
 

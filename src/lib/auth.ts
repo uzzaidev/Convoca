@@ -4,6 +4,36 @@ import { sql } from "@/db/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+// Validar configuração do AUTH_SECRET
+if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+  console.error(`
+╔═══════════════════════════════════════════════════════════════════╗
+║                     ⚠️  ERRO DE CONFIGURAÇÃO ⚠️                    ║
+╟───────────────────────────────────────────────────────────────────╢
+║  AUTH_SECRET não está configurado!                                ║
+║                                                                    ║
+║  A autenticação não funcionará sem esta variável de ambiente.     ║
+║                                                                    ║
+║  Para corrigir:                                                    ║
+║  1. Gere um secret: openssl rand -base64 32                       ║
+║  2. Adicione ao .env.local:                                       ║
+║     AUTH_SECRET="valor_gerado"                                    ║
+║  3. No Vercel, adicione em: Project Settings > Environment Vars   ║
+║                                                                    ║
+║  Documentação: /NEON_AUTH_GUIDE.md                                ║
+╚═══════════════════════════════════════════════════════════════════╝
+  `);
+  
+  // Em produção, isso é crítico
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "AUTH_SECRET não está configurado. A aplicação não pode iniciar sem esta variável de ambiente."
+    );
+  }
+  
+  console.warn("⚠️  Usando modo de desenvolvimento sem AUTH_SECRET - NÃO USE EM PRODUÇÃO!");
+}
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),

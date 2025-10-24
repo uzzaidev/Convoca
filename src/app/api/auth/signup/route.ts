@@ -35,12 +35,11 @@ export async function POST(request: NextRequest) {
 
     // Criar usuário
     const newUser = await sql`
-      INSERT INTO users (name, email, password_hash, email_verified)
+      INSERT INTO users (name, email, password_hash)
       VALUES (
         ${name},
         ${email.toLowerCase()},
-        ${passwordHash},
-        NOW()
+        ${passwordHash}
       )
       RETURNING id, name, email
     `;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 type Group = {
   id: string;
@@ -51,8 +52,9 @@ export function GroupsCard({ groups }: GroupsCardProps) {
                       </p>
                     )}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        👥 {group.member_count} membro{group.member_count !== 1 ? "s" : ""}
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {group.member_count} membro{group.member_count !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>

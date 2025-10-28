@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, Goal, Hand } from "lucide-react";
+import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type PlayerStat = {
   id: string;
@@ -24,11 +26,15 @@ type GeneralRanking = {
   wins: number;
 };
 
+type SortField = 'score' | 'games' | 'goals' | 'assists' | 'mvps' | 'wins';
+type SortDirection = 'asc' | 'desc';
+
 type RankingsCardProps = {
   topScorers: Array<{ id: string; name: string; goals: string }>;
   topAssisters: Array<{ id: string; name: string; assists: string }>;
   topGoalkeepers: Array<{ id: string; name: string; saves: string }>;
   generalRanking: GeneralRanking[];
+  currentUserId: string;
 };
 
 export function RankingsCard({
@@ -36,7 +42,33 @@ export function RankingsCard({
   topAssisters,
   topGoalkeepers,
   generalRanking,
+  currentUserId,
 }: RankingsCardProps) {
+  const [sortField, setSortField] = useState<SortField>('score');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Função para alternar ordenação
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Ordenar ranking geral
+  const sortedGeneralRanking = [...generalRanking].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    
+    if (sortDirection === 'asc') {
+      return aValue - bValue;
+    } else {
+      return bValue - aValue;
+    }
+  });
+
   // Transformar dados para formato consistente
   const scorersData: PlayerStat[] = topScorers.map((p) => {
     const goalsCount = parseInt(p.goals);
@@ -86,29 +118,35 @@ export function RankingsCard({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((player, index) => (
-              <TableRow key={player.id}>
-                <TableCell className="text-center">
-                  <div
-                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                      index === 0
-                        ? "bg-yellow-500 text-yellow-950"
-                        : index === 1
-                        ? "bg-slate-300 text-slate-900"
-                        : index === 2
-                        ? "bg-orange-600 text-orange-50"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{player.name}</TableCell>
-                <TableCell className="text-right">
-                  <Badge variant="secondary">{player.label}</Badge>
-                </TableCell>
-              </TableRow>
-            ))}
+            {data.map((player, index) => {
+              const isCurrentUser = player.id === currentUserId;
+              return (
+                <TableRow 
+                  key={player.id}
+                  className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                >
+                  <TableCell className="text-center">
+                    <div
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                        index === 0
+                          ? "bg-yellow-500 text-yellow-950"
+                          : index === 1
+                          ? "bg-slate-300 text-slate-900"
+                          : index === 2
+                          ? "bg-orange-600 text-orange-50"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="secondary">{player.label}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
@@ -124,6 +162,15 @@ export function RankingsCard({
       );
     }
 
+    const getSortIcon = (field: SortField) => {
+      if (sortField !== field) {
+        return <ArrowUpDown className="ml-2 h-4 w-4" />;
+      }
+      return sortDirection === 'asc' 
+        ? <ArrowUp className="ml-2 h-4 w-4" />
+        : <ArrowDown className="ml-2 h-4 w-4" />;
+    };
+
     return (
       <div className="rounded-lg border">
         <Table>
@@ -131,51 +178,117 @@ export function RankingsCard({
             <TableRow>
               <TableHead className="w-[60px] text-center">#</TableHead>
               <TableHead>Jogador</TableHead>
-              <TableHead className="text-center">Jogos</TableHead>
-              <TableHead className="text-center">Gols</TableHead>
-              <TableHead className="text-center">Assist.</TableHead>
-              <TableHead className="text-center">MVPs</TableHead>
-              <TableHead className="text-center">Vitórias</TableHead>
-              <TableHead className="text-right">Pontos</TableHead>
+              <TableHead className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('games')}
+                  className="h-8 w-full"
+                >
+                  Jogos
+                  {getSortIcon('games')}
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('goals')}
+                  className="h-8 w-full"
+                >
+                  Gols
+                  {getSortIcon('goals')}
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('assists')}
+                  className="h-8 w-full"
+                >
+                  Assist.
+                  {getSortIcon('assists')}
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('mvps')}
+                  className="h-8 w-full"
+                >
+                  MVPs
+                  {getSortIcon('mvps')}
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('wins')}
+                  className="h-8 w-full"
+                >
+                  Vitórias
+                  {getSortIcon('wins')}
+                </Button>
+              </TableHead>
+              <TableHead className="text-right">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => toggleSort('score')}
+                  className="h-8 w-full justify-end"
+                >
+                  Pontos
+                  {getSortIcon('score')}
+                </Button>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {generalRanking.map((player, index) => (
-              <TableRow key={player.id}>
-                <TableCell className="text-center">
-                  <div
-                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                      index === 0
-                        ? "bg-yellow-500 text-yellow-950"
-                        : index === 1
-                        ? "bg-slate-300 text-slate-900"
-                        : index === 2
-                        ? "bg-orange-600 text-orange-50"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{player.name}</TableCell>
-                <TableCell className="text-center tabular-nums">{player.games}</TableCell>
-                <TableCell className="text-center tabular-nums">{player.goals}</TableCell>
-                <TableCell className="text-center tabular-nums">{player.assists}</TableCell>
-                <TableCell className="text-center tabular-nums">
-                  {player.mvps > 0 ? (
-                    <span className="text-yellow-600 dark:text-yellow-500 font-medium">
-                      {player.mvps}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">0</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-center tabular-nums">{player.wins}</TableCell>
-                <TableCell className="text-right">
-                  <span className="text-lg font-bold tabular-nums">{player.score}</span>
-                </TableCell>
-              </TableRow>
-            ))}
+            {sortedGeneralRanking.map((player, index) => {
+              const isCurrentUser = player.id === currentUserId;
+              return (
+                <TableRow 
+                  key={player.id}
+                  className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                >
+                  <TableCell className="text-center">
+                    <div
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                        index === 0
+                          ? "bg-yellow-500 text-yellow-950"
+                          : index === 1
+                          ? "bg-slate-300 text-slate-900"
+                          : index === 2
+                          ? "bg-orange-600 text-orange-50"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell className="text-center tabular-nums">{player.games}</TableCell>
+                  <TableCell className="text-center tabular-nums">{player.goals}</TableCell>
+                  <TableCell className="text-center tabular-nums">{player.assists}</TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    {player.mvps > 0 ? (
+                      <span className="text-yellow-600 dark:text-yellow-500 font-medium">
+                        {player.mvps}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">0</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums">{player.wins}</TableCell>
+                  <TableCell className="text-right">
+                    <span className="text-lg font-bold tabular-nums">{player.score}</span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

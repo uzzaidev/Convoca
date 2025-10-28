@@ -8,7 +8,7 @@ import { z } from "zod";
 if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
   console.error(`
 ╔═══════════════════════════════════════════════════════════════════╗
-║                     ⚠️  ERRO DE CONFIGURAÇÃO ⚠️                    ║
+║                     ERRO DE CONFIGURAÇÃO                          ║
 ╟───────────────────────────────────────────────────────────────────╢
 ║  AUTH_SECRET não está configurado!                                ║
 ║                                                                    ║
@@ -31,7 +31,7 @@ if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
     );
   }
   
-  console.warn("⚠️  Usando modo de desenvolvimento sem AUTH_SECRET - NÃO USE EM PRODUÇÃO!");
+  console.warn("Usando modo de desenvolvimento sem AUTH_SECRET - NÃO USE EM PRODUÇÃO!");
 }
 
 const credentialsSchema = z.object({
@@ -48,15 +48,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         console.log('\n========================================');
-        console.log('🚀 [AUTH] FUNÇÃO AUTHORIZE CHAMADA!');
+        console.log('[AUTH] FUNÇÃO AUTHORIZE CHAMADA!');
         console.log('========================================\n');
 
         try {
           // Validar credenciais
           const { email, password } = credentialsSchema.parse(credentials);
 
-          console.log('🔍 [AUTH DEBUG] Email recebido:', email);
-          console.log('🔍 [AUTH DEBUG] Senha recebida (tamanho):', password?.length);
+          console.log('[AUTH DEBUG] Email recebido:', email);
+          console.log('[AUTH DEBUG] Senha recebida (tamanho):', password?.length);
 
           // Buscar usuário no banco
           const result = await sql`
@@ -65,21 +65,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             WHERE email = ${email.toLowerCase()}
           `;
 
-          console.log('🔍 [AUTH DEBUG] Usuário encontrado:', result.length > 0);
+          console.log('[AUTH DEBUG] Usuário encontrado:', result.length > 0);
 
           if (result.length === 0) {
-            console.log('❌ [AUTH DEBUG] Nenhum usuário encontrado com este email');
+            console.log('[AUTH DEBUG] Nenhum usuário encontrado com este email');
             return null;
           }
 
           const user = result[0];
-          console.log('🔍 [AUTH DEBUG] User ID:', user.id);
-          console.log('🔍 [AUTH DEBUG] Tem password_hash?', !!user.password_hash);
-          console.log('🔍 [AUTH DEBUG] Tamanho do hash:', user.password_hash?.length);
+          console.log('[AUTH DEBUG] User ID:', user.id);
+          console.log('[AUTH DEBUG] Tem password_hash?', !!user.password_hash);
+          console.log('[AUTH DEBUG] Tamanho do hash:', user.password_hash?.length);
 
           // Verificar senha
           if (!user.password_hash) {
-            console.log('❌ [AUTH DEBUG] password_hash está vazio!');
+            console.log('[AUTH DEBUG] password_hash está vazio!');
             return null;
           }
 
@@ -88,15 +88,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user.password_hash
           );
 
-          console.log('🔍 [AUTH DEBUG] Senha válida?', isValidPassword);
+          console.log('[AUTH DEBUG] Senha válida?', isValidPassword);
 
           if (!isValidPassword) {
-            console.log('❌ [AUTH DEBUG] Senha incorreta!');
+            console.log('[AUTH DEBUG] Senha incorreta!');
             return null;
           }
 
           // Retornar dados do usuário (sem senha)
-          console.log('✅ [AUTH DEBUG] Login bem-sucedido! Retornando usuário');
+          console.log('[AUTH DEBUG] Login bem-sucedido! Retornando usuário');
           return {
             id: user.id,
             name: user.name,
@@ -104,10 +104,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             image: null,
           };
         } catch (error) {
-          console.error('\n❌❌❌ [AUTH ERROR] ERRO NA AUTENTICAÇÃO:');
+          console.error('\n[AUTH ERROR] ERRO NA AUTENTICAÇÃO:');
           console.error(error);
           console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
-          console.error('❌❌❌\n');
+          console.error('\n');
           return null;
         }
       },

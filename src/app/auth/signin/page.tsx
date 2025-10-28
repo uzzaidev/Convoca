@@ -21,8 +21,8 @@ export default function SignInPage() {
     setError("");
     setIsLoading(true);
 
-    console.log('🔵 [FRONTEND] Tentando fazer login...');
-    console.log('🔵 [FRONTEND] Email:', email);
+    console.log('[FRONTEND] Tentando fazer login...');
+    console.log('[FRONTEND] Email:', email);
 
     try {
       const result = await signIn("credentials", {
@@ -31,20 +31,20 @@ export default function SignInPage() {
         redirect: false,
       });
 
-      console.log('🔵 [FRONTEND] Resultado do signIn:', result);
+      console.log('[FRONTEND] Resultado do signIn:', result);
 
       if (result?.error) {
-        console.log('🔴 [FRONTEND] Erro no login:', result.error);
+        console.log('[FRONTEND] Erro no login:', result.error);
         setError("Email ou senha incorretos");
         setIsLoading(false);
         return;
       }
 
-      console.log('🟢 [FRONTEND] Login bem-sucedido!');
+      console.log('[FRONTEND] Login bem-sucedido!');
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      console.error("🔴 [FRONTEND] Exceção no login:", error);
+      console.error("[FRONTEND] Exceção no login:", error);
       setError("Erro ao fazer login. Tente novamente.");
       setIsLoading(false);
     }

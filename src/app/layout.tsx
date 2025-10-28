@@ -5,6 +5,9 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 export const metadata: Metadata = {
   title: "Peladeiros - Gestão de Peladas",
   description: "Organize suas peladas, sorteie times, registre estatísticas e acompanhe rankings",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

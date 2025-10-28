@@ -25,6 +25,9 @@ type Stats = {
     id: string;
     name: string;
     games_played: string;
+    games_dm: string;
+    games_absent: string;
+    total_games: string;
     frequency_percentage: string;
   }>;
 };
@@ -176,15 +179,32 @@ export default async function GroupPage({ params }: RouteParams) {
           SELECT id FROM events
           WHERE group_id = ${groupId} AND status = 'finished'
           ORDER BY starts_at DESC LIMIT 10
+        ),
+        total_count AS (
+          SELECT COUNT(*) as total FROM recent_events
         )
-        SELECT u.id, u.name, COUNT(*) as games_played,
-          ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM recent_events), 1) as frequency_percentage
-        FROM event_attendance ea
-        INNER JOIN users u ON ea.user_id = u.id
-        WHERE ea.event_id IN (SELECT id FROM recent_events)
-          AND ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
+        SELECT 
+          u.id, 
+          u.name,
+          COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
+          COUNT(*) FILTER (WHERE ea.status = 'dm') as games_dm,
+          COUNT(*) FILTER (WHERE ea.status = 'no') as games_absent,
+          (SELECT total FROM total_count) as total_games,
+          ROUND(
+            COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
+            NULLIF((SELECT total FROM total_count) - COUNT(*) FILTER (WHERE ea.status = 'dm'), 0), 
+            1
+          ) as frequency_percentage
+        FROM users u
+        INNER JOIN group_members gm ON u.id = gm.user_id
+        LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id IN (SELECT id FROM recent_events)
+        WHERE gm.group_id = ${groupId}
         GROUP BY u.id, u.name
-        ORDER BY games_played DESC LIMIT 15
+        HAVING COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
+           OR COUNT(*) FILTER (WHERE ea.status = 'dm') > 0
+           OR COUNT(*) FILTER (WHERE ea.status = 'no') > 0
+        ORDER BY games_played DESC, frequency_percentage DESC
+        LIMIT 15
       `;
       stats.playerFrequency = playerFrequency as typeof stats.playerFrequency;
 
@@ -264,13 +284,14 @@ export default async function GroupPage({ params }: RouteParams) {
             u.id,
             u.name,
             COUNT(DISTINCT ea.event_id) as games_played,
-            COUNT(CASE WHEN ea2.action_type = 'goal' THEN 1 END) as goals,
-            COUNT(CASE WHEN ea2.action_type = 'assist' THEN 1 END) as assists,
-            COUNT(CASE WHEN pr.tags @> ARRAY['mvp'] THEN 1 END) as mvps,
-            COUNT(CASE WHEN t.is_winner = true THEN 1 END) as wins
+            COUNT(DISTINCT ea2.id) FILTER (WHERE ea2.action_type = 'goal') as goals,
+            COUNT(DISTINCT ea2b.id) FILTER (WHERE ea2b.action_type = 'assist') as assists,
+            COUNT(DISTINCT pr.id) FILTER (WHERE pr.tags @> ARRAY['mvp']) as mvps,
+            COUNT(DISTINCT CASE WHEN t.is_winner = true THEN t.id END) as wins
           FROM users u
           INNER JOIN event_attendance ea ON u.id = ea.user_id
-          LEFT JOIN event_actions ea2 ON ea2.event_id = ea.event_id AND ea2.actor_user_id = u.id
+          LEFT JOIN event_actions ea2 ON ea2.event_id = ea.event_id AND ea2.actor_user_id = u.id AND ea2.action_type = 'goal'
+          LEFT JOIN event_actions ea2b ON ea2b.event_id = ea.event_id AND ea2b.actor_user_id = u.id AND ea2b.action_type = 'assist'
           LEFT JOIN team_members tm ON tm.user_id = u.id
           LEFT JOIN teams t ON t.id = tm.team_id AND t.event_id = ea.event_id
           LEFT JOIN player_ratings pr ON pr.event_id = ea.event_id AND pr.rated_user_id = u.id

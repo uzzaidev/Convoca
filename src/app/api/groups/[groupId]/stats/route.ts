@@ -132,20 +132,32 @@ export async function GET(
           AND status = 'finished'
         ORDER BY starts_at DESC
         LIMIT 10
+      ),
+      total_count AS (
+        SELECT COUNT(*) as total FROM recent_events
       )
       SELECT
         u.id,
         u.name,
         u.image,
-        COUNT(*) as games_played,
-        ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM recent_events), 1) as frequency_percentage
-      FROM event_attendance ea
-      INNER JOIN users u ON ea.user_id = u.id
-      WHERE ea.event_id IN (SELECT id FROM recent_events)
-        AND ea.status = 'yes'
-        AND ea.checked_in_at IS NOT NULL
+        COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
+        COUNT(*) FILTER (WHERE ea.status = 'dm') as games_dm,
+        COUNT(*) FILTER (WHERE ea.status = 'no') as games_absent,
+        (SELECT total FROM total_count) as total_games,
+        ROUND(
+          COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
+          NULLIF((SELECT total FROM total_count) - COUNT(*) FILTER (WHERE ea.status = 'dm'), 0), 
+          1
+        ) as frequency_percentage
+      FROM users u
+      INNER JOIN group_members gm ON u.id = gm.user_id
+      LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id IN (SELECT id FROM recent_events)
+      WHERE gm.group_id = ${groupId}
       GROUP BY u.id, u.name, u.image
-      ORDER BY games_played DESC
+      HAVING COUNT(*) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
+         OR COUNT(*) FILTER (WHERE ea.status = 'dm') > 0
+         OR COUNT(*) FILTER (WHERE ea.status = 'no') > 0
+      ORDER BY games_played DESC, frequency_percentage DESC
       LIMIT 15
     `;
 

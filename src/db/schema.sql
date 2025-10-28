@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS event_attendance (
   event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role VARCHAR(20) DEFAULT 'line' CHECK (role IN ('gk', 'line')),
-  status VARCHAR(20) DEFAULT 'no' CHECK (status IN ('yes', 'no', 'waitlist')),
+  status VARCHAR(20) DEFAULT 'no' CHECK (status IN ('yes', 'no', 'waitlist', 'dm')),
   checked_in_at TIMESTAMP,
   order_of_arrival INTEGER,
   created_at TIMESTAMP DEFAULT NOW(),

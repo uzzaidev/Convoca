@@ -20,6 +20,9 @@ type PlayerFrequency = {
   id: string;
   name: string;
   games_played: string;
+  games_dm: string;
+  games_absent: string;
+  total_games: string;
   frequency_percentage: string;
 };
 
@@ -324,14 +327,16 @@ export function RankingsCard({
             <TableRow>
               <TableHead className="w-[60px] text-center">#</TableHead>
               <TableHead>Jogador</TableHead>
-              <TableHead className="text-center">Jogos</TableHead>
-              <TableHead className="text-right">Frequência</TableHead>
+              <TableHead className="text-center">Presentes</TableHead>
+              <TableHead className="text-center">DM</TableHead>
+              <TableHead className="text-center">Ausentes</TableHead>
+              <TableHead className="text-right">% Participação</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {playerFrequency.map((player, index) => {
               const isCurrentUser = player.id === currentUserId;
-              const percentage = parseFloat(player.frequency_percentage);
+              const percentage = parseFloat(player.frequency_percentage || '0');
               const percentageColor =
                 percentage >= 80
                   ? "text-green-600 dark:text-green-500"
@@ -351,8 +356,18 @@ export function RankingsCard({
                   </TableCell>
                   <TableCell className="font-medium">{player.name}</TableCell>
                   <TableCell className="text-center tabular-nums">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950">
                       {player.games_played}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    <Badge variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950">
+                      {player.games_dm}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    <Badge variant="outline" className="text-xs bg-red-50 dark:bg-red-950">
+                      {player.games_absent}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -367,12 +382,12 @@ export function RankingsCard({
                                 ? "bg-yellow-500"
                                 : "bg-red-500"
                             }`}
-                            style={{ width: `${percentage}%` }}
+                            style={{ width: `${Math.min(percentage, 100)}%` }}
                           />
                         </div>
                       </div>
                       <span className={`text-sm font-bold tabular-nums min-w-[50px] text-right ${percentageColor}`}>
-                        {player.frequency_percentage}%
+                        {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}%
                       </span>
                     </div>
                   </TableCell>
@@ -446,7 +461,7 @@ export function RankingsCard({
             <div className="flex items-center gap-2 mb-2">
               <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
               <span className="text-sm text-muted-foreground">
-                Presença nos últimos 10 jogos
+                Últimos 10 jogos - % de participação calculada sobre jogos disponíveis (total - DM)
               </span>
             </div>
             {renderFrequency()}

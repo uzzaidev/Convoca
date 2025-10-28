@@ -8,6 +8,9 @@ type PlayerFrequency = {
   id: string;
   name: string;
   games_played: string;
+  games_dm: string;
+  games_absent: string;
+  total_games: string;
   frequency_percentage: string;
 };
 

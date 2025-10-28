@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, Target, Goal, Hand } from "lucide-react";
 
 type PlayerStat = {
@@ -75,40 +76,41 @@ export function RankingsCard({
     }
 
     return (
-      <div className="rounded-lg border overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[auto_1fr_auto] gap-3 px-3 py-3 bg-muted/50 border-b font-medium text-sm text-muted-foreground">
-          <div className="w-8 text-center">#</div>
-          <div>Jogador</div>
-          <div className="text-right">Estatística</div>
-        </div>
-        {/* Table Body */}
-        <div>
-          {data.map((player, index) => (
-            <div
-              key={player.id}
-              className="grid grid-cols-[auto_1fr_auto] gap-3 px-3 py-3 hover:bg-accent transition-colors border-b last:border-b-0 items-center"
-            >
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0 ${
-                  index === 0
-                    ? "bg-yellow-500 text-yellow-950"
-                    : index === 1
-                    ? "bg-slate-300 text-slate-900"
-                    : index === 2
-                    ? "bg-orange-600 text-orange-50"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {index + 1}
-              </div>
-              <span className="font-medium truncate">{player.name}</span>
-              <Badge variant="secondary" className="ml-2 flex-shrink-0">
-                {player.label}
-              </Badge>
-            </div>
-          ))}
-        </div>
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[60px] text-center">#</TableHead>
+              <TableHead>Jogador</TableHead>
+              <TableHead className="text-right">Estatística</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((player, index) => (
+              <TableRow key={player.id}>
+                <TableCell className="text-center">
+                  <div
+                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                      index === 0
+                        ? "bg-yellow-500 text-yellow-950"
+                        : index === 1
+                        ? "bg-slate-300 text-slate-900"
+                        : index === 2
+                        ? "bg-orange-600 text-orange-50"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{player.name}</TableCell>
+                <TableCell className="text-right">
+                  <Badge variant="secondary">{player.label}</Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   };
@@ -123,66 +125,59 @@ export function RankingsCard({
     }
 
     return (
-      <div className="rounded-lg border overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 px-3 py-3 bg-muted/50 border-b font-medium text-sm text-muted-foreground">
-          <div className="w-8 text-center">#</div>
-          <div>Jogador</div>
-          <div className="text-center">Jogos</div>
-          <div className="text-center">Gols</div>
-          <div className="text-center">Assist.</div>
-          <div className="text-center">MVPs</div>
-          <div className="text-center">Vitórias</div>
-          <div className="text-right">Pontos</div>
-        </div>
-        {/* Table Body */}
-        <div>
-          {generalRanking.map((player, index) => (
-            <div
-              key={player.id}
-              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 px-3 py-3 hover:bg-accent transition-colors border-b last:border-b-0 items-center"
-            >
-              {/* Position */}
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0 ${
-                  index === 0
-                    ? "bg-yellow-500 text-yellow-950"
-                    : index === 1
-                    ? "bg-slate-300 text-slate-900"
-                    : index === 2
-                    ? "bg-orange-600 text-orange-50"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {index + 1}
-              </div>
-              {/* Player Name */}
-              <div className="font-medium truncate min-w-0">{player.name}</div>
-              {/* Games */}
-              <div className="text-center text-sm tabular-nums">{player.games}</div>
-              {/* Goals */}
-              <div className="text-center text-sm tabular-nums">{player.goals}</div>
-              {/* Assists */}
-              <div className="text-center text-sm tabular-nums">{player.assists}</div>
-              {/* MVPs */}
-              <div className="text-center text-sm tabular-nums">
-                {player.mvps > 0 ? (
-                  <span className="text-yellow-600 dark:text-yellow-500 font-medium">
-                    {player.mvps}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">0</span>
-                )}
-              </div>
-              {/* Wins */}
-              <div className="text-center text-sm tabular-nums">{player.wins}</div>
-              {/* Score */}
-              <div className="text-right">
-                <div className="text-lg font-bold tabular-nums">{player.score}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[60px] text-center">#</TableHead>
+              <TableHead>Jogador</TableHead>
+              <TableHead className="text-center">Jogos</TableHead>
+              <TableHead className="text-center">Gols</TableHead>
+              <TableHead className="text-center">Assist.</TableHead>
+              <TableHead className="text-center">MVPs</TableHead>
+              <TableHead className="text-center">Vitórias</TableHead>
+              <TableHead className="text-right">Pontos</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {generalRanking.map((player, index) => (
+              <TableRow key={player.id}>
+                <TableCell className="text-center">
+                  <div
+                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                      index === 0
+                        ? "bg-yellow-500 text-yellow-950"
+                        : index === 1
+                        ? "bg-slate-300 text-slate-900"
+                        : index === 2
+                        ? "bg-orange-600 text-orange-50"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{player.name}</TableCell>
+                <TableCell className="text-center tabular-nums">{player.games}</TableCell>
+                <TableCell className="text-center tabular-nums">{player.goals}</TableCell>
+                <TableCell className="text-center tabular-nums">{player.assists}</TableCell>
+                <TableCell className="text-center tabular-nums">
+                  {player.mvps > 0 ? (
+                    <span className="text-yellow-600 dark:text-yellow-500 font-medium">
+                      {player.mvps}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">0</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center tabular-nums">{player.wins}</TableCell>
+                <TableCell className="text-right">
+                  <span className="text-lg font-bold tabular-nums">{player.score}</span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   };

@@ -284,13 +284,14 @@ export default async function GroupPage({ params }: RouteParams) {
             u.id,
             u.name,
             COUNT(DISTINCT ea.event_id) as games_played,
-            COUNT(CASE WHEN ea2.action_type = 'goal' THEN 1 END) as goals,
-            COUNT(CASE WHEN ea2.action_type = 'assist' THEN 1 END) as assists,
-            COUNT(CASE WHEN pr.tags @> ARRAY['mvp'] THEN 1 END) as mvps,
-            COUNT(CASE WHEN t.is_winner = true THEN 1 END) as wins
+            COUNT(DISTINCT ea2.id) FILTER (WHERE ea2.action_type = 'goal') as goals,
+            COUNT(DISTINCT ea2b.id) FILTER (WHERE ea2b.action_type = 'assist') as assists,
+            COUNT(DISTINCT pr.id) FILTER (WHERE pr.tags @> ARRAY['mvp']) as mvps,
+            COUNT(DISTINCT CASE WHEN t.is_winner = true THEN t.id END) as wins
           FROM users u
           INNER JOIN event_attendance ea ON u.id = ea.user_id
-          LEFT JOIN event_actions ea2 ON ea2.event_id = ea.event_id AND ea2.actor_user_id = u.id
+          LEFT JOIN event_actions ea2 ON ea2.event_id = ea.event_id AND ea2.actor_user_id = u.id AND ea2.action_type = 'goal'
+          LEFT JOIN event_actions ea2b ON ea2b.event_id = ea.event_id AND ea2b.actor_user_id = u.id AND ea2b.action_type = 'assist'
           LEFT JOIN team_members tm ON tm.user_id = u.id
           LEFT JOIN teams t ON t.id = tm.team_id AND t.event_id = ea.event_id
           LEFT JOIN player_ratings pr ON pr.event_id = ea.event_id AND pr.rated_user_id = u.id

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BarChart3 } from "lucide-react";
 
 type PlayerFrequency = {
   id: string;
@@ -19,7 +20,10 @@ export function FrequencyCard({ playerFrequency }: FrequencyCardProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>📊 Frequência</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-blue-500" />
+            Frequência
+          </CardTitle>
           <CardDescription>Últimos 10 jogos</CardDescription>
         </CardHeader>
         <CardContent>
@@ -34,7 +38,10 @@ export function FrequencyCard({ playerFrequency }: FrequencyCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>📊 Frequência</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-blue-500" />
+          Frequência
+        </CardTitle>
         <CardDescription>Presença nos últimos 10 jogos</CardDescription>
       </CardHeader>
       <CardContent>

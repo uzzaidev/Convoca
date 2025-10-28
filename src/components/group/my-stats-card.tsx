@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Goal, Target, Trophy, Star, Crown } from "lucide-react";
 
 type MyStatsCardProps = {
   gamesPlayed: number;
@@ -33,12 +34,12 @@ export function MyStatsCard({
     : "0";
 
   const stats = [
-    { label: "Jogos", value: gamesPlayed, icon: "⚽" },
-    { label: "Gols", value: goals, icon: "🎯" },
-    { label: "Assistências", value: assists, icon: "🎁" },
-    { label: "Vitórias", value: wins, icon: "🏆" },
-    { label: "Nota Média", value: averageRating || "—", icon: "⭐" },
-    { label: "MVPs", value: mvpCount, icon: "👑" },
+    { label: "Jogos", value: gamesPlayed, icon: <Goal className="h-6 w-6" /> },
+    { label: "Gols", value: goals, icon: <Target className="h-6 w-6 text-green-600" /> },
+    { label: "Assistências", value: assists, icon: <TrendingUp className="h-6 w-6 text-blue-600" /> },
+    { label: "Vitórias", value: wins, icon: <Trophy className="h-6 w-6 text-yellow-600" /> },
+    { label: "Nota Média", value: averageRating || "—", icon: <Star className="h-6 w-6 text-purple-600" /> },
+    { label: "MVPs", value: mvpCount, icon: <Crown className="h-6 w-6 text-orange-600" /> },
   ];
 
   return (
@@ -54,7 +55,7 @@ export function MyStatsCard({
               key={index}
               className="flex flex-col items-center justify-center p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
             >
-              <div className="text-2xl mb-1">{stat.icon}</div>
+              <div className="mb-1">{stat.icon}</div>
               <div className="text-2xl font-bold text-center">{stat.value}</div>
               <div className="text-xs text-muted-foreground text-center mt-1">
                 {stat.label}

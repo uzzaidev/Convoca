@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { Calendar, MapPin, Trophy as TrophyIcon } from "lucide-react";
 
 type Team = {
   id: string;
@@ -31,7 +32,10 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
   return (
     <Card className="col-span-full">
       <CardHeader>
-        <CardTitle>🏟️ Jogos Recentes</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <TrophyIcon className="h-5 w-5 text-orange-500" />
+          Jogos Recentes
+        </CardTitle>
         <CardDescription>Últimos 5 jogos finalizados</CardDescription>
       </CardHeader>
       <CardContent>
@@ -43,12 +47,14 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
             >
               {/* Cabeçalho do jogo */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <span className="text-sm text-muted-foreground">
-                  📅 {formatDate(match.starts_at)}
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" />
+                  {formatDate(match.starts_at)}
                 </span>
                 {match.venue_name && (
-                  <span className="text-sm text-muted-foreground">
-                    📍 {match.venue_name}
+                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4" />
+                    {match.venue_name}
                   </span>
                 )}
               </div>
@@ -79,8 +85,9 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
                           {team.goals}
                         </div>
                         {team.is_winner && (
-                          <Badge className="mt-2 text-xs" variant="default">
-                            🏆 Vencedor
+                          <Badge className="mt-2 text-xs flex items-center gap-1 w-fit mx-auto" variant="default">
+                            <TrophyIcon className="h-3 w-3" />
+                            Vencedor
                           </Badge>
                         )}
                       </div>

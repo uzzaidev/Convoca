@@ -47,25 +47,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
+        console.log('\n========================================');
+        console.log('🚀 [AUTH] FUNÇÃO AUTHORIZE CHAMADA!');
+        console.log('========================================\n');
+
         try {
           // Validar credenciais
           const { email, password } = credentialsSchema.parse(credentials);
 
+          console.log('🔍 [AUTH DEBUG] Email recebido:', email);
+          console.log('🔍 [AUTH DEBUG] Senha recebida (tamanho):', password?.length);
+
           // Buscar usuário no banco
           const result = await sql`
-            SELECT id, name, email, password_hash, image, email_verified
+            SELECT id, name, email, password_hash
             FROM users
             WHERE email = ${email.toLowerCase()}
           `;
 
+          console.log('🔍 [AUTH DEBUG] Usuário encontrado:', result.length > 0);
+
           if (result.length === 0) {
+            console.log('❌ [AUTH DEBUG] Nenhum usuário encontrado com este email');
             return null;
           }
 
           const user = result[0];
+          console.log('🔍 [AUTH DEBUG] User ID:', user.id);
+          console.log('🔍 [AUTH DEBUG] Tem password_hash?', !!user.password_hash);
+          console.log('🔍 [AUTH DEBUG] Tamanho do hash:', user.password_hash?.length);
 
           // Verificar senha
           if (!user.password_hash) {
+            console.log('❌ [AUTH DEBUG] password_hash está vazio!');
             return null;
           }
 
@@ -74,19 +88,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user.password_hash
           );
 
+          console.log('🔍 [AUTH DEBUG] Senha válida?', isValidPassword);
+
           if (!isValidPassword) {
+            console.log('❌ [AUTH DEBUG] Senha incorreta!');
             return null;
           }
 
           // Retornar dados do usuário (sem senha)
+          console.log('✅ [AUTH DEBUG] Login bem-sucedido! Retornando usuário');
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            image: user.image,
+            image: null,
           };
         } catch (error) {
-          console.error("Error during authentication:", error);
+          console.error('\n❌❌❌ [AUTH ERROR] ERRO NA AUTENTICAÇÃO:');
+          console.error(error);
+          console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+          console.error('❌❌❌\n');
           return null;
         }
       },

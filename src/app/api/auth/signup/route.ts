@@ -33,6 +33,11 @@ export async function POST(request: NextRequest) {
     // Hash da senha
     const passwordHash = await bcrypt.hash(password, 10);
 
+    console.log('🔍 [SIGNUP DEBUG] Email:', email.toLowerCase());
+    console.log('🔍 [SIGNUP DEBUG] Senha original:', password);
+    console.log('🔍 [SIGNUP DEBUG] Hash gerado:', passwordHash);
+    console.log('🔍 [SIGNUP DEBUG] Tamanho do hash:', passwordHash.length);
+
     // Criar usuário
     const newUser = await sql`
       INSERT INTO users (name, email, password_hash)
@@ -43,6 +48,8 @@ export async function POST(request: NextRequest) {
       )
       RETURNING id, name, email
     `;
+
+    console.log('✅ [SIGNUP DEBUG] Usuário criado com ID:', newUser[0].id);
 
     logger.info({ userId: newUser[0].id, email: newUser[0].email }, "Novo usuário criado");
 

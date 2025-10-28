@@ -62,11 +62,7 @@ export function RankingsCard({
     const aValue = a[sortField];
     const bValue = b[sortField];
     
-    if (sortDirection === 'asc') {
-      return aValue - bValue;
-    } else {
-      return bValue - aValue;
-    }
+    return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
   });
 
   // Transformar dados para formato consistente

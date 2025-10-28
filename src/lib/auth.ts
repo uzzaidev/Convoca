@@ -56,7 +56,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const { email, password } = credentialsSchema.parse(credentials);
 
           console.log('[AUTH DEBUG] Email recebido:', email);
-          console.log('[AUTH DEBUG] Senha recebida (tamanho):', password?.length);
 
           // Buscar usuário no banco
           const result = await sql`
@@ -87,8 +86,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password,
             user.password_hash
           );
-
-          console.log('[AUTH DEBUG] Senha válida?', isValidPassword);
 
           if (!isValidPassword) {
             console.log('[AUTH DEBUG] Senha incorreta!');

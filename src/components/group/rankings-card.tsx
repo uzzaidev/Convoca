@@ -36,26 +36,35 @@ export function RankingsCard({
   generalRanking,
 }: RankingsCardProps) {
   // Transformar dados para formato consistente
-  const scorersData: PlayerStat[] = topScorers.map((p) => ({
-    id: p.id,
-    name: p.name,
-    value: parseInt(p.goals),
-    label: `${p.goals} gol${parseInt(p.goals) !== 1 ? "s" : ""}`,
-  }));
+  const scorersData: PlayerStat[] = topScorers.map((p) => {
+    const goalsCount = parseInt(p.goals);
+    return {
+      id: p.id,
+      name: p.name,
+      value: goalsCount,
+      label: `${p.goals} gol${goalsCount !== 1 ? "s" : ""}`,
+    };
+  });
 
-  const assistersData: PlayerStat[] = topAssisters.map((p) => ({
-    id: p.id,
-    name: p.name,
-    value: parseInt(p.assists),
-    label: `${p.assists} assistência${parseInt(p.assists) !== 1 ? "s" : ""}`,
-  }));
+  const assistersData: PlayerStat[] = topAssisters.map((p) => {
+    const assistsCount = parseInt(p.assists);
+    return {
+      id: p.id,
+      name: p.name,
+      value: assistsCount,
+      label: `${p.assists} assistência${assistsCount !== 1 ? "s" : ""}`,
+    };
+  });
 
-  const goalkeepersData: PlayerStat[] = topGoalkeepers.map((p) => ({
-    id: p.id,
-    name: p.name,
-    value: parseInt(p.saves),
-    label: `${p.saves} defesa${parseInt(p.saves) !== 1 ? "s" : ""}`,
-  }));
+  const goalkeepersData: PlayerStat[] = topGoalkeepers.map((p) => {
+    const savesCount = parseInt(p.saves);
+    return {
+      id: p.id,
+      name: p.name,
+      value: savesCount,
+      label: `${p.saves} defesa${savesCount !== 1 ? "s" : ""}`,
+    };
+  });
 
   const renderRankingList = (data: PlayerStat[], emptyMessage: string) => {
     if (data.length === 0) {

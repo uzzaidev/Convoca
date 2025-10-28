@@ -186,6 +186,65 @@ export default async function GroupPage({ params }: RouteParams) {
       `;
       stats.playerFrequency = playerFrequency as typeof stats.playerFrequency;
 
+      // Minhas estatísticas
+      const myEvents = await sql`
+        SELECT e.id FROM events e
+        INNER JOIN event_attendance ea ON e.id = ea.event_id
+        WHERE e.group_id = ${groupId} AND e.status = 'finished'
+          AND ea.user_id = ${user.id} AND ea.checked_in_at IS NOT NULL
+      `;
+      const myEventIds = (myEvents as unknown as Array<{ id: string }>).map(e => e.id);
+
+      if (myEventIds.length > 0) {
+        myStats.gamesPlayed = myEventIds.length;
+
+        const actions = await sql`
+          SELECT action_type, COUNT(*) as count
+          FROM event_actions
+          WHERE event_id = ANY(${myEventIds}) AND actor_user_id = ${user.id}
+          GROUP BY action_type
+        `;
+        (actions as unknown as Array<{ action_type: string; count: string }>).forEach((a) => {
+          if (a.action_type === 'goal') myStats.goals = parseInt(a.count);
+          if (a.action_type === 'assist') myStats.assists = parseInt(a.count);
+          if (a.action_type === 'save') myStats.saves = parseInt(a.count);
+          if (a.action_type === 'yellow_card') myStats.yellowCards = parseInt(a.count);
+          if (a.action_type === 'red_card') myStats.redCards = parseInt(a.count);
+        });
+
+        const winLoss = await sql`
+          SELECT t.is_winner, COUNT(*) as count
+          FROM team_members tm
+          INNER JOIN teams t ON tm.team_id = t.id
+          WHERE t.event_id = ANY(${myEventIds}) AND tm.user_id = ${user.id} AND t.is_winner IS NOT NULL
+          GROUP BY t.is_winner
+        `;
+        (winLoss as unknown as Array<{ is_winner: boolean; count: string }>).forEach((wl) => {
+          if (wl.is_winner === true) myStats.wins = parseInt(wl.count);
+          if (wl.is_winner === false) myStats.losses = parseInt(wl.count);
+        });
+
+        const ratingResult = await sql`
+          SELECT AVG(score) as avg_rating
+          FROM player_ratings
+          WHERE event_id = ANY(${myEventIds}) AND rated_user_id = ${user.id}
+        `;
+        if (ratingResult[0]?.avg_rating) {
+          myStats.averageRating = parseFloat(ratingResult[0].avg_rating).toFixed(1);
+        }
+
+        const tagsResult = await sql`
+          SELECT UNNEST(tags) as tag, COUNT(*) as count
+          FROM player_ratings
+          WHERE event_id = ANY(${myEventIds}) AND rated_user_id = ${user.id} AND tags IS NOT NULL
+          GROUP BY tag ORDER BY count DESC
+        `;
+        (tagsResult as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
+          myStats.tags[t.tag] = parseInt(t.count);
+          if (t.tag === 'mvp') myStats.mvpCount = parseInt(t.count);
+        });
+      }
+
     } catch (error) {
       console.error("Error fetching stats:", error);
     }

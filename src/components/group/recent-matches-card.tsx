@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
@@ -56,7 +57,7 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
               {match.teams && match.teams.length > 0 ? (
                 <div className="flex items-center justify-center gap-3 sm:gap-6">
                   {match.teams.map((team, index) => (
-                    <>
+                    <React.Fragment key={team.id}>
                       {index > 0 && (
                         <div className="flex items-center justify-center">
                           <span className="text-2xl sm:text-3xl font-bold text-muted-foreground">
@@ -65,7 +66,6 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
                         </div>
                       )}
                       <div
-                        key={team.id}
                         className={`flex-1 text-center p-3 sm:p-4 rounded-lg transition-all ${
                           team.is_winner
                             ? "bg-green-500/10 border-2 border-green-500/30 shadow-sm"
@@ -84,7 +84,7 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
                           </Badge>
                         )}
                       </div>
-                    </>
+                    </React.Fragment>
                   ))}
                 </div>
               ) : (

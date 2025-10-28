@@ -27,8 +27,9 @@ export function MyStatsCard({
   mvpCount,
   tags,
 }: MyStatsCardProps) {
-  const winRate = gamesPlayed > 0 
-    ? ((wins / (wins + losses)) * 100).toFixed(0) 
+  const totalMatches = wins + losses;
+  const winRate = totalMatches > 0 
+    ? ((wins / totalMatches) * 100).toFixed(0) 
     : "0";
 
   const stats = [
@@ -63,7 +64,7 @@ export function MyStatsCard({
         </div>
 
         {/* Taxa de vitória */}
-        {(wins + losses) > 0 && (
+        {totalMatches > 0 && (
           <div className="mt-4 p-4 rounded-lg bg-muted/50">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Taxa de Vitória</span>

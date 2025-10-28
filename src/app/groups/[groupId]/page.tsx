@@ -1,10 +1,12 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
-import { formatDate } from "@/lib/utils";
+import { RankingsCard } from "@/components/group/rankings-card";
+import { MyStatsCard } from "@/components/group/my-stats-card";
+import { RecentMatchesCard } from "@/components/group/recent-matches-card";
+import { FrequencyCard } from "@/components/group/frequency-card";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -26,6 +28,17 @@ type Stats = {
     games_played: string;
     frequency_percentage: string;
   }>;
+};
+
+type GeneralRanking = {
+  id: string;
+  name: string;
+  score: number;
+  games: number;
+  goals: number;
+  assists: number;
+  mvps: number;
+  wins: number;
 };
 
 type MyStats = {
@@ -231,268 +244,107 @@ export default async function GroupPage({ params }: RouteParams) {
           if (t.tag === 'mvp') myStats.mvpCount = parseInt(t.count);
         });
       }
+
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  }
+
+  // Calcular ranking geral
+  let generalRanking: GeneralRanking[] = [];
+  
+  if (eventIds.length > 0) {
+    try {
+      // Buscar dados combinados de todos os jogadores
+      const rankingData = await sql`
+        WITH player_stats AS (
+          SELECT 
+            u.id,
+            u.name,
+            COUNT(DISTINCT ea.event_id) as games_played,
+            COUNT(CASE WHEN ea2.action_type = 'goal' THEN 1 END) as goals,
+            COUNT(CASE WHEN ea2.action_type = 'assist' THEN 1 END) as assists,
+            COUNT(CASE WHEN pr.tags @> ARRAY['mvp'] THEN 1 END) as mvps,
+            COUNT(CASE WHEN t.is_winner = true THEN 1 END) as wins
+          FROM users u
+          INNER JOIN event_attendance ea ON u.id = ea.user_id
+          LEFT JOIN event_actions ea2 ON ea2.event_id = ea.event_id AND ea2.actor_user_id = u.id
+          LEFT JOIN team_members tm ON tm.user_id = u.id
+          LEFT JOIN teams t ON t.id = tm.team_id AND t.event_id = ea.event_id
+          LEFT JOIN player_ratings pr ON pr.event_id = ea.event_id AND pr.rated_user_id = u.id
+          WHERE ea.event_id = ANY(${eventIds})
+            AND ea.status = 'yes'
+            AND ea.checked_in_at IS NOT NULL
+          GROUP BY u.id, u.name
+          HAVING COUNT(DISTINCT ea.event_id) > 0
+        )
+        SELECT 
+          id,
+          name,
+          games_played::int,
+          goals::int,
+          assists::int,
+          mvps::int,
+          wins::int,
+          (
+            (games_played * 2) +    -- 2 pontos por presença
+            (goals * 3) +           -- 3 pontos por gol
+            (assists * 2) +         -- 2 pontos por assistência
+            (mvps * 5) +            -- 5 pontos por MVP
+            (wins * 1)              -- 1 ponto por vitória
+          )::int as score
+        FROM player_stats
+        ORDER BY score DESC, games_played DESC, goals DESC
+        LIMIT 15
+      `;
+
+      generalRanking = rankingData as GeneralRanking[];
+    } catch (error) {
+      console.error("Error calculating general ranking:", error);
     }
   }
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header do Grupo */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
               <h1 className="text-3xl font-bold">{group.name}</h1>
               {group.description && (
                 <p className="text-muted-foreground mt-2">{group.description}</p>
               )}
             </div>
-            <Badge variant={group.user_role === "admin" ? "default" : "secondary"}>
+            <Badge variant={group.user_role === "admin" ? "default" : "secondary"} className="w-fit">
               {group.user_role === "admin" ? "Admin" : "Membro"}
             </Badge>
           </div>
         </div>
 
         {/* Minhas Estatísticas */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Minhas Estatísticas</CardTitle>
-            <CardDescription>Seu desempenho neste grupo</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.gamesPlayed}</div>
-                <div className="text-xs text-muted-foreground">Jogos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.goals}</div>
-                <div className="text-xs text-muted-foreground">Gols</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.assists}</div>
-                <div className="text-xs text-muted-foreground">Assistências</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.wins}</div>
-                <div className="text-xs text-muted-foreground">Vitórias</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.averageRating || "—"}</div>
-                <div className="text-xs text-muted-foreground">Nota Média</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{myStats.mvpCount}</div>
-                <div className="text-xs text-muted-foreground">MVPs</div>
-              </div>
-            </div>
-            {Object.keys(myStats.tags).length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {Object.entries(myStats.tags).map(([tag, count]) => (
-                  <Badge key={tag} variant="outline">
-                    {tag} ({count})
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* Artilheiros */}
-          <Card>
-            <CardHeader>
-              <CardTitle>⚽ Artilheiros</CardTitle>
-              <CardDescription>Top 10 goleadores</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.topScorers.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum gol registrado ainda
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.topScorers.map((player, index) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-2 rounded hover:bg-accent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-muted-foreground w-6">
-                          #{index + 1}
-                        </span>
-                        <span>{player.name}</span>
-                      </div>
-                      <Badge>{player.goals} gols</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Garçons */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🎯 Garçons</CardTitle>
-              <CardDescription>Top 10 assistências</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.topAssisters.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhuma assistência registrada ainda
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.topAssisters.map((player, index) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-2 rounded hover:bg-accent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-muted-foreground w-6">
-                          #{index + 1}
-                        </span>
-                        <span>{player.name}</span>
-                      </div>
-                      <Badge>{player.assists} assistências</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Goleiros */}
-          <Card>
-            <CardHeader>
-              <CardTitle>🧤 Goleiros</CardTitle>
-              <CardDescription>Top 10 defesas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.topGoalkeepers.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhuma defesa registrada ainda
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.topGoalkeepers.map((player, index) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-2 rounded hover:bg-accent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-muted-foreground w-6">
-                          #{index + 1}
-                        </span>
-                        <span>{player.name}</span>
-                      </div>
-                      <Badge>{player.saves} defesas</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Frequência */}
-          <Card>
-            <CardHeader>
-              <CardTitle>📊 Frequência</CardTitle>
-              <CardDescription>Últimos 10 jogos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.playerFrequency.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum dado de frequência disponível
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.playerFrequency.map((player) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-2 rounded hover:bg-accent"
-                    >
-                      <span>{player.name}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {player.games_played} jogos
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {player.frequency_percentage}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="mb-8">
+          <MyStatsCard {...myStats} />
         </div>
 
-        {/* Jogos Recentes */}
-        {stats.recentMatches.length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>🏆 Jogos Recentes</CardTitle>
-              <CardDescription>Últimos 5 jogos finalizados</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.recentMatches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="p-4 border rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">
-                        {formatDate(match.starts_at)}
-                      </span>
-                      {match.venue_name && (
-                        <span className="text-xs text-muted-foreground">
-                          📍 {match.venue_name}
-                        </span>
-                      )}
-                    </div>
-                    {match.teams && match.teams.length > 0 ? (
-                      <div className="flex items-center justify-center gap-4">
-                        {match.teams.map((team, index) => (
-                          <>
-                            {index > 0 && (
-                              <span className="text-2xl font-bold text-muted-foreground">
-                                ×
-                              </span>
-                            )}
-                            <div
-                              key={team.id}
-                              className={`flex-1 text-center p-2 rounded ${
-                                team.is_winner ? "bg-green-500/10 border border-green-500/20" : ""
-                              }`}
-                            >
-                              <div className="font-semibold">{team.name}</div>
-                              <div className="text-3xl font-bold">{team.goals}</div>
-                              {team.is_winner && (
-                                <Badge className="mt-1" variant="default">
-                                  Vencedor
-                                </Badge>
-                              )}
-                            </div>
-                          </>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-center text-muted-foreground">
-                        Times não disponíveis
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Rankings com Tabs */}
+        <div className="mb-8">
+          <RankingsCard
+            topScorers={stats.topScorers}
+            topAssisters={stats.topAssisters}
+            topGoalkeepers={stats.topGoalkeepers}
+            generalRanking={generalRanking}
+          />
+        </div>
+
+        {/* Frequência e Jogos Recentes */}
+        <div className="grid gap-8 md:grid-cols-2 mb-8">
+          <FrequencyCard playerFrequency={stats.playerFrequency} />
+          <div className="md:col-span-2">
+            <RecentMatchesCard matches={stats.recentMatches} />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -510,4 +510,4 @@ Manter consistência visual:
 
 **Última atualização**: 2025-10-28  
 **Versão**: 1.0  
-**Autor**: Copilot AI Assistant
+**Mantido por**: Equipe Peladeiros

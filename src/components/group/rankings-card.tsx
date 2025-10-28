@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type PlayerStat = {
@@ -13,6 +13,14 @@ type PlayerStat = {
   name: string;
   value: number;
   label: string;
+  games?: number;
+};
+
+type PlayerFrequency = {
+  id: string;
+  name: string;
+  games_played: string;
+  frequency_percentage: string;
 };
 
 type GeneralRanking = {
@@ -30,10 +38,11 @@ type SortField = 'score' | 'games' | 'goals' | 'assists' | 'mvps' | 'wins';
 type SortDirection = 'asc' | 'desc';
 
 type RankingsCardProps = {
-  topScorers: Array<{ id: string; name: string; goals: string }>;
-  topAssisters: Array<{ id: string; name: string; assists: string }>;
-  topGoalkeepers: Array<{ id: string; name: string; saves: string }>;
+  topScorers: Array<{ id: string; name: string; goals: string; games?: string }>;
+  topAssisters: Array<{ id: string; name: string; assists: string; games?: string }>;
+  topGoalkeepers: Array<{ id: string; name: string; saves: string; games?: string }>;
   generalRanking: GeneralRanking[];
+  playerFrequency: PlayerFrequency[];
   currentUserId: string;
 };
 
@@ -42,6 +51,7 @@ export function RankingsCard({
   topAssisters,
   topGoalkeepers,
   generalRanking,
+  playerFrequency,
   currentUserId,
 }: RankingsCardProps) {
   const [sortField, setSortField] = useState<SortField>('score');
@@ -73,6 +83,7 @@ export function RankingsCard({
       name: p.name,
       value: goalsCount,
       label: `${p.goals} gol${goalsCount !== 1 ? "s" : ""}`,
+      games: p.games ? parseInt(p.games) : undefined,
     };
   });
 
@@ -83,6 +94,7 @@ export function RankingsCard({
       name: p.name,
       value: assistsCount,
       label: `${p.assists} assistência${assistsCount !== 1 ? "s" : ""}`,
+      games: p.games ? parseInt(p.games) : undefined,
     };
   });
 
@@ -93,6 +105,7 @@ export function RankingsCard({
       name: p.name,
       value: savesCount,
       label: `${p.saves} defesa${savesCount !== 1 ? "s" : ""}`,
+      games: p.games ? parseInt(p.games) : undefined,
     };
   });
 
@@ -110,6 +123,7 @@ export function RankingsCard({
             <TableRow>
               <TableHead className="w-[60px] text-center">#</TableHead>
               <TableHead>Jogador</TableHead>
+              <TableHead className="text-center">Jogos</TableHead>
               <TableHead className="text-right">Estatística</TableHead>
             </TableRow>
           </TableHeader>
@@ -137,6 +151,9 @@ export function RankingsCard({
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    {player.games ?? '-'}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="secondary">{player.label}</Badge>
                   </TableCell>
@@ -291,8 +308,85 @@ export function RankingsCard({
     );
   };
 
+  const renderFrequency = () => {
+    if (playerFrequency.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-8">
+          Nenhum dado de frequência disponível
+        </p>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[60px] text-center">#</TableHead>
+              <TableHead>Jogador</TableHead>
+              <TableHead className="text-center">Jogos</TableHead>
+              <TableHead className="text-right">Frequência</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {playerFrequency.map((player, index) => {
+              const isCurrentUser = player.id === currentUserId;
+              const percentage = parseFloat(player.frequency_percentage);
+              const percentageColor =
+                percentage >= 80
+                  ? "text-green-600 dark:text-green-500"
+                  : percentage >= 50
+                  ? "text-yellow-600 dark:text-yellow-500"
+                  : "text-red-600 dark:text-red-500";
+
+              return (
+                <TableRow 
+                  key={player.id}
+                  className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                >
+                  <TableCell className="text-center">
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-bold text-sm">
+                      {index + 1}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell className="text-center tabular-nums">
+                    <Badge variant="outline" className="text-xs">
+                      {player.games_played}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="flex-1 max-w-[120px]">
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              percentage >= 80
+                                ? "bg-green-500"
+                                : percentage >= 50
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                            }`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className={`text-sm font-bold tabular-nums min-w-[50px] text-right ${percentageColor}`}>
+                        {player.frequency_percentage}%
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
   return (
-    <Card className="col-span-full">
+    <Card className="col-span-full bg-card/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
@@ -302,11 +396,12 @@ export function RankingsCard({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsList className="grid w-full grid-cols-5 mb-4">
             <TabsTrigger value="geral">Geral</TabsTrigger>
             <TabsTrigger value="artilheiros">Artilheiros</TabsTrigger>
             <TabsTrigger value="garcons">Garçons</TabsTrigger>
             <TabsTrigger value="goleiros">Goleiros</TabsTrigger>
+            <TabsTrigger value="frequencia">Frequência</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4">
@@ -345,6 +440,16 @@ export function RankingsCard({
               </span>
             </div>
             {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda")}
+          </TabsContent>
+
+          <TabsContent value="frequencia" className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+              <span className="text-sm text-muted-foreground">
+                Presença nos últimos 10 jogos
+              </span>
+            </div>
+            {renderFrequency()}
           </TabsContent>
         </Tabs>
       </CardContent>

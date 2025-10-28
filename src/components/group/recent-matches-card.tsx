@@ -30,7 +30,7 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
   }
 
   return (
-    <Card className="col-span-full">
+    <Card className="col-span-full bg-card/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrophyIcon className="h-5 w-5 text-orange-500" />

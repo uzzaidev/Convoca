@@ -6,16 +6,15 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
-import { FrequencyCard } from "@/components/group/frequency-card";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
 };
 
 type Stats = {
-  topScorers: Array<{ id: string; name: string; goals: string }>;
-  topAssisters: Array<{ id: string; name: string; assists: string }>;
-  topGoalkeepers: Array<{ id: string; name: string; saves: string }>;
+  topScorers: Array<{ id: string; name: string; goals: string; games: string }>;
+  topAssisters: Array<{ id: string; name: string; assists: string; games: string }>;
+  topGoalkeepers: Array<{ id: string; name: string; saves: string; games: string }>;
   recentMatches: Array<{
     id: string;
     starts_at: string;
@@ -119,36 +118,39 @@ export default async function GroupPage({ params }: RouteParams) {
     try {
       // Artilheiros
       const topScorers = await sql`
-        SELECT u.id, u.name, COUNT(*) as goals
+        SELECT u.id, u.name, COUNT(*) as goals,
+          COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.actor_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'goal'
         GROUP BY u.id, u.name
         ORDER BY goals DESC LIMIT 10
       `;
-      stats.topScorers = topScorers as Array<{ id: string; name: string; goals: string }>;
+      stats.topScorers = topScorers as Array<{ id: string; name: string; goals: string; games: string }>;
 
       // Garçons
       const topAssisters = await sql`
-        SELECT u.id, u.name, COUNT(*) as assists
+        SELECT u.id, u.name, COUNT(*) as assists,
+          COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.actor_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'assist'
         GROUP BY u.id, u.name
         ORDER BY assists DESC LIMIT 10
       `;
-      stats.topAssisters = topAssisters as Array<{ id: string; name: string; assists: string }>;
+      stats.topAssisters = topAssisters as Array<{ id: string; name: string; assists: string; games: string }>;
 
       // Goleiros
       const topGoalkeepers = await sql`
-        SELECT u.id, u.name, COUNT(*) as saves
+        SELECT u.id, u.name, COUNT(*) as saves,
+          COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.actor_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'save'
         GROUP BY u.id, u.name
         ORDER BY saves DESC LIMIT 10
       `;
-      stats.topGoalkeepers = topGoalkeepers as Array<{ id: string; name: string; saves: string }>;
+      stats.topGoalkeepers = topGoalkeepers as Array<{ id: string; name: string; saves: string; games: string }>;
 
       // Jogos recentes
       const recentMatches = await sql`
@@ -305,7 +307,7 @@ export default async function GroupPage({ params }: RouteParams) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
       <DashboardHeader userName={user.name || user.email} />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header do Grupo */}
@@ -335,16 +337,14 @@ export default async function GroupPage({ params }: RouteParams) {
             topAssisters={stats.topAssisters}
             topGoalkeepers={stats.topGoalkeepers}
             generalRanking={generalRanking}
+            playerFrequency={stats.playerFrequency}
             currentUserId={user.id}
           />
         </div>
 
-        {/* Frequência e Jogos Recentes */}
-        <div className="grid gap-8 md:grid-cols-2 mb-8">
-          <FrequencyCard playerFrequency={stats.playerFrequency} />
-          <div className="md:col-span-2">
-            <RecentMatchesCard matches={stats.recentMatches} />
-          </div>
+        {/* Jogos Recentes */}
+        <div className="mb-8">
+          <RecentMatchesCard matches={stats.recentMatches} />
         </div>
       </div>
     </div>

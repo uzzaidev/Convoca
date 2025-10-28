@@ -43,7 +43,7 @@ export function MyStatsCard({
   ];
 
   return (
-    <Card>
+    <Card className="bg-card/50">
       <CardHeader>
         <CardTitle>Minhas Estatísticas</CardTitle>
         <CardDescription>Seu desempenho neste grupo</CardDescription>

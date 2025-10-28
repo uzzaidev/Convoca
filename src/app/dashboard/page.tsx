@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { GroupsCard } from "@/components/dashboard/groups-card";
 import { UpcomingEventsCard } from "@/components/dashboard/upcoming-events-card";
+import { Plus } from "lucide-react";
 
 type Group = {
   id: string;
@@ -99,7 +100,10 @@ export default async function DashboardPage() {
             </p>
           </div>
           <Button asChild className="w-fit">
-            <Link href="/groups/new">➕ Criar Grupo</Link>
+            <Link href="/groups/new" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Criar Grupo
+            </Link>
           </Button>
         </div>
 

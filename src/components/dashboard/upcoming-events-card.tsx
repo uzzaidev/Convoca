@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { Calendar, MapPin, Users, Check, X, Clock } from "lucide-react";
 
 type Event = {
   id: string;
@@ -58,27 +59,41 @@ export function UpcomingEventsCard({ events }: UpcomingEventsCardProps) {
                                 ? "secondary"
                                 : "outline"
                             }
-                            className="flex-shrink-0"
+                            className="flex-shrink-0 flex items-center gap-1"
                           >
-                            {event.user_status === "yes"
-                              ? "✓ Confirmado"
-                              : event.user_status === "waitlist"
-                              ? "⏳ Lista de espera"
-                              : "✗ Recusado"}
+                            {event.user_status === "yes" ? (
+                              <>
+                                <Check className="h-3 w-3" />
+                                Confirmado
+                              </>
+                            ) : event.user_status === "waitlist" ? (
+                              <>
+                                <Clock className="h-3 w-3" />
+                                Lista de espera
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3" />
+                                Recusado
+                              </>
+                            )}
                           </Badge>
                         )}
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        📅 {formatDate(event.starts_at)}
+                      <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(event.starts_at)}
                       </p>
                       {event.venue_name && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          📍 {event.venue_name}
+                        <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {event.venue_name}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-muted-foreground">
-                          👥 {event.confirmed_count}/{event.max_players} confirmados
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {event.confirmed_count}/{event.max_players} confirmados
                         </span>
                         <div className="flex-1 max-w-[100px]">
                           <div className="h-1.5 bg-muted rounded-full overflow-hidden">

@@ -335,6 +335,7 @@ export default async function GroupPage({ params }: RouteParams) {
             topAssisters={stats.topAssisters}
             topGoalkeepers={stats.topGoalkeepers}
             generalRanking={generalRanking}
+            currentUserId={user.id}
           />
         </div>
 

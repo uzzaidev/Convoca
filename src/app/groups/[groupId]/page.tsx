@@ -305,7 +305,7 @@ export default async function GroupPage({ params }: RouteParams) {
             AND ea.checked_in_at IS NOT NULL
         ),
         team_goals_per_event AS (
-          -- Calculate goals scored and conceded for each team in each event
+          -- Calculate goals scored for each team in each event
           SELECT 
             t.id as team_id,
             t.event_id,
@@ -314,6 +314,19 @@ export default async function GroupPage({ params }: RouteParams) {
           LEFT JOIN event_actions ea ON ea.team_id = t.id AND ea.action_type = 'goal'
           WHERE t.event_id = ANY(${eventIds})
           GROUP BY t.id, t.event_id
+        ),
+        player_team_goals AS (
+          -- Associate each player with their team's goals scored and conceded
+          SELECT 
+            pe.user_id,
+            pe.event_id,
+            COALESCE(tg_own.goals_scored, 0) as team_goals_scored,
+            COALESCE(SUM(tg_opp.goals_scored), 0) as team_goals_conceded
+          FROM player_events pe
+          LEFT JOIN team_goals_per_event tg_own ON tg_own.team_id = pe.team_id
+          LEFT JOIN teams t_opp ON t_opp.event_id = pe.event_id AND t_opp.id != pe.team_id
+          LEFT JOIN team_goals_per_event tg_opp ON tg_opp.team_id = t_opp.id
+          GROUP BY pe.user_id, pe.event_id, tg_own.goals_scored
         ),
         player_stats AS (
           SELECT 
@@ -328,16 +341,10 @@ export default async function GroupPage({ params }: RouteParams) {
             COUNT(DISTINCT CASE WHEN pe.is_winner = true THEN pe.event_id END) as wins,
             COUNT(DISTINCT CASE WHEN pe.is_winner = false THEN pe.event_id END) as losses,
             COUNT(DISTINCT CASE WHEN pe.is_winner IS NULL AND pe.team_id IS NOT NULL THEN pe.event_id END) as draws,
-            -- Team goals
-            COALESCE(SUM(tg.goals_scored), 0) as team_goals,
-            -- Goals conceded
-            COALESCE(SUM(
-              (SELECT SUM(tg2.goals_scored) 
-               FROM team_goals_per_event tg2
-               INNER JOIN teams t2 ON t2.id = tg2.team_id
-               WHERE t2.event_id = pe.event_id AND t2.id != pe.team_id)
-            ), 0) as team_goals_conceded,
-            -- DM games
+            -- Team goals (sum across all events player participated in)
+            COALESCE(SUM(ptg.team_goals_scored), 0) as team_goals,
+            COALESCE(SUM(ptg.team_goals_conceded), 0) as team_goals_conceded,
+            -- DM games (count from all events in the group)
             COUNT(ea_dm.id) FILTER (WHERE ea_dm.status = 'dm') as dm_games
           FROM player_events pe
           LEFT JOIN event_actions ea_goals ON ea_goals.event_id = pe.event_id 
@@ -348,7 +355,8 @@ export default async function GroupPage({ params }: RouteParams) {
             AND ea_assists.action_type = 'assist'
           LEFT JOIN player_ratings pr ON pr.event_id = pe.event_id 
             AND pr.rated_user_id = pe.user_id
-          LEFT JOIN team_goals_per_event tg ON tg.team_id = pe.team_id
+          LEFT JOIN player_team_goals ptg ON ptg.user_id = pe.user_id 
+            AND ptg.event_id = pe.event_id
           LEFT JOIN event_attendance ea_dm ON ea_dm.user_id = pe.user_id 
             AND ea_dm.event_id = ANY(${eventIds})
           GROUP BY pe.user_id, pe.name

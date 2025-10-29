@@ -76,6 +76,10 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'score', label: 'Pontos', defaultVisible: true },
 ];
 
+// Constants for sticky column positioning
+const STICKY_RANK_WIDTH = 60;
+const STICKY_NAME_LEFT = STICKY_RANK_WIDTH;
+
 type SortField = ColumnKey;
 type SortDirection = 'asc' | 'desc';
 
@@ -240,6 +244,35 @@ export function RankingsCard({
     );
   };
 
+  // Helper function to format cell values
+  const formatCellValue = (col: ColumnConfig, value: number) => {
+    if (col.key === 'mvps' && value > 0) {
+      return (
+        <span className="text-yellow-600 dark:text-yellow-500 font-medium">
+          {value}
+        </span>
+      );
+    }
+    
+    if (col.key === 'goal_difference') {
+      return (
+        <span className={value > 0 ? "text-green-600 dark:text-green-500" : value < 0 ? "text-red-600 dark:text-red-500" : ""}>
+          {value > 0 ? '+' : ''}{value}
+        </span>
+      );
+    }
+    
+    if (col.key === 'score') {
+      return <span className="text-lg font-bold tabular-nums">{value}</span>;
+    }
+    
+    if (value === 0) {
+      return <span className="text-muted-foreground">0</span>;
+    }
+    
+    return value;
+  };
+
   const renderGeneralRanking = () => {
     if (generalRanking.length === 0) {
       return (
@@ -292,7 +325,7 @@ export function RankingsCard({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60px] text-center sticky left-0 bg-background z-10">#</TableHead>
-                <TableHead className="sticky left-[60px] bg-background z-10">Jogador</TableHead>
+                <TableHead className="sticky bg-background z-10" style={{ left: `${STICKY_NAME_LEFT}px` }}>Jogador</TableHead>
                 {visibleColumnsList.map((col) => (
                   <TableHead key={col.key} className={col.key === 'score' ? "text-right" : "text-center"}>
                     <Button 
@@ -331,31 +364,17 @@ export function RankingsCard({
                         {index + 1}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium sticky left-[60px] bg-inherit z-10">{player.name}</TableCell>
+                    <TableCell className="font-medium sticky bg-inherit z-10" style={{ left: `${STICKY_NAME_LEFT}px` }}>{player.name}</TableCell>
                     {visibleColumnsList.map((col) => {
                       const value = player[col.key];
                       const isScore = col.key === 'score';
-                      const isMvp = col.key === 'mvps';
-                      const isGoalDiff = col.key === 'goal_difference';
                       
                       return (
                         <TableCell 
                           key={col.key} 
                           className={isScore ? "text-right" : "text-center tabular-nums"}
                         >
-                          {isMvp && value > 0 ? (
-                            <span className="text-yellow-600 dark:text-yellow-500 font-medium">
-                              {value}
-                            </span>
-                          ) : isGoalDiff ? (
-                            <span className={value > 0 ? "text-green-600 dark:text-green-500" : value < 0 ? "text-red-600 dark:text-red-500" : ""}>
-                              {value > 0 ? '+' : ''}{value}
-                            </span>
-                          ) : isScore ? (
-                            <span className="text-lg font-bold tabular-nums">{value}</span>
-                          ) : (
-                            value === 0 && !isScore ? <span className="text-muted-foreground">0</span> : value
-                          )}
+                          {formatCellValue(col, value)}
                         </TableCell>
                       );
                     })}

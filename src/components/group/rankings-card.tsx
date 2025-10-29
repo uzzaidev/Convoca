@@ -330,6 +330,7 @@ export function RankingsCard({
               <TableHead className="text-center">Presentes</TableHead>
               <TableHead className="text-center">DM</TableHead>
               <TableHead className="text-center">Ausentes</TableHead>
+              <TableHead className="text-center">Jogos Totais</TableHead>
               <TableHead className="text-right">% Participação</TableHead>
             </TableRow>
           </TableHeader>
@@ -369,6 +370,9 @@ export function RankingsCard({
                     <Badge variant="outline" className="text-xs bg-red-50 dark:bg-red-950">
                       {player.games_absent}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums font-semibold">
+                    {player.total_games}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">

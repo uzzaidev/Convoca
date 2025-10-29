@@ -461,7 +461,9 @@ export function RankingsCard({
             <div className="flex items-center gap-2 mb-2">
               <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
               <span className="text-sm text-muted-foreground">
-                Últimos 10 jogos - % de participação calculada sobre jogos disponíveis (total - DM)
+                {playerFrequency.length > 0 && playerFrequency[0].total_games 
+                  ? `Últimos ${playerFrequency[0].total_games} jogos - % de participação calculada sobre jogos disponíveis (total - DM)`
+                  : 'Últimos 10 jogos - % de participação calculada sobre jogos disponíveis (total - DM)'}
               </span>
             </div>
             {renderFrequency()}

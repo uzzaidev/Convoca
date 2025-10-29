@@ -433,7 +433,7 @@ export default async function GroupPage({ params }: RouteParams) {
 
         {/* Jogos Recentes */}
         <div className="mb-8">
-          <RecentMatchesCard matches={stats.recentMatches} />
+          <RecentMatchesCard matches={stats.recentMatches} groupId={groupId} />
         </div>
       </div>
     </div>

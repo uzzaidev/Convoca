@@ -24,3 +24,7 @@ export function generateInviteCode(): string {
   }
   return code;
 }
+
+export function formatRating(rating: string | number): string {
+  return parseFloat(rating.toString()).toFixed(1);
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
@@ -22,9 +23,10 @@ type Match = {
 
 type RecentMatchesCardProps = {
   matches: Match[];
+  groupId: string;
 };
 
-export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
+export function RecentMatchesCard({ matches, groupId }: RecentMatchesCardProps) {
   if (matches.length === 0) {
     return null;
   }
@@ -36,14 +38,15 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
           <TrophyIcon className="h-5 w-5 text-orange-500" />
           Jogos Recentes
         </CardTitle>
-        <CardDescription>Últimos 5 jogos finalizados</CardDescription>
+        <CardDescription>Últimos 5 jogos finalizados - clique para ver detalhes</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {matches.map((match) => (
-            <div
+            <Link
               key={match.id}
-              className="p-4 border rounded-lg hover:shadow-md transition-all"
+              href={`/groups/${groupId}/events/${match.id}`}
+              className="block p-4 border rounded-lg hover:shadow-md hover:border-primary/50 transition-all cursor-pointer"
             >
               {/* Cabeçalho do jogo */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
@@ -99,7 +102,7 @@ export function RecentMatchesCard({ matches }: RecentMatchesCardProps) {
                   Informações do jogo não disponíveis
                 </p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       </CardContent>

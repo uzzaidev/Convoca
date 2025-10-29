@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatRating } from "@/lib/utils";
 import { Calendar, MapPin, Trophy, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -393,7 +393,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
                         </div>
                         <div className="text-xl font-bold">{mvp.player_name}</div>
                         <div className="text-sm text-muted-foreground">
-                          Avaliação: {parseFloat(mvp.avg_rating).toFixed(1)}/10
+                          Avaliação: {formatRating(mvp.avg_rating)}/10
                         </div>
                       </div>
                     </div>
@@ -427,7 +427,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold">
-                          {parseFloat(rating.avg_rating).toFixed(1)}
+                          {formatRating(rating.avg_rating)}
                         </span>
                         <span className="text-sm text-muted-foreground">/10</span>
                       </div>

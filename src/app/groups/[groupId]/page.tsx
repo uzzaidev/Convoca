@@ -192,7 +192,7 @@ export default async function GroupPage({ params }: RouteParams) {
           (SELECT total FROM total_count) as total_games,
           ROUND(
             COUNT(ea.id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
-            NULLIF(COUNT(ea.id) - COUNT(ea.id) FILTER (WHERE ea.status = 'dm'), 0), 
+            NULLIF((SELECT total FROM total_count) - COUNT(ea.id) FILTER (WHERE ea.status = 'dm'), 0), 
             1
           ) as frequency_percentage
         FROM users u

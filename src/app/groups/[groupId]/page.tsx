@@ -186,13 +186,13 @@ export default async function GroupPage({ params }: RouteParams) {
         SELECT 
           u.id, 
           u.name,
-          COUNT(ea.id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
-          COUNT(ea.id) FILTER (WHERE ea.status = 'dm') as games_dm,
-          COUNT(ea.id) FILTER (WHERE ea.status = 'no') as games_absent,
+          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
+          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') as games_dm,
+          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') as games_absent,
           (SELECT total FROM total_count) as total_games,
           ROUND(
-            COUNT(ea.id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
-            NULLIF((SELECT total FROM total_count) - COUNT(ea.id) FILTER (WHERE ea.status = 'dm'), 0), 
+            COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
+            NULLIF((SELECT total FROM total_count) - COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm'), 0), 
             1
           ) as frequency_percentage
         FROM users u
@@ -200,9 +200,9 @@ export default async function GroupPage({ params }: RouteParams) {
         LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id IN (SELECT id FROM recent_events)
         WHERE gm.group_id = ${groupId}
         GROUP BY u.id, u.name
-        HAVING COUNT(ea.id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
-           OR COUNT(ea.id) FILTER (WHERE ea.status = 'dm') > 0
-           OR COUNT(ea.id) FILTER (WHERE ea.status = 'no') > 0
+        HAVING COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
+           OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') > 0
+           OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') > 0
         ORDER BY games_played DESC, frequency_percentage DESC
         LIMIT 15
       `;

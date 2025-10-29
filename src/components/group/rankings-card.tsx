@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3 } from "lucide-react";
+import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type PlayerStat = {
   id: string;
@@ -35,9 +43,40 @@ type GeneralRanking = {
   assists: number;
   mvps: number;
   wins: number;
+  draws: number;
+  losses: number;
+  team_goals: number;
+  team_goals_conceded: number;
+  goal_difference: number;
+  available_matches: number;
+  dm_games: number;
 };
 
-type SortField = 'score' | 'games' | 'goals' | 'assists' | 'mvps' | 'wins';
+type ColumnKey = 'games' | 'goals' | 'assists' | 'mvps' | 'wins' | 'draws' | 'losses' | 'team_goals' | 'team_goals_conceded' | 'goal_difference' | 'available_matches' | 'dm_games' | 'score';
+
+type ColumnConfig = {
+  key: ColumnKey;
+  label: string;
+  defaultVisible: boolean;
+};
+
+const COLUMNS: ColumnConfig[] = [
+  { key: 'games', label: 'Jogos', defaultVisible: true },
+  { key: 'goals', label: 'Gols', defaultVisible: true },
+  { key: 'assists', label: 'Assist.', defaultVisible: true },
+  { key: 'wins', label: 'Vitórias', defaultVisible: true },
+  { key: 'draws', label: 'Empates', defaultVisible: false },
+  { key: 'losses', label: 'Derrotas', defaultVisible: false },
+  { key: 'team_goals', label: 'Gols da Equipe', defaultVisible: false },
+  { key: 'team_goals_conceded', label: 'Gols Sofridos', defaultVisible: false },
+  { key: 'goal_difference', label: 'Saldo de Gols', defaultVisible: false },
+  { key: 'available_matches', label: 'Partidas Disp.', defaultVisible: false },
+  { key: 'dm_games', label: 'Jogos no DM', defaultVisible: false },
+  { key: 'mvps', label: 'MVPs', defaultVisible: true },
+  { key: 'score', label: 'Pontos', defaultVisible: true },
+];
+
+type SortField = ColumnKey;
 type SortDirection = 'asc' | 'desc';
 
 type RankingsCardProps = {
@@ -59,6 +98,38 @@ export function RankingsCard({
 }: RankingsCardProps) {
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
+    // Tentar carregar do localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('rankings-visible-columns');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // Se falhar ao parsear, usar valores padrão
+        }
+      }
+    }
+    // Valores padrão
+    return COLUMNS.reduce((acc, col) => {
+      acc[col.key] = col.defaultVisible;
+      return acc;
+    }, {} as Record<ColumnKey, boolean>);
+  });
+
+  // Salvar preferências quando mudarem
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('rankings-visible-columns', JSON.stringify(visibleColumns));
+    }
+  }, [visibleColumns]);
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   // Função para alternar ordenação
   const toggleSort = (field: SortField) => {
@@ -187,126 +258,113 @@ export function RankingsCard({
         : <ArrowDown className="ml-2 h-4 w-4" />;
     };
 
+    const visibleColumnsList = COLUMNS.filter(col => visibleColumns[col.key]);
+
     return (
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px] text-center">#</TableHead>
-              <TableHead>Jogador</TableHead>
-              <TableHead className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('games')}
-                  className="h-8 w-full"
+      <div className="space-y-2">
+        {/* Menu de seleção de colunas */}
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8">
+                <MoreVertical className="h-4 w-4" />
+                <span className="ml-2 hidden sm:inline">Colunas</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
+              <DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUMNS.map((col) => (
+                <DropdownMenuCheckboxItem
+                  key={col.key}
+                  checked={visibleColumns[col.key]}
+                  onCheckedChange={() => toggleColumn(col.key)}
                 >
-                  Jogos
-                  {getSortIcon('games')}
-                </Button>
-              </TableHead>
-              <TableHead className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('goals')}
-                  className="h-8 w-full"
-                >
-                  Gols
-                  {getSortIcon('goals')}
-                </Button>
-              </TableHead>
-              <TableHead className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('assists')}
-                  className="h-8 w-full"
-                >
-                  Assist.
-                  {getSortIcon('assists')}
-                </Button>
-              </TableHead>
-              <TableHead className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('mvps')}
-                  className="h-8 w-full"
-                >
-                  MVPs
-                  {getSortIcon('mvps')}
-                </Button>
-              </TableHead>
-              <TableHead className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('wins')}
-                  className="h-8 w-full"
-                >
-                  Vitórias
-                  {getSortIcon('wins')}
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => toggleSort('score')}
-                  className="h-8 w-full justify-end"
-                >
-                  Pontos
-                  {getSortIcon('score')}
-                </Button>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedGeneralRanking.map((player, index) => {
-              const isCurrentUser = player.id === currentUserId;
-              return (
-                <TableRow 
-                  key={player.id}
-                  className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
-                >
-                  <TableCell className="text-center">
-                    <div
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                        index === 0
-                          ? "bg-yellow-500 text-yellow-950"
-                          : index === 1
-                          ? "bg-slate-300 text-slate-900"
-                          : index === 2
-                          ? "bg-orange-600 text-orange-50"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                  {col.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="rounded-lg border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px] text-center sticky left-0 bg-background z-10">#</TableHead>
+                <TableHead className="sticky left-[60px] bg-background z-10">Jogador</TableHead>
+                {visibleColumnsList.map((col) => (
+                  <TableHead key={col.key} className={col.key === 'score' ? "text-right" : "text-center"}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => toggleSort(col.key)}
+                      className="h-8 w-full"
                     >
-                      {index + 1}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{player.name}</TableCell>
-                  <TableCell className="text-center tabular-nums">{player.games}</TableCell>
-                  <TableCell className="text-center tabular-nums">{player.goals}</TableCell>
-                  <TableCell className="text-center tabular-nums">{player.assists}</TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    {player.mvps > 0 ? (
-                      <span className="text-yellow-600 dark:text-yellow-500 font-medium">
-                        {player.mvps}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">0</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums">{player.wins}</TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-lg font-bold tabular-nums">{player.score}</span>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                      {col.label}
+                      {getSortIcon(col.key)}
+                    </Button>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedGeneralRanking.map((player, index) => {
+                const isCurrentUser = player.id === currentUserId;
+                return (
+                  <TableRow 
+                    key={player.id}
+                    className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                  >
+                    <TableCell className="text-center sticky left-0 bg-inherit z-10">
+                      <div
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                          index === 0
+                            ? "bg-yellow-500 text-yellow-950"
+                            : index === 1
+                            ? "bg-slate-300 text-slate-900"
+                            : index === 2
+                            ? "bg-orange-600 text-orange-50"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium sticky left-[60px] bg-inherit z-10">{player.name}</TableCell>
+                    {visibleColumnsList.map((col) => {
+                      const value = player[col.key];
+                      const isScore = col.key === 'score';
+                      const isMvp = col.key === 'mvps';
+                      const isGoalDiff = col.key === 'goal_difference';
+                      
+                      return (
+                        <TableCell 
+                          key={col.key} 
+                          className={isScore ? "text-right" : "text-center tabular-nums"}
+                        >
+                          {isMvp && value > 0 ? (
+                            <span className="text-yellow-600 dark:text-yellow-500 font-medium">
+                              {value}
+                            </span>
+                          ) : isGoalDiff ? (
+                            <span className={value > 0 ? "text-green-600 dark:text-green-500" : value < 0 ? "text-red-600 dark:text-red-500" : ""}>
+                              {value > 0 ? '+' : ''}{value}
+                            </span>
+                          ) : isScore ? (
+                            <span className="text-lg font-bold tabular-nums">{value}</span>
+                          ) : (
+                            value === 0 && !isScore ? <span className="text-muted-foreground">0</span> : value
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   };

@@ -284,13 +284,34 @@ export default async function EventDetailPage({ params }: RouteParams) {
                               className={`w-2 h-2 rounded-full ${
                                 member.position === "gk"
                                   ? "bg-yellow-500"
-                                  : "bg-blue-500"
+                                  : member.position === "defender"
+                                  ? "bg-blue-500"
+                                  : member.position === "midfielder"
+                                  ? "bg-green-500"
+                                  : member.position === "forward"
+                                  ? "bg-red-500"
+                                  : "bg-gray-500"
                               }`}
                             />
                             <span>{member.userName}</span>
                             {member.position === "gk" && (
                               <Badge variant="outline" className="text-xs">
                                 Goleiro
+                              </Badge>
+                            )}
+                            {member.position === "defender" && (
+                              <Badge variant="outline" className="text-xs">
+                                Zagueiro
+                              </Badge>
+                            )}
+                            {member.position === "midfielder" && (
+                              <Badge variant="outline" className="text-xs">
+                                Meio-campo
+                              </Badge>
+                            )}
+                            {member.position === "forward" && (
+                              <Badge variant="outline" className="text-xs">
+                                Atacante
                               </Badge>
                             )}
                           </div>

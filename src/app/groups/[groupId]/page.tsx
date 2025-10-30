@@ -9,7 +9,7 @@ import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
-import { Settings, Plus } from "lucide-react";
+import { Settings, Plus, ChevronLeft } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -428,6 +428,16 @@ export default async function GroupPage({ params }: RouteParams) {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
       <DashboardHeader userName={user.name || user.email} />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Botão voltar */}
+        <div className="mb-6">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para o dashboard
+            </Button>
+          </Link>
+        </div>
+
         {/* Header do Grupo */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

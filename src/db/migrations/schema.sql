@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS team_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  position VARCHAR(20) DEFAULT 'line' CHECK (position IN ('gk', 'line')),
+  position VARCHAR(20) DEFAULT 'line' CHECK (position IN ('gk', 'defender', 'midfielder', 'forward', 'line')),
   starter BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(team_id, user_id)

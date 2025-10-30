@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { Calendar, MapPin, Users, Clock, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, ArrowLeft, Trophy } from "lucide-react";
 import { EventRsvpForm } from "@/components/events/event-rsvp-form";
 import { TeamDrawButton } from "@/components/events/team-draw-button";
+import { ManualTeamManager } from "@/components/events/manual-team-manager";
+import { TeamEditor } from "@/components/events/team-editor";
 import Link from "next/link";
 
 type RouteParams = {
@@ -31,6 +33,20 @@ type WaitlistPlayer = {
   image: string | null;
   role: string;
   created_at: string;
+};
+
+type Team = {
+  id: string;
+  name: string;
+  seed: number;
+  is_winner: boolean | null;
+  members: Array<{
+    userId: string;
+    userName: string;
+    userImage: string | null;
+    position: string;
+    starter: boolean;
+  }> | null;
 };
 
 export default async function EventRsvpPage({ params }: RouteParams) {
@@ -77,11 +93,31 @@ export default async function EventRsvpPage({ params }: RouteParams) {
   const membership = membershipResult[0];
   const isAdmin = membership.role === "admin";
 
-  // Check if teams have been drawn
-  const teamsResult = await sql`
-    SELECT COUNT(*) as count FROM teams WHERE event_id = ${eventId}
-  `;
-  const hasTeams = parseInt(teamsResult[0].count) > 0;
+  // Buscar times e jogadores
+  const teams = await sql`
+    SELECT
+      t.id,
+      t.name,
+      t.seed,
+      t.is_winner,
+      json_agg(
+        json_build_object(
+          'userId', u.id,
+          'userName', u.name,
+          'userImage', u.image,
+          'position', tm.position,
+          'starter', tm.starter
+        ) ORDER BY tm.position DESC, tm.starter DESC
+      ) FILTER (WHERE u.id IS NOT NULL) as members
+    FROM teams t
+    LEFT JOIN team_members tm ON t.id = tm.team_id
+    LEFT JOIN users u ON tm.user_id = u.id
+    WHERE t.event_id = ${eventId}
+    GROUP BY t.id, t.name, t.seed, t.is_winner
+    ORDER BY t.seed ASC
+  ` as unknown as Team[];
+  
+  const hasTeams = teams.length > 0;
 
   // Buscar status atual do usuário neste evento
   const userAttendanceResult = await sql`
@@ -283,17 +319,29 @@ export default async function EventRsvpPage({ params }: RouteParams) {
         {confirmedPlayers.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-green-500" />
                   Jogadores Confirmados ({confirmedPlayers.length})
                 </CardTitle>
                 {isAdmin && event.status === "scheduled" && (
-                  <TeamDrawButton
-                    eventId={eventId}
-                    confirmedCount={confirmedPlayers.length}
-                    hasTeams={hasTeams}
-                  />
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <TeamDrawButton
+                      eventId={eventId}
+                      confirmedCount={confirmedPlayers.length}
+                      hasTeams={hasTeams}
+                    />
+                    <ManualTeamManager
+                      eventId={eventId}
+                      confirmedPlayers={confirmedPlayers.map((p) => ({
+                        userId: p.id,
+                        userName: p.name,
+                        preferredPosition: p.preferred_position,
+                        secondaryPosition: p.secondary_position,
+                      }))}
+                      hasTeams={hasTeams}
+                    />
+                  </div>
                 )}
               </div>
             </CardHeader>
@@ -327,6 +375,78 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                         GK
                       </Badge>
                     )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Times sorteados */}
+        {teams.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-orange-500" />
+                  Times
+                </CardTitle>
+                {isAdmin && event.status === "scheduled" && (
+                  <TeamEditor eventId={eventId} teams={teams} />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 md:grid-cols-2">
+                {teams.map((team) => (
+                  <div key={team.id} className="space-y-3">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      {team.name}
+                      <Badge variant="secondary" className="text-xs">
+                        {team.members?.length || 0} jogadores
+                      </Badge>
+                    </h3>
+                    <div className="space-y-2">
+                      {team.members?.map((member) => (
+                        <div
+                          key={member.userId}
+                          className="flex items-center gap-2 p-2 rounded bg-muted/30"
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              member.position === "gk"
+                                ? "bg-yellow-500"
+                                : member.position === "defender"
+                                ? "bg-blue-500"
+                                : member.position === "midfielder"
+                                ? "bg-green-500"
+                                : member.position === "forward"
+                                ? "bg-red-500"
+                                : "bg-gray-500"
+                            }`}
+                          />
+                          <span className="flex-1 text-sm font-medium">
+                            {member.userName}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {member.position === "gk"
+                              ? "Goleiro"
+                              : member.position === "defender"
+                              ? "Zagueiro"
+                              : member.position === "midfielder"
+                              ? "Meio"
+                              : member.position === "forward"
+                              ? "Atacante"
+                              : "Linha"}
+                          </Badge>
+                        </div>
+                      ))}
+                      {(!team.members || team.members.length === 0) && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Nenhum jogador neste time
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

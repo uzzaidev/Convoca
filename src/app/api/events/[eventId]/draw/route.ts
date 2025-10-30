@@ -21,6 +21,7 @@ function drawTeams(players: Player[], numTeams: number = 2) {
   const defenders = players.filter((p) => p.preferred_position === "defender");
   const midfielders = players.filter((p) => p.preferred_position === "midfielder");
   const forwards = players.filter((p) => p.preferred_position === "forward");
+  const noPreference = players.filter((p) => !p.preferred_position);
   
   // Sort each position group by rating (descending)
   const sortByRating = (a: Player, b: Player) => b.base_rating - a.base_rating;
@@ -28,6 +29,7 @@ function drawTeams(players: Player[], numTeams: number = 2) {
   defenders.sort(sortByRating);
   midfielders.sort(sortByRating);
   forwards.sort(sortByRating);
+  noPreference.sort(sortByRating);
 
   // Initialize teams with total rating tracking
   const teams: { players: Player[]; totalRating: number }[] = Array.from(
@@ -54,6 +56,9 @@ function drawTeams(players: Player[], numTeams: number = 2) {
   defenders.forEach(addToBalancedTeam);
   midfielders.forEach(addToBalancedTeam);
   forwards.forEach(addToBalancedTeam);
+  
+  // Finally distribute players with no preference
+  noPreference.forEach(addToBalancedTeam);
 
   // Return just the player arrays
   return teams.map((team) => team.players);

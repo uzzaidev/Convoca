@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { Calendar, MapPin, Users, Clock, ArrowLeft } from "lucide-react";
 import { EventRsvpForm } from "@/components/events/event-rsvp-form";
+import { TeamDrawButton } from "@/components/events/team-draw-button";
 import Link from "next/link";
 
 type RouteParams = {
@@ -72,6 +73,15 @@ export default async function EventRsvpPage({ params }: RouteParams) {
   if (membershipResult.length === 0) {
     redirect("/dashboard");
   }
+
+  const membership = membershipResult[0];
+  const isAdmin = membership.role === "admin";
+
+  // Check if teams have been drawn
+  const teamsResult = await sql`
+    SELECT COUNT(*) as count FROM teams WHERE event_id = ${eventId}
+  `;
+  const hasTeams = parseInt(teamsResult[0].count) > 0;
 
   // Buscar status atual do usuário neste evento
   const userAttendanceResult = await sql`
@@ -273,10 +283,19 @@ export default async function EventRsvpPage({ params }: RouteParams) {
         {confirmedPlayers.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-500" />
-                Jogadores Confirmados ({confirmedPlayers.length})
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-green-500" />
+                  Jogadores Confirmados ({confirmedPlayers.length})
+                </CardTitle>
+                {isAdmin && event.status === "scheduled" && (
+                  <TeamDrawButton
+                    eventId={eventId}
+                    confirmedCount={confirmedPlayers.length}
+                    hasTeams={hasTeams}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2">

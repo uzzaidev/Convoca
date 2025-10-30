@@ -148,7 +148,7 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
                 max="30"
                 value={formData.maxPlayers}
                 onChange={(e) =>
-                  setFormData({ ...formData, maxPlayers: parseInt(e.target.value) })
+                  setFormData({ ...formData, maxPlayers: parseInt(e.target.value, 10) })
                 }
                 required
                 disabled={isLoading}
@@ -166,7 +166,7 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    maxGoalkeepers: parseInt(e.target.value),
+                    maxGoalkeepers: parseInt(e.target.value, 10),
                   })
                 }
                 required

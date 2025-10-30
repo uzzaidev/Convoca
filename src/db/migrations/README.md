@@ -111,6 +111,83 @@ As posições selecionadas poderão ser utilizadas futuramente para:
 
 ---
 
+# Migração 002: Correção do Constraint de Posição em team_members
+
+## Descrição
+
+Esta migração corrige o constraint da coluna `position` na tabela `team_members` para permitir as posições detalhadas (gk, defender, midfielder, forward) ao invés de apenas 'gk' e 'line'.
+
+## Problema
+
+O sorteio de times estava falhando com erro:
+```
+NeonDbError: new row for relation "team_members" violates check constraint "team_members_position_check"
+```
+
+Isso acontecia porque:
+- A tabela `event_attendance` permite posições: 'gk', 'defender', 'midfielder', 'forward'
+- A tabela `team_members` só permitia: 'gk', 'line'
+- Ao sortear times, o código tentava inserir posições como 'defender' em `team_members`, violando o constraint
+
+## Alterações no Schema
+
+### Tabela: `team_members`
+
+Atualização do constraint da coluna `position`:
+
+**Antes:**
+```sql
+position VARCHAR(20) DEFAULT 'line' CHECK (position IN ('gk', 'line'))
+```
+
+**Depois:**
+```sql
+position VARCHAR(20) DEFAULT 'line' CHECK (position IN ('gk', 'defender', 'midfielder', 'forward', 'line'))
+```
+
+## Como Aplicar
+
+### Opção 1: Via Neon Console
+
+1. Acesse o [Neon Console](https://console.neon.tech/)
+2. Selecione seu projeto
+3. Vá para SQL Editor
+4. Execute o conteúdo do arquivo `002_fix_team_members_position.sql`
+
+### Opção 2: Via CLI (psql)
+
+```bash
+psql $DATABASE_URL -f src/db/migrations/002_fix_team_members_position.sql
+```
+
+## Verificar Aplicação
+
+Para verificar se a migração foi aplicada corretamente:
+
+```sql
+SELECT con.conname, pg_get_constraintdef(con.oid)
+FROM pg_constraint con
+INNER JOIN pg_class rel ON rel.oid = con.conrelid
+WHERE rel.relname = 'team_members' 
+  AND con.conname = 'team_members_position_check';
+```
+
+O resultado deve mostrar que o constraint permite os 5 valores: 'gk', 'defender', 'midfielder', 'forward', 'line'.
+
+## Impacto
+
+- ✅ **Correção crítica**: Resolve erro que impedia o sorteio de times
+- ✅ **Compatibilidade reversa**: Mantém suporte para o valor 'line' existente
+- ✅ **Consistência**: Alinha com os valores usados em `event_attendance`
+
+## Recursos Relacionados
+
+- Endpoint: `POST /api/events/[eventId]/draw`
+- Página: `/groups/[groupId]/events/[eventId]`
+- Componente: `TeamDrawButton`
+
+---
+
 **Data**: 2025-10-30
 **Versão**: 1.0.0
 **Status**: Pronta para aplicação

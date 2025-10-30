@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/utils";
 import { Calendar, MapPin, Users, Clock, ArrowLeft } from "lucide-react";
 import { EventRsvpForm } from "@/components/events/event-rsvp-form";
 import { TeamDrawButton } from "@/components/events/team-draw-button";
+import { ManualTeamManager } from "@/components/events/manual-team-manager";
 import Link from "next/link";
 
 type RouteParams = {
@@ -289,11 +290,23 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                   Jogadores Confirmados ({confirmedPlayers.length})
                 </CardTitle>
                 {isAdmin && event.status === "scheduled" && (
-                  <TeamDrawButton
-                    eventId={eventId}
-                    confirmedCount={confirmedPlayers.length}
-                    hasTeams={hasTeams}
-                  />
+                  <div className="flex gap-2">
+                    <TeamDrawButton
+                      eventId={eventId}
+                      confirmedCount={confirmedPlayers.length}
+                      hasTeams={hasTeams}
+                    />
+                    <ManualTeamManager
+                      eventId={eventId}
+                      confirmedPlayers={confirmedPlayers.map((p) => ({
+                        userId: p.id,
+                        userName: p.name,
+                        preferredPosition: p.preferred_position,
+                        secondaryPosition: p.secondary_position,
+                      }))}
+                      hasTeams={hasTeams}
+                    />
+                  </div>
                 )}
               </div>
             </CardHeader>

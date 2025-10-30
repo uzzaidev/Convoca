@@ -19,6 +19,8 @@ export const rsvpSchema = z.object({
   eventId: z.string().uuid(),
   status: z.enum(["yes", "no", "waitlist"]),
   role: z.enum(["gk", "line"]).default("line"),
+  preferredPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
+  secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
 });
 
 export const eventActionSchema = z.object({

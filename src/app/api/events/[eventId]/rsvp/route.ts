@@ -25,7 +25,7 @@ export async function POST(
       );
     }
 
-    const { status, role } = validation.data;
+    const { status, role, preferredPosition, secondaryPosition } = validation.data;
 
     // Get event details
     const [event] = await sql`
@@ -74,12 +74,14 @@ export async function POST(
 
     // Upsert attendance
     const [attendance] = await sql`
-      INSERT INTO event_attendance (event_id, user_id, role, status)
-      VALUES (${eventId}, ${user.id}, ${role}, ${finalStatus})
+      INSERT INTO event_attendance (event_id, user_id, role, status, preferred_position, secondary_position)
+      VALUES (${eventId}, ${user.id}, ${role}, ${finalStatus}, ${preferredPosition || null}, ${secondaryPosition || null})
       ON CONFLICT (event_id, user_id)
       DO UPDATE SET
         role = ${role},
         status = ${finalStatus},
+        preferred_position = ${preferredPosition || null},
+        secondary_position = ${secondaryPosition || null},
         updated_at = NOW()
       RETURNING *
     `;

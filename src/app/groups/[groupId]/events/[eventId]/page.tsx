@@ -134,7 +134,14 @@ export default async function EventDetailPage({ params }: RouteParams) {
       u.image as player_image,
       AVG(pr.score)::numeric(3,2) as avg_rating,
       COUNT(pr.id) as rating_count,
-      array_agg(DISTINCT unnest(pr.tags)) FILTER (WHERE pr.tags IS NOT NULL) as all_tags
+      (
+        SELECT array_agg(DISTINCT tag)
+        FROM player_ratings pr2
+        CROSS JOIN LATERAL unnest(pr2.tags) AS tag
+        WHERE pr2.event_id = ${eventId} 
+          AND pr2.rated_user_id = pr.rated_user_id
+          AND pr2.tags IS NOT NULL
+      ) as all_tags
     FROM player_ratings pr
     INNER JOIN users u ON pr.rated_user_id = u.id
     WHERE pr.event_id = ${eventId}

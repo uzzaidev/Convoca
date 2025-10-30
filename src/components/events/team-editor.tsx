@@ -25,6 +25,8 @@ type TeamMember = {
   starter: boolean;
 };
 
+type TeamMemberWithTeamId = TeamMember & { teamId?: string };
+
 type Team = {
   id: string;
   name: string;
@@ -92,9 +94,7 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
         const newTeams = teams.map((team) => {
           if (!team.members) return team;
 
-          type MemberWithTeamId = TeamMember & { teamId?: string };
-
-          const members: MemberWithTeamId[] = team.members.map((member) => {
+          const members: TeamMemberWithTeamId[] = team.members.map((member) => {
             // Swap player 1 to team 2
             if (
               member.userId === selectedPlayer.userId &&
@@ -128,14 +128,14 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
             selectedPlayer.teamId === team.id &&
             members.find((m) => m.userId === userId);
 
-          const finalMembers = [
+          // Clean up the temporary teamId property and return clean TeamMember objects
+          const finalMembers: TeamMember[] = [
             ...updatedMembers,
             ...(player1MovedHere ? [player1MovedHere] : []),
             ...(player2MovedHere ? [player2MovedHere] : []),
           ].map((m) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { teamId, ...member } = m as MemberWithTeamId;
-            return member as TeamMember;
+            const { userId, userName, userImage, position, starter } = m;
+            return { userId, userName, userImage, position, starter };
           });
 
           return {
@@ -151,9 +151,6 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
           title: "Jogadores trocados!",
           description: `${selectedPlayer.userName} ↔ ${userName}`,
         });
-
-        // Refresh the page to get the updated data
-        router.refresh();
       } catch (error) {
         toast({
           title: "Erro",

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Goal, Shield, Zap, TrendingUp } from "lucide-react";
 
 type Position = "gk" | "defender" | "midfielder" | "forward";
 
@@ -20,10 +20,10 @@ type EventRsvpFormProps = {
 };
 
 const POSITIONS = [
-  { value: "gk", label: "Goleiro", icon: "🧤" },
-  { value: "defender", label: "Zagueiro", icon: "🛡️" },
-  { value: "midfielder", label: "Meio-campo", icon: "⚡" },
-  { value: "forward", label: "Atacante", icon: "⚽" },
+  { value: "gk", label: "Goleiro", Icon: Goal },
+  { value: "defender", label: "Zagueiro", Icon: Shield },
+  { value: "midfielder", label: "Meio-campo", Icon: Zap },
+  { value: "forward", label: "Atacante", Icon: TrendingUp },
 ] as const;
 
 export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: EventRsvpFormProps) {
@@ -105,22 +105,27 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
       <div className="space-y-3">
         <Label className="text-base">1ª Posição Preferencial *</Label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {POSITIONS.map((pos) => (
-            <button
-              key={pos.value}
-              type="button"
-              disabled={isEventFinished || isSubmitting}
-              onClick={() => setPreferredPosition(pos.value)}
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
-                preferredPosition === pos.value
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-muted hover:border-primary/50"
-              } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              <div className="text-3xl mb-2">{pos.icon}</div>
-              <div className="text-sm font-medium">{pos.label}</div>
-            </button>
-          ))}
+          {POSITIONS.map((pos) => {
+            const IconComponent = pos.Icon;
+            return (
+              <button
+                key={pos.value}
+                type="button"
+                disabled={isEventFinished || isSubmitting}
+                onClick={() => setPreferredPosition(pos.value)}
+                className={`p-4 rounded-lg border-2 transition-all text-center ${
+                  preferredPosition === pos.value
+                    ? "border-primary bg-primary/10 shadow-md"
+                    : "border-muted hover:border-primary/50"
+                } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                <div className="flex justify-center mb-2">
+                  <IconComponent className="h-8 w-8" />
+                </div>
+                <div className="text-sm font-medium">{pos.label}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -128,24 +133,29 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
       <div className="space-y-3">
         <Label className="text-base">2ª Posição (Opcional)</Label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {POSITIONS.map((pos) => (
-            <button
-              key={pos.value}
-              type="button"
-              disabled={isEventFinished || isSubmitting}
-              onClick={() =>
-                setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
-              }
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
-                secondaryPosition === pos.value
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-muted hover:border-primary/50"
-              } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              <div className="text-3xl mb-2">{pos.icon}</div>
-              <div className="text-sm font-medium">{pos.label}</div>
-            </button>
-          ))}
+          {POSITIONS.map((pos) => {
+            const IconComponent = pos.Icon;
+            return (
+              <button
+                key={pos.value}
+                type="button"
+                disabled={isEventFinished || isSubmitting}
+                onClick={() =>
+                  setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
+                }
+                className={`p-4 rounded-lg border-2 transition-all text-center ${
+                  secondaryPosition === pos.value
+                    ? "border-primary bg-primary/10 shadow-md"
+                    : "border-muted hover:border-primary/50"
+                } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                <div className="flex justify-center mb-2">
+                  <IconComponent className="h-8 w-8" />
+                </div>
+                <div className="text-sm font-medium">{pos.label}</div>
+              </button>
+            );
+          })}
         </div>
         {secondaryPosition && (
           <p className="text-xs text-muted-foreground">

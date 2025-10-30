@@ -1,11 +1,14 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
+import { Settings, Plus } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -408,9 +411,27 @@ export default async function GroupPage({ params }: RouteParams) {
                 <p className="text-muted-foreground mt-2">{group.description}</p>
               )}
             </div>
-            <Badge variant={group.user_role === "admin" ? "default" : "secondary"} className="w-fit">
-              {group.user_role === "admin" ? "Admin" : "Membro"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={group.user_role === "admin" ? "default" : "secondary"} className="w-fit">
+                {group.user_role === "admin" ? "Admin" : "Membro"}
+              </Badge>
+              {group.user_role === "admin" && (
+                <>
+                  <Button asChild size="sm">
+                    <Link href={`/groups/${groupId}/events/new`}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Evento
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/groups/${groupId}/settings`}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configurações
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

@@ -99,12 +99,19 @@ export default async function DashboardPage() {
               Bem-vindo, {user.name || user.email}
             </p>
           </div>
-          <Button asChild className="w-fit">
-            <Link href="/groups/new" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Criar Grupo
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button asChild variant="outline" className="w-fit">
+              <Link href="/groups/join" className="flex items-center gap-2">
+                Entrar em Grupo
+              </Link>
+            </Button>
+            <Button asChild className="w-fit">
+              <Link href="/groups/new" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Criar Grupo
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">

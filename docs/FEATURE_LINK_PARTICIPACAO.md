@@ -132,7 +132,7 @@ export const rsvpSchema = z.object({
 
 ### Fase 2: Campo Visual Interativo
 
-Ver documentação completa em: [`docs/CAMPO_VISUAL_FUTURO.md`](../docs/CAMPO_VISUAL_FUTURO.md)
+Ver documentação completa em: [`CAMPO_VISUAL_FUTURO.md`](./CAMPO_VISUAL_FUTURO.md)
 
 **Resumo**:
 - Campo de futebol 7 em SVG/Canvas

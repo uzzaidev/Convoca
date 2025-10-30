@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
@@ -49,6 +49,13 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
     teamId: string;
   } | null>(null);
   const [isSwapping, setIsSwapping] = useState(false);
+
+  // Update teams when the prop changes (after re-draw)
+  React.useEffect(() => {
+    setTeams(initialTeams);
+    // Reset selection when teams change
+    setSelectedPlayer(null);
+  }, [initialTeams]);
 
   const handlePlayerClick = async (
     userId: string,

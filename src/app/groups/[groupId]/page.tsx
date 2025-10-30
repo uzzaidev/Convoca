@@ -8,10 +8,20 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
+import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
 import { Settings, Plus } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
+};
+
+type UpcomingEvent = {
+  id: string;
+  starts_at: string;
+  venue_name: string | null;
+  status: string;
+  confirmed_count: number;
+  max_players: number;
 };
 
 type Stats = {
@@ -94,6 +104,22 @@ export default async function GroupPage({ params }: RouteParams) {
   }
 
   const group = groupResult[0];
+
+  // Buscar próximos eventos do grupo
+  const upcomingEvents = await sql`
+    SELECT
+      e.id,
+      e.starts_at,
+      e.status,
+      e.max_players,
+      v.name as venue_name,
+      (SELECT COUNT(*) FROM event_attendance WHERE event_id = e.id AND status = 'yes') as confirmed_count
+    FROM events e
+    LEFT JOIN venues v ON e.venue_id = v.id
+    WHERE e.group_id = ${groupId} AND e.status IN ('scheduled', 'live')
+    ORDER BY e.starts_at ASC
+    LIMIT 5
+  ` as unknown as UpcomingEvent[];
 
   // Buscar eventos finalizados do grupo
   const events = await sql`
@@ -433,6 +459,11 @@ export default async function GroupPage({ params }: RouteParams) {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Próximas Partidas */}
+        <div className="mb-8">
+          <UpcomingEventsCard events={upcomingEvents} />
         </div>
 
         {/* Minhas Estatísticas */}

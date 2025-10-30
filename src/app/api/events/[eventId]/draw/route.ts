@@ -10,30 +10,58 @@ type Player = {
   role: string;
   name: string;
   base_rating: number;
+  preferred_position: string | null;
+  secondary_position: string | null;
 };
 
-// Simple team draw algorithm (v1 - random with goalkeeper separation)
+// Balanced team draw algorithm that considers positions and ratings
 function drawTeams(players: Player[], numTeams: number = 2) {
-  const goalkeepers = players.filter((p) => p.role === "gk");
-  const linePlayers = players.filter((p) => p.role === "line");
+  // Separate players by preferred position
+  const goalkeepers = players.filter((p) => p.preferred_position === "gk");
+  const defenders = players.filter((p) => p.preferred_position === "defender");
+  const midfielders = players.filter((p) => p.preferred_position === "midfielder");
+  const forwards = players.filter((p) => p.preferred_position === "forward");
+  const noPreference = players.filter((p) => !p.preferred_position);
+  
+  // Sort each position group by rating (descending)
+  const sortByRating = (a: Player, b: Player) => b.base_rating - a.base_rating;
+  goalkeepers.sort(sortByRating);
+  defenders.sort(sortByRating);
+  midfielders.sort(sortByRating);
+  forwards.sort(sortByRating);
+  noPreference.sort(sortByRating);
 
-  // Shuffle arrays
-  const shuffledGks = goalkeepers.sort(() => Math.random() - 0.5);
-  const shuffledLine = linePlayers.sort(() => Math.random() - 0.5);
+  // Initialize teams with total rating tracking
+  const teams: { players: Player[]; totalRating: number }[] = Array.from(
+    { length: numTeams },
+    () => ({ players: [], totalRating: 0 })
+  );
 
-  const teams: Player[][] = Array.from({ length: numTeams }, () => []);
+  // Helper to add player to team with lowest total rating
+  const addToBalancedTeam = (player: Player) => {
+    // Find team with lowest total rating
+    const targetTeam = teams.reduce((min, team, idx) => {
+      return team.totalRating < teams[min].totalRating ? idx : min;
+    }, 0);
+    
+    teams[targetTeam].players.push(player);
+    teams[targetTeam].totalRating += player.base_rating;
+  };
 
-  // Distribute goalkeepers first
-  shuffledGks.forEach((gk, i) => {
-    teams[i % numTeams].push(gk);
-  });
+  // Distribute players position by position to ensure balance
+  // Distribute goalkeepers first (most important position)
+  goalkeepers.forEach(addToBalancedTeam);
+  
+  // Then defenders, midfielders, and forwards
+  defenders.forEach(addToBalancedTeam);
+  midfielders.forEach(addToBalancedTeam);
+  forwards.forEach(addToBalancedTeam);
+  
+  // Finally distribute players with no preference
+  noPreference.forEach(addToBalancedTeam);
 
-  // Distribute line players
-  shuffledLine.forEach((player, i) => {
-    teams[i % numTeams].push(player);
-  });
-
-  return teams;
+  // Return just the player arrays
+  return teams.map((team) => team.players);
 }
 
 // POST /api/events/:eventId/draw - Draw teams for event
@@ -75,6 +103,8 @@ export async function POST(
       SELECT
         ea.user_id,
         ea.role,
+        ea.preferred_position,
+        ea.secondary_position,
         u.name,
         gm.base_rating
       FROM event_attendance ea
@@ -114,7 +144,7 @@ export async function POST(
       for (const player of drawnTeams[i]) {
         await sql`
           INSERT INTO team_members (team_id, user_id, position, starter)
-          VALUES (${team.id}, ${player.user_id}, ${player.role}, true)
+          VALUES (${team.id}, ${player.user_id}, ${player.preferred_position || player.role}, true)
         `;
       }
 

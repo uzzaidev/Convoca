@@ -64,10 +64,11 @@ export function TeamDrawButton({ eventId, confirmedCount, hasTeams }: TeamDrawBu
 
   if (confirmedCount < 4) {
     return (
-      <Button disabled variant="outline" size="sm">
+      <Button disabled variant="outline" size="sm" className="w-full sm:w-auto">
         <Shuffle className="h-4 w-4 mr-2" />
-        Sortear Times
-        <span className="ml-2 text-xs text-muted-foreground">(mín. 4 jogadores)</span>
+        <span className="hidden sm:inline">Sortear Times</span>
+        <span className="sm:hidden">Sortear</span>
+        <span className="ml-2 text-xs text-muted-foreground">(mín. 4)</span>
       </Button>
     );
   }
@@ -75,13 +76,18 @@ export function TeamDrawButton({ eventId, confirmedCount, hasTeams }: TeamDrawBu
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isDrawing}>
+        <Button variant="outline" size="sm" disabled={isDrawing} className="w-full sm:w-auto">
           {isDrawing ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <Shuffle className="h-4 w-4 mr-2" />
           )}
-          {hasTeams ? "Sortear Novamente" : "Sortear Times"}
+          <span className="hidden sm:inline">
+            {hasTeams ? "Sortear Novamente" : "Sortear Times"}
+          </span>
+          <span className="sm:hidden">
+            {hasTeams ? "Sortear" : "Sortear"}
+          </span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

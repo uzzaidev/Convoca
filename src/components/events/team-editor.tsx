@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
@@ -41,7 +40,6 @@ type TeamEditorProps = {
 };
 
 export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
-  const router = useRouter();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>(initialTeams);
@@ -197,7 +195,7 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto">
           <ArrowLeftRight className="h-4 w-4 mr-2" />
           Editar Times
         </Button>

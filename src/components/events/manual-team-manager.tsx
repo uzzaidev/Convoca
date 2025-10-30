@@ -222,9 +222,14 @@ export function ManualTeamManager({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" size="sm">
+        <Button variant="default" size="sm" className="w-full sm:w-auto">
           <Users className="h-4 w-4 mr-2" />
-          {hasTeams ? "Editar Times Manualmente" : "Criar Times Manualmente"}
+          <span className="hidden sm:inline">
+            {hasTeams ? "Editar Times Manualmente" : "Criar Times Manualmente"}
+          </span>
+          <span className="sm:hidden">
+            {hasTeams ? "Editar" : "Criar"}
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

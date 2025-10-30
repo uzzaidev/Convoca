@@ -9,6 +9,7 @@ import { Calendar, MapPin, Trophy, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
+import { TeamEditor } from "@/components/events/team-editor";
 
 type RouteParams = {
   params: Promise<{ groupId: string; eventId: string }>;
@@ -84,6 +85,9 @@ export default async function EventDetailPage({ params }: RouteParams) {
   if (membershipResult.length === 0) {
     redirect("/dashboard");
   }
+
+  const membership = membershipResult[0];
+  const isAdmin = membership.role === "admin";
 
   // Buscar times e jogadores
   const teams = await sql`
@@ -259,10 +263,15 @@ export default async function EventDetailPage({ params }: RouteParams) {
           {teams.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-blue-500" />
-                  Times
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-500" />
+                    Times
+                  </CardTitle>
+                  {isAdmin && event.status === "scheduled" && (
+                    <TeamEditor eventId={eventId} teams={teams} />
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">

@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS event_attendance (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role VARCHAR(20) DEFAULT 'line' CHECK (role IN ('gk', 'line')),
   status VARCHAR(20) DEFAULT 'no' CHECK (status IN ('yes', 'no', 'waitlist', 'dm')),
+  preferred_position VARCHAR(20) CHECK (preferred_position IN ('gk', 'defender', 'midfielder', 'forward')),
+  secondary_position VARCHAR(20) CHECK (secondary_position IN ('gk', 'defender', 'midfielder', 'forward')),
   checked_in_at TIMESTAMP,
   order_of_arrival INTEGER,
   created_at TIMESTAMP DEFAULT NOW(),

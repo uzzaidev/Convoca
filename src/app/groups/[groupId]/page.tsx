@@ -8,7 +8,7 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
-import { Settings } from "lucide-react";
+import { Settings, Plus } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -416,12 +416,20 @@ export default async function GroupPage({ params }: RouteParams) {
                 {group.user_role === "admin" ? "Admin" : "Membro"}
               </Badge>
               {group.user_role === "admin" && (
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/groups/${groupId}/settings`}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configurações
-                  </Link>
-                </Button>
+                <>
+                  <Button asChild size="sm">
+                    <Link href={`/groups/${groupId}/events/new`}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Evento
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/groups/${groupId}/settings`}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configurações
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>

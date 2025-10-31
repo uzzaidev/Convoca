@@ -13,6 +13,45 @@ const adminRsvpSchema = z.object({
   secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
 });
 
+// Helper function to promote first person from waitlist
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function promoteFromWaitlist(eventId: string, event: any) {
+  const [firstInWaitlist] = await sql`
+    SELECT * FROM event_attendance
+    WHERE event_id = ${eventId} AND status = 'waitlist'
+    ORDER BY created_at ASC
+    LIMIT 1
+  `;
+
+  if (!firstInWaitlist) return;
+
+  const [counts] = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
+      COUNT(*) FILTER (WHERE status = 'yes' AND role = 'line') as line_count
+    FROM event_attendance
+    WHERE event_id = ${eventId}
+  `;
+
+  const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
+  const gkCount = parseInt(counts.gk_count);
+
+  let canConfirm = false;
+  if (firstInWaitlist.role === "gk" && gkCount < event.max_goalkeepers) {
+    canConfirm = true;
+  } else if (totalPlayers < event.max_players) {
+    canConfirm = true;
+  }
+
+  if (canConfirm) {
+    await sql`
+      UPDATE event_attendance
+      SET status = 'yes', updated_at = NOW()
+      WHERE id = ${firstInWaitlist.id}
+    `;
+  }
+}
+
 // POST /api/events/:eventId/admin-rsvp - Admin confirms/unconfirms a player
 export async function POST(
   request: NextRequest,
@@ -77,40 +116,7 @@ export async function POST(
       `;
 
       // Check waitlist and promote if needed
-      const [firstInWaitlist] = await sql`
-        SELECT * FROM event_attendance
-        WHERE event_id = ${eventId} AND status = 'waitlist'
-        ORDER BY created_at ASC
-        LIMIT 1
-      `;
-
-      if (firstInWaitlist) {
-        const [counts] = await sql`
-          SELECT
-            COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
-            COUNT(*) FILTER (WHERE status = 'yes' AND role = 'line') as line_count
-          FROM event_attendance
-          WHERE event_id = ${eventId}
-        `;
-
-        const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
-        const gkCount = parseInt(counts.gk_count);
-
-        let canConfirm = false;
-        if (firstInWaitlist.role === "gk" && gkCount < event.max_goalkeepers) {
-          canConfirm = true;
-        } else if (totalPlayers < event.max_players) {
-          canConfirm = true;
-        }
-
-        if (canConfirm) {
-          await sql`
-            UPDATE event_attendance
-            SET status = 'yes', updated_at = NOW()
-            WHERE id = ${firstInWaitlist.id}
-          `;
-        }
-      }
+      await promoteFromWaitlist(eventId, event);
 
       logger.info(
         { eventId, userId, adminId: admin.id },

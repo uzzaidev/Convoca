@@ -11,6 +11,7 @@ import { EventRsvpForm } from "@/components/events/event-rsvp-form";
 import { TeamDrawButton } from "@/components/events/team-draw-button";
 import { ManualTeamManager } from "@/components/events/manual-team-manager";
 import { TeamEditor } from "@/components/events/team-editor";
+import { AdminPlayerManager } from "@/components/events/admin-player-manager";
 import Link from "next/link";
 
 type RouteParams = {
@@ -33,6 +34,13 @@ type WaitlistPlayer = {
   image: string | null;
   role: string;
   created_at: string;
+};
+
+type GroupMember = {
+  user_id: string;
+  user_name: string;
+  user_image: string | null;
+  is_confirmed: boolean;
 };
 
 type Team = {
@@ -155,6 +163,20 @@ export default async function EventRsvpPage({ params }: RouteParams) {
     WHERE ea.event_id = ${eventId} AND ea.status = 'waitlist'
     ORDER BY ea.created_at ASC
   ` as unknown as WaitlistPlayer[];
+
+  // Buscar membros do grupo para o admin gerenciar confirmações
+  const groupMembers: GroupMember[] = isAdmin ? await sql`
+    SELECT
+      u.id as user_id,
+      u.name as user_name,
+      u.image as user_image,
+      CASE WHEN ea.status = 'yes' THEN true ELSE false END as is_confirmed
+    FROM group_members gm
+    INNER JOIN users u ON gm.user_id = u.id
+    LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id = ${eventId}
+    WHERE gm.group_id = ${event.group_id}
+    ORDER BY u.name ASC
+  ` as unknown as GroupMember[] : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
@@ -314,6 +336,29 @@ export default async function EventRsvpPage({ params }: RouteParams) {
             />
           </CardContent>
         </Card>
+
+        {/* Gerenciamento de jogadores (Admin) */}
+        {isAdmin && event.status === "scheduled" && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Gerenciar Jogadores (Admin)</CardTitle>
+              <CardDescription>
+                Confirme ou desconfirme jogadores manualmente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminPlayerManager
+                eventId={eventId}
+                groupMembers={groupMembers.map((m) => ({
+                  userId: m.user_id,
+                  userName: m.user_name,
+                  userImage: m.user_image,
+                  isConfirmed: m.is_confirmed,
+                }))}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Lista de jogadores confirmados */}
         {confirmedPlayers.length > 0 && (

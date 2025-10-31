@@ -143,13 +143,13 @@ export async function POST(
 
     const role = preferredPosition === "gk" ? "gk" : "line";
 
-    // Count current confirmations
+    // Count current confirmations (excluding the user being confirmed to avoid double-counting)
     const [counts] = await sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
         COUNT(*) FILTER (WHERE status = 'yes' AND role = 'line') as line_count
       FROM event_attendance
-      WHERE event_id = ${eventId}
+      WHERE event_id = ${eventId} AND user_id != ${userId}
     `;
 
     let finalStatus = "yes";

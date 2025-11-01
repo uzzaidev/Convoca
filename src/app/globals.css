@@ -67,3 +67,72 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Responsividade Global - Zoom e Telas Grandes */
+@layer utilities {
+  /* Previne overflow horizontal em qualquer zoom */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Melhor responsividade para containers */
+  .container-responsive {
+    width: 100%;
+    max-width: 100vw;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Botões responsivos que ficam sempre visíveis */
+  .btn-responsive {
+    min-height: 44px; /* Tamanho mínimo para toque */
+    padding: 0.75rem 1rem;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    white-space: nowrap;
+  }
+
+  /* Textos que se adaptam ao zoom */
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+    line-height: 1.5;
+  }
+
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+    line-height: 1.4;
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1.125rem, 3vw, 1.25rem);
+    line-height: 1.4;
+  }
+
+  /* Containers com scroll interno quando necessário */
+  .scroll-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Modal overlay melhorado */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Animações suaves para melhor UX */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

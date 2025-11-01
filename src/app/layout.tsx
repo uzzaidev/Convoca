@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className="font-sans">
+      <body className="font-sans min-h-screen overflow-x-hidden">
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
       </body>

@@ -12,9 +12,9 @@ type Position = "gk" | "defender" | "midfielder" | "forward";
 type EventRsvpFormProps = {
   eventId: string;
   currentAttendance: {
-    preferred_position?: string;
-    secondary_position?: string;
-    status?: string;
+    preferred_position: string | null;
+    secondary_position: string | null;
+    status: string;
   } | null;
   eventStatus: string;
 };

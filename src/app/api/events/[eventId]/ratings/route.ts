@@ -36,23 +36,16 @@ export async function GET(
       );
     }
 
-    // Get average ratings per player
-    const ratings = await sql`
+    // Get user's individual ratings for this event
+    const userRatings = await sql`
       SELECT
-        pr.rated_user_id,
-        u.name as player_name,
-        u.image as player_image,
-        AVG(pr.score)::numeric(3,2) as avg_rating,
-        COUNT(pr.id) as rating_count,
-        array_agg(DISTINCT unnest(pr.tags)) FILTER (WHERE pr.tags IS NOT NULL) as all_tags
-      FROM player_ratings pr
-      INNER JOIN users u ON pr.rated_user_id = u.id
-      WHERE pr.event_id = ${eventId}
-      GROUP BY pr.rated_user_id, u.name, u.image
-      ORDER BY avg_rating DESC
+        rated_user_id as player_id,
+        score as rating
+      FROM player_ratings
+      WHERE event_id = ${eventId} AND rater_user_id = ${user.id}
     `;
 
-    return NextResponse.json({ ratings });
+    return NextResponse.json({ ratings: userRatings });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

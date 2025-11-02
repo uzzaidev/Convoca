@@ -72,7 +72,15 @@ export async function POST(
     const user = await requireAuth();
 
     const body = await request.json();
-    const validation = eventActionSchema.safeParse({ ...body, eventId });
+
+    // Use current user as actor
+    const actionData = {
+      ...body,
+      eventId,
+      actorUserId: user.id, // Always use logged-in user as actor
+    };
+
+    const validation = eventActionSchema.safeParse(actionData);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -139,6 +147,78 @@ export async function POST(
     logger.error(error, "Error creating event action");
     return NextResponse.json(
       { error: "Erro ao criar ação" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/events/:eventId/actions - Delete event action (admin only)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
+  try {
+    const { eventId } = await params;
+    const user = await requireAuth();
+
+    const body = await request.json();
+    const { actionId } = body;
+
+    if (!actionId) {
+      return NextResponse.json(
+        { error: "actionId é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    const [event] = await sql`
+      SELECT * FROM events WHERE id = ${eventId}
+    `;
+
+    if (!event) {
+      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
+    }
+
+    // Check if user is admin
+    const [membership] = await sql`
+      SELECT role FROM group_members
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
+    `;
+
+    if (!membership || membership.role !== "admin") {
+      return NextResponse.json(
+        { error: "Apenas admins podem deletar ações" },
+        { status: 403 }
+      );
+    }
+
+    // Delete the action
+    const result = await sql`
+      DELETE FROM event_actions
+      WHERE id = ${actionId} AND event_id = ${eventId}
+      RETURNING *
+    `;
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: "Ação não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    logger.info(
+      { eventId, actionId, userId: user.id },
+      "Event action deleted"
+    );
+
+    return NextResponse.json({ message: "Ação deletada com sucesso" });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+    logger.error(error, "Error deleting event action");
+    return NextResponse.json(
+      { error: "Erro ao deletar ação" },
       { status: 500 }
     );
   }

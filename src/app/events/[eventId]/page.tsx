@@ -2,15 +2,13 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { Calendar, MapPin, Users, Clock, ArrowLeft, Trophy } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
 import { EventRsvpForm } from "@/components/events/event-rsvp-form";
-import { TeamDrawButton } from "@/components/events/team-draw-button";
-import { ManualTeamManager } from "@/components/events/manual-team-manager";
-import { TeamEditor } from "@/components/events/team-editor";
+import { EventTabs } from "@/components/events/event-tabs";
 import { AdminPlayerManager } from "@/components/events/admin-player-manager";
 import Link from "next/link";
 
@@ -56,6 +54,12 @@ type Team = {
     starter: boolean;
   }> | null;
 };
+
+type UserAttendance = {
+  status: string;
+  preferred_position: string | null;
+  secondary_position: string | null;
+} | null;
 
 export default async function EventRsvpPage({ params }: RouteParams) {
   const user = await getCurrentUser();
@@ -129,11 +133,13 @@ export default async function EventRsvpPage({ params }: RouteParams) {
 
   // Buscar status atual do usuário neste evento
   const userAttendanceResult = await sql`
-    SELECT * FROM event_attendance
+    SELECT status, preferred_position, secondary_position FROM event_attendance
     WHERE event_id = ${eventId} AND user_id = ${user.id}
   `;
 
-  const userAttendance = userAttendanceResult.length > 0 ? userAttendanceResult[0] : null;
+  const userAttendance: UserAttendance = userAttendanceResult.length > 0
+    ? userAttendanceResult[0] as { status: string; preferred_position: string | null; secondary_position: string | null; }
+    : null;
 
   // Buscar lista de confirmados
   const confirmedPlayers = await sql`
@@ -181,7 +187,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Botão voltar */}
         <div className="mb-6">
           <Link href="/dashboard">
@@ -191,14 +197,14 @@ export default async function EventRsvpPage({ params }: RouteParams) {
             </Button>
           </Link>
         </div>
-        
+
         {/* Cabeçalho do evento */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Calendar className="h-4 w-4" />
             {formatDate(event.starts_at)}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h1 className="text-3xl font-bold mb-1">{event.group_name}</h1>
               {event.venue_name && (
@@ -216,6 +222,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                   ? "destructive"
                   : "secondary"
               }
+              className="w-fit"
             >
               {event.status === "finished"
                 ? "Finalizado"
@@ -224,309 +231,49 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                 : "Agendado"}
             </Badge>
           </div>
-        </div>
 
-        {/* Informações e status */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="h-5 w-5 text-blue-500" />
-                Participantes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Confirmados</span>
-                  <span className="font-bold text-lg">
-                    {event.confirmed_count}/{event.max_players}
-                  </span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${
-                      event.confirmed_count >= event.max_players
-                        ? "bg-green-500"
-                        : event.confirmed_count >= event.max_players * 0.7
-                        ? "bg-yellow-500"
-                        : "bg-blue-500"
-                    }`}
-                    style={{
-                      width: `${Math.min(
-                        (event.confirmed_count / event.max_players) * 100,
-                        100
-                      )}%`,
-                    }}
-                  />
-                </div>
-                {event.waitlist_enabled && event.waitlist_count > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{event.waitlist_count} na lista de espera</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Seu Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userAttendance ? (
-                <div className="space-y-2">
-                  <Badge
-                    variant={
-                      userAttendance.status === "yes"
-                        ? "default"
-                        : userAttendance.status === "waitlist"
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className="text-base px-4 py-2"
-                  >
-                    {userAttendance.status === "yes"
-                      ? "✓ Confirmado"
-                      : userAttendance.status === "waitlist"
-                      ? "⏳ Lista de espera"
-                      : "✗ Não confirmado"}
-                  </Badge>
-                  {userAttendance.preferred_position && (
-                    <div className="text-sm text-muted-foreground mt-3">
-                      <p className="font-medium">Posições escolhidas:</p>
-                      <p className="capitalize">
-                        1ª: {userAttendance.preferred_position === "gk" ? "Goleiro" : 
-                             userAttendance.preferred_position === "defender" ? "Zagueiro" :
-                             userAttendance.preferred_position === "midfielder" ? "Meio-campo" : "Atacante"}
-                      </p>
-                      {userAttendance.secondary_position && (
-                        <p className="capitalize">
-                          2ª: {userAttendance.secondary_position === "gk" ? "Goleiro" : 
-                               userAttendance.secondary_position === "defender" ? "Zagueiro" :
-                               userAttendance.secondary_position === "midfielder" ? "Meio-campo" : "Atacante"}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Você ainda não confirmou sua presença
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Formulário de confirmação */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Confirmar Presença</CardTitle>
-            <CardDescription>
-              Selecione suas posições preferenciais para o sorteio dos times
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EventRsvpForm
-              eventId={eventId}
-              currentAttendance={userAttendance}
-              eventStatus={event.status}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Gerenciamento de jogadores (Admin) */}
-        {isAdmin && event.status === "scheduled" && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Gerenciar Jogadores (Admin)</CardTitle>
-              <CardDescription>
-                Confirme ou desconfirme jogadores manualmente
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminPlayerManager
-                eventId={eventId}
-                groupMembers={groupMembers.map((m) => ({
-                  userId: m.user_id,
-                  userName: m.user_name,
-                  userImage: m.user_image,
-                  isConfirmed: m.is_confirmed,
-                }))}
+          {/* Barra de progresso discreta */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span className="font-medium">
+                {event.confirmed_count}/{event.max_players}
+              </span>
+            </div>
+            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden max-w-xs">
+              <div
+                className={`h-full transition-all ${
+                  event.confirmed_count >= event.max_players
+                    ? "bg-green-500"
+                    : event.confirmed_count >= event.max_players * 0.7
+                    ? "bg-yellow-500"
+                    : "bg-blue-500"
+                }`}
+                style={{
+                  width: `${Math.min(
+                    (event.confirmed_count / event.max_players) * 100,
+                    100
+                  )}%`,
+                }}
               />
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </div>
+        </div>
 
-        {/* Lista de jogadores confirmados */}
-        {confirmedPlayers.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-green-500" />
-                  Jogadores Confirmados ({confirmedPlayers.length})
-                </CardTitle>
-                {isAdmin && event.status === "scheduled" && (
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <TeamDrawButton
-                      eventId={eventId}
-                      groupId={event.group_id}
-                      confirmedCount={confirmedPlayers.length}
-                      hasTeams={hasTeams}
-                      isAdmin={isAdmin}
-                    />
-                    <ManualTeamManager
-                      eventId={eventId}
-                      confirmedPlayers={confirmedPlayers.map((p) => ({
-                        userId: p.id,
-                        userName: p.name,
-                        preferredPosition: p.preferred_position,
-                        secondaryPosition: p.secondary_position,
-                      }))}
-                      hasTeams={hasTeams}
-                    />
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {confirmedPlayers.map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/10 text-green-600 font-semibold text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{player.name}</p>
-                      {player.preferred_position && (
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {player.preferred_position === "gk" ? "Goleiro" : 
-                           player.preferred_position === "defender" ? "Zagueiro" :
-                           player.preferred_position === "midfielder" ? "Meio" : "Atacante"}
-                          {player.secondary_position && ` / ${
-                            player.secondary_position === "gk" ? "Goleiro" : 
-                            player.secondary_position === "defender" ? "Zagueiro" :
-                            player.secondary_position === "midfielder" ? "Meio" : "Atacante"
-                          }`}
-                        </p>
-                      )}
-                    </div>
-                    {player.role === "gk" && (
-                      <Badge variant="outline" className="text-xs">
-                        GK
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Times sorteados */}
-        {teams.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-orange-500" />
-                  Times
-                </CardTitle>
-                {isAdmin && event.status === "scheduled" && (
-                  <TeamEditor eventId={eventId} teams={teams} />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-2">
-                {teams.map((team) => (
-                  <div key={team.id} className="space-y-3">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      {team.name}
-                      <Badge variant="secondary" className="text-xs">
-                        {team.members?.length || 0} jogadores
-                      </Badge>
-                    </h3>
-                    <div className="space-y-2">
-                      {team.members?.map((member) => (
-                        <div
-                          key={member.userId}
-                          className="flex items-center gap-2 p-2 rounded bg-muted/30"
-                        >
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              member.position === "gk"
-                                ? "bg-yellow-500"
-                                : member.position === "defender"
-                                ? "bg-blue-500"
-                                : member.position === "midfielder"
-                                ? "bg-green-500"
-                                : member.position === "forward"
-                                ? "bg-red-500"
-                                : "bg-gray-500"
-                            }`}
-                          />
-                          <span className="flex-1 text-sm font-medium">
-                            {member.userName}
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            {member.position === "gk"
-                              ? "Goleiro"
-                              : member.position === "defender"
-                              ? "Zagueiro"
-                              : member.position === "midfielder"
-                              ? "Meio"
-                              : member.position === "forward"
-                              ? "Atacante"
-                              : "Linha"}
-                          </Badge>
-                        </div>
-                      ))}
-                      {(!team.members || team.members.length === 0) && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          Nenhum jogador neste time
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lista de espera */}
-        {waitlistPlayers.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-yellow-500" />
-                Lista de Espera ({waitlistPlayers.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {waitlistPlayers.map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/10 text-yellow-600 font-semibold text-sm">
-                      {index + 1}
-                    </div>
-                    <p className="font-medium">{player.name}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Sistema de Abas */}
+        <EventTabs
+          eventId={eventId}
+          groupId={event.group_id}
+          eventStatus={event.status}
+          isAdmin={isAdmin}
+          confirmedPlayers={confirmedPlayers}
+          waitlistPlayers={waitlistPlayers}
+          teams={teams}
+          maxPlayers={event.max_players}
+          hasTeams={hasTeams}
+          userAttendance={userAttendance}
+          groupMembers={groupMembers}
+        />
       </div>
     </div>
   );

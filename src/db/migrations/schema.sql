@@ -164,17 +164,20 @@ CREATE TABLE IF NOT EXISTS charges (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Transactions (movimentações financeiras)
-CREATE TABLE IF NOT EXISTS transactions (
+-- Draw configurations (configurações de sorteio por grupo)
+CREATE TABLE IF NOT EXISTS draw_configs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
-  charge_id UUID REFERENCES charges(id) ON DELETE SET NULL,
-  type VARCHAR(10) CHECK (type IN ('credit', 'debit')),
-  amount_cents INTEGER NOT NULL,
-  method VARCHAR(20) CHECK (method IN ('cash', 'pix', 'card', 'transfer', 'other')),
-  notes TEXT,
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  players_per_team INTEGER DEFAULT 7 CHECK (players_per_team >= 1 AND players_per_team <= 22),
+  reserves_per_team INTEGER DEFAULT 2 CHECK (reserves_per_team >= 0 AND reserves_per_team <= 11),
+  gk_count INTEGER DEFAULT 1 CHECK (gk_count >= 0 AND gk_count <= 5),
+  defender_count INTEGER DEFAULT 2 CHECK (defender_count >= 0 AND defender_count <= 11),
+  midfielder_count INTEGER DEFAULT 2 CHECK (midfielder_count >= 0 AND midfielder_count <= 11),
+  forward_count INTEGER DEFAULT 2 CHECK (forward_count >= 0 AND forward_count <= 11),
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(group_id)
 );
 
 -- Indexes for performance
@@ -191,6 +194,19 @@ CREATE INDEX IF NOT EXISTS idx_player_ratings_event ON player_ratings(event_id);
 CREATE INDEX IF NOT EXISTS idx_player_ratings_rated ON player_ratings(rated_user_id);
 CREATE INDEX IF NOT EXISTS idx_charges_user_status ON charges(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_charges_due_date ON charges(due_date);
+
+-- Event settings (configurações de eventos por grupo)
+CREATE TABLE IF NOT EXISTS event_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  min_players INTEGER DEFAULT 4 CHECK (min_players >= 1 AND min_players <= 22),
+  max_players INTEGER DEFAULT 22 CHECK (max_players >= 1 AND max_players <= 50),
+  max_waitlist INTEGER DEFAULT 10 CHECK (max_waitlist >= 0 AND max_waitlist <= 50),
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(group_id)
+);
 
 -- Materialized view for event scoreboard
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_event_scoreboard AS

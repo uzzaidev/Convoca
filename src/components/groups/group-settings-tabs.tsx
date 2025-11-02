@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvitesManager } from "@/components/groups/invites-manager";
 import { MembersManager } from "@/components/groups/members-manager";
 import { GroupInfoForm } from "@/components/groups/group-info-form";
+import { EventSettingsForm } from "@/components/groups/event-settings-form";
 
 type Group = {
   id: string;
@@ -46,13 +47,17 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="info">Informações</TabsTrigger>
+        <TabsTrigger value="events">Eventos</TabsTrigger>
         <TabsTrigger value="invites">Convites</TabsTrigger>
         <TabsTrigger value="members">Membros</TabsTrigger>
       </TabsList>
       <TabsContent value="info" className="mt-6">
         <GroupInfoForm group={group} />
+      </TabsContent>
+      <TabsContent value="events" className="mt-6">
+        <EventSettingsForm groupId={group.id} />
       </TabsContent>
       <TabsContent value="invites" className="mt-6">
         <InvitesManager groupId={group.id} initialInvites={invites} />

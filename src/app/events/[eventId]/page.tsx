@@ -373,8 +373,10 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                   <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <TeamDrawButton
                       eventId={eventId}
+                      groupId={event.group_id}
                       confirmedCount={confirmedPlayers.length}
                       hasTeams={hasTeams}
+                      isAdmin={isAdmin}
                     />
                     <ManualTeamManager
                       eventId={eventId}

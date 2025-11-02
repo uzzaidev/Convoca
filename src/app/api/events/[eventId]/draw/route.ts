@@ -14,54 +14,104 @@ type Player = {
   secondary_position: string | null;
 };
 
-// Balanced team draw algorithm that considers positions and ratings
-function drawTeams(players: Player[], numTeams: number = 2) {
-  // Separate players by preferred position
-  const goalkeepers = players.filter((p) => p.preferred_position === "gk");
-  const defenders = players.filter((p) => p.preferred_position === "defender");
-  const midfielders = players.filter((p) => p.preferred_position === "midfielder");
-  const forwards = players.filter((p) => p.preferred_position === "forward");
-  const noPreference = players.filter((p) => !p.preferred_position);
-  
-  // Sort each position group by rating (descending)
-  const sortByRating = (a: Player, b: Player) => b.base_rating - a.base_rating;
-  goalkeepers.sort(sortByRating);
-  defenders.sort(sortByRating);
-  midfielders.sort(sortByRating);
-  forwards.sort(sortByRating);
-  noPreference.sort(sortByRating);
-
-  // Initialize teams with total rating tracking
-  const teams: { players: Player[]; totalRating: number }[] = Array.from(
-    { length: numTeams },
-    () => ({ players: [], totalRating: 0 })
-  );
-
-  // Helper to add player to team with lowest total rating
-  const addToBalancedTeam = (player: Player) => {
-    // Find team with lowest total rating
-    const targetTeam = teams.reduce((min, team, idx) => {
-      return team.totalRating < teams[min].totalRating ? idx : min;
-    }, 0);
-    
-    teams[targetTeam].players.push(player);
-    teams[targetTeam].totalRating += player.base_rating;
+type DrawConfig = {
+  playersPerTeam: number;
+  reservesPerTeam: number;
+  positions: {
+    gk: number;
+    defender: number;
+    midfielder: number;
+    forward: number;
   };
+};
 
-  // Distribute players position by position to ensure balance
-  // Distribute goalkeepers first (most important position)
-  goalkeepers.forEach(addToBalancedTeam);
-  
-  // Then defenders, midfielders, and forwards
-  defenders.forEach(addToBalancedTeam);
-  midfielders.forEach(addToBalancedTeam);
-  forwards.forEach(addToBalancedTeam);
-  
-  // Finally distribute players with no preference
-  noPreference.forEach(addToBalancedTeam);
+// Smart team draw algorithm that considers positions, ratings, and configuration
+function drawTeams(players: Player[], numTeams: number = 2, config?: DrawConfig) {
+  // If no config provided, use simple balanced distribution
+  if (!config) {
+    console.log('No draw config found, using simple balanced distribution for', players.length, 'players in', numTeams, 'teams');
+    const sortedPlayers = [...players].sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+    const teams = Array.from({ length: numTeams }, () => [] as Player[]);
 
-  // Return just the player arrays
-  return teams.map((team) => team.players);
+    sortedPlayers.forEach((player, index) => {
+      const teamIndex = index % numTeams;
+      teams[teamIndex].push(player);
+    });
+
+    console.log('Balanced distribution result:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
+    return teams;
+  }
+
+  // Simple and direct approach: fill positions in order
+  console.log('Using position-based distribution with config');
+
+  // Create teams structure
+  const teams: Player[][] = Array.from({ length: numTeams }, () => []);
+
+  // Track assigned players to ensure each player is in only one team
+  const assignedPlayers = new Set<string>();
+
+  // Positions in order of priority
+  const positions = ["gk", "defender", "midfielder", "forward"] as const;
+
+  // For each position, assign players to teams
+  positions.forEach((position) => {
+    const requiredPerTeam = config.positions[position];
+    console.log(`Filling ${position}: ${requiredPerTeam} per team`);
+
+    // Get available players for this position (not yet assigned)
+    const availablePlayers = players.filter(p =>
+      !assignedPlayers.has(p.user_id) &&
+      (p.preferred_position === position || p.secondary_position === position)
+    );
+
+    // Sort by rating (highest first)
+    availablePlayers.sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+
+    console.log(`Available players for ${position}:`, availablePlayers.map(p => `${p.name}(${p.base_rating})`));
+
+    // Assign players to teams round-robin style
+    let playerIndex = 0;
+    for (let teamIndex = 0; teamIndex < numTeams; teamIndex++) {
+      for (let pos = 0; pos < requiredPerTeam && playerIndex < availablePlayers.length; pos++) {
+        const player = availablePlayers[playerIndex++];
+        if (player && !assignedPlayers.has(player.user_id)) {
+          teams[teamIndex].push(player);
+          assignedPlayers.add(player.user_id);
+          console.log(`Assigned ${player.name} to Team ${teamIndex} as ${position}`);
+        }
+      }
+    }
+  });
+
+  // Fill remaining spots with unassigned players
+  const remainingPlayers = players.filter(p => !assignedPlayers.has(p.user_id));
+  remainingPlayers.sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+
+  console.log(`Filling remaining ${remainingPlayers.length} players`);
+
+  let playerIndex = 0;
+  const totalSpots = numTeams * (config.playersPerTeam + config.reservesPerTeam);
+
+  // Fill until we reach the total spots or run out of players
+  while (playerIndex < remainingPlayers.length && assignedPlayers.size < Math.min(totalSpots, players.length)) {
+    for (let teamIndex = 0; teamIndex < numTeams && playerIndex < remainingPlayers.length; teamIndex++) {
+      const currentTeamSize = teams[teamIndex].length;
+      const maxTeamSize = config.playersPerTeam + config.reservesPerTeam;
+
+      if (currentTeamSize < maxTeamSize) {
+        const player = remainingPlayers[playerIndex++];
+        if (player && !assignedPlayers.has(player.user_id)) {
+          teams[teamIndex].push(player);
+          assignedPlayers.add(player.user_id);
+          console.log(`Assigned ${player.name} to Team ${teamIndex} as reserve`);
+        }
+      }
+    }
+  }
+
+  console.log('Final team sizes:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
+  return teams;
 }
 
 // POST /api/events/:eventId/draw - Draw teams for event
@@ -127,33 +177,122 @@ export async function POST(
       DELETE FROM teams WHERE event_id = ${eventId}
     `;
 
+    // Get draw configuration for the group
+    const [drawConfig] = await sql`
+      SELECT
+        players_per_team as "playersPerTeam",
+        reserves_per_team as "reservesPerTeam",
+        gk_count as "gk",
+        defender_count as "defender",
+        midfielder_count as "midfielder",
+        forward_count as "forward"
+      FROM draw_configs
+      WHERE group_id = ${event.group_id}
+    `;
+
+    console.log('Draw config found:', drawConfig ? 'YES' : 'NO');
+    if (drawConfig) {
+      console.log('Config details:', {
+        playersPerTeam: drawConfig.playersPerTeam,
+        reservesPerTeam: drawConfig.reservesPerTeam,
+        positions: {
+          gk: drawConfig.gk,
+          defender: drawConfig.defender,
+          midfielder: drawConfig.midfielder,
+          forward: drawConfig.forward,
+        }
+      });
+    }
+
+    const config = drawConfig ? {
+      playersPerTeam: drawConfig.playersPerTeam,
+      reservesPerTeam: drawConfig.reservesPerTeam,
+      positions: {
+        gk: drawConfig.gk,
+        defender: drawConfig.defender,
+        midfielder: drawConfig.midfielder,
+        forward: drawConfig.forward,
+      },
+    } : undefined;
+
     // Draw teams
-    const drawnTeams = drawTeams(confirmedPlayers, numTeams);
+    console.log('Starting team draw for event:', eventId, 'with', confirmedPlayers.length, 'players');
+    console.log('Player positions:', confirmedPlayers.map(p => ({
+      name: p.name,
+      position: p.preferred_position || 'none'
+    })));
+    const drawnTeams = drawTeams(confirmedPlayers, numTeams, config);
+    console.log('Teams drawn successfully:', drawnTeams?.length, 'teams created');
+
     const teamNames = ["Time A", "Time B", "Time C", "Time D"];
+
+    // Validate drawn teams
+    if (!drawnTeams || !Array.isArray(drawnTeams) || drawnTeams.length !== numTeams) {
+      console.error('Invalid teams result:', drawnTeams);
+      return NextResponse.json(
+        { error: "Erro interno: times não foram criados corretamente" },
+        { status: 500 }
+      );
+    }
 
     const createdTeams = [];
 
     for (let i = 0; i < drawnTeams.length; i++) {
-      const [team] = await sql`
-        INSERT INTO teams (event_id, name, seed)
-        VALUES (${eventId}, ${teamNames[i]}, ${i})
-        RETURNING *
-      `;
+      const teamPlayers = drawnTeams[i];
+      console.log(`Processing team ${i} with ${teamPlayers?.length || 0} players`);
 
-      // Add team members
-      for (const player of drawnTeams[i]) {
-        await sql`
-          INSERT INTO team_members (team_id, user_id, position, starter)
-          VALUES (${team.id}, ${player.user_id}, ${player.preferred_position || player.role}, true)
-        `;
+      // Validate team has players
+      if (!teamPlayers || !Array.isArray(teamPlayers) || teamPlayers.length === 0) {
+        console.warn(`Team ${i} has no players, skipping`);
+        continue;
       }
 
-      createdTeams.push({
-        ...team,
-        members: drawnTeams[i],
-      });
+      try {
+        const [team] = await sql`
+          INSERT INTO teams (event_id, name, seed)
+          VALUES (${eventId}, ${teamNames[i]}, ${i})
+          RETURNING *
+        `;
+        console.log(`Created team ${team.id} in database`);
+
+        // Add team members with validation
+        for (let k = 0; k < teamPlayers.length; k++) {
+          const player = teamPlayers[k];
+          if (!player || !player.user_id) {
+            console.warn(`Invalid player at index ${k} in team ${i}`);
+            continue;
+          }
+
+          const isStarter = k < (config?.playersPerTeam || 7);
+          const position = player.preferred_position || player.role || 'noPreference';
+
+          await sql`
+            INSERT INTO team_members (team_id, user_id, position, starter)
+            VALUES (${team.id}, ${player.user_id}, ${position}, ${isStarter})
+          `;
+        }
+        console.log(`Added ${teamPlayers.length} players to team ${team.id}`);
+
+        createdTeams.push({
+          ...team,
+          members: teamPlayers,
+        });
+      } catch (teamError) {
+        console.error(`Error creating team ${i}:`, teamError);
+        // Continue with other teams
+      }
     }
 
+    // Ensure we have at least one team created
+    if (createdTeams.length === 0) {
+      console.error('No teams were created successfully');
+      return NextResponse.json(
+        { error: "Erro: nenhum time pôde ser criado" },
+        { status: 500 }
+      );
+    }
+
+    console.log('Team draw completed successfully with', createdTeams.length, 'teams');
     logger.info({ eventId, userId: user.id }, "Teams drawn");
 
     return NextResponse.json({ teams: createdTeams });

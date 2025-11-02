@@ -16,14 +16,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DrawConfigModal } from "./draw-config-modal";
 
 type TeamDrawButtonProps = {
   eventId: string;
+  groupId: string;
   confirmedCount: number;
   hasTeams: boolean;
+  isAdmin?: boolean;
 };
 
-export function TeamDrawButton({ eventId, confirmedCount, hasTeams }: TeamDrawButtonProps) {
+export function TeamDrawButton({ eventId, groupId, confirmedCount, hasTeams, isAdmin = false }: TeamDrawButtonProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isDrawing, setIsDrawing] = useState(false);
@@ -74,40 +77,48 @@ export function TeamDrawButton({ eventId, confirmedCount, hasTeams }: TeamDrawBu
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isDrawing} className="w-full sm:w-auto">
-          {isDrawing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Shuffle className="h-4 w-4 mr-2" />
-          )}
-          <span className="hidden sm:inline">
-            {hasTeams ? "Sortear Novamente" : "Sortear Times"}
-          </span>
-          <span className="sm:hidden">
-            {hasTeams ? "Sortear" : "Sortear"}
-          </span>
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {hasTeams ? "Sortear times novamente?" : "Sortear times"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {hasTeams
-              ? "Isso irá apagar os times atuais e criar novos times balanceados baseado nas posições e pontuações dos jogadores."
-              : "Os times serão criados de forma balanceada considerando as posições preferenciais e pontuações dos jogadores confirmados."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDraw}>
-            Confirmar Sorteio
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <div className="flex gap-2">
+      {isAdmin && (
+        <DrawConfigModal
+          eventId={eventId}
+          groupId={groupId}
+        />
+      )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="sm" disabled={isDrawing} className="w-full sm:w-auto">
+            {isDrawing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Shuffle className="h-4 w-4 mr-2" />
+            )}
+            <span className="hidden sm:inline">
+              {hasTeams ? "Sortear Novamente" : "Sortear Times"}
+            </span>
+            <span className="sm:hidden">
+              {hasTeams ? "Sortear" : "Sortear"}
+            </span>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {hasTeams ? "Sortear times novamente?" : "Sortear times"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {hasTeams
+                ? "Isso irá apagar os times atuais e criar novos times balanceados baseado nas posições e pontuações dos jogadores."
+                : "Os times serão criados de forma balanceada considerando as posições preferenciais e pontuações dos jogadores confirmados."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDraw}>
+              Confirmar Sorteio
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

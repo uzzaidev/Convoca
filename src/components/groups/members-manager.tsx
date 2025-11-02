@@ -30,6 +30,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { UserMinus, Shield, Loader2, UserPlus, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -72,6 +81,14 @@ export function MembersManager({
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
+
+  // Create user states
+  const [showCreateUserDialog, setShowCreateUserDialog] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(null);
 
   const handleToggleRole = async (member: Member) => {
     setIsUpdating(member.user_id);
@@ -189,10 +206,14 @@ export function MembersManager({
 
       setSearchResults(filteredUsers);
 
-      if (filteredUsers.length === 0) {
+      // If no users found and search query looks like an email, offer to create user
+      if (filteredUsers.length === 0 && searchQuery.includes("@")) {
+        // No results, but valid email format - we'll show create option in UI
+        // Don't show toast, let the UI handle it
+      } else if (filteredUsers.length === 0) {
         toast({
           title: "Nenhum usuário encontrado",
-          description: "Tente buscar por outro email",
+          description: "Digite um email válido para criar um novo usuário",
         });
       }
     } catch (error) {
@@ -259,6 +280,81 @@ export function MembersManager({
       });
     } finally {
       setIsAddingMember(false);
+    }
+  };
+
+  const handleOpenCreateUserDialog = () => {
+    setNewUserEmail(searchQuery);
+    setNewUserName("");
+    setNewUserPassword("");
+    setShowCreateUserDialog(true);
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUserEmail || !newUserName) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Email e nome são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingUser(true);
+
+    try {
+      const response = await fetch(`/api/groups/${groupId}/members/create-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: newUserEmail,
+          name: newUserName,
+          defaultPassword: newUserPassword || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao criar usuário");
+      }
+
+      // Add new member to the list
+      const newMember: Member = {
+        id: data.member.id,
+        user_id: data.member.user_id,
+        role: data.member.role,
+        joined_at: data.member.joined_at,
+        name: data.member.name,
+        email: data.member.email,
+      };
+
+      setMembers([...members, newMember]);
+
+      // Store the temporary password to show to admin
+      setCreatedUserPassword(data.temporaryPassword);
+
+      // Clear search
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowCreateUserDialog(false);
+
+      toast({
+        title: "Usuário criado e adicionado!",
+        description: `${data.member.name} foi criado e adicionado ao grupo.`,
+      });
+
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao criar usuário",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingUser(false);
     }
   };
 
@@ -330,6 +426,18 @@ export function MembersManager({
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {searchResults.length === 0 && searchQuery.includes("@") && !isSearching && (
+            <div className="border rounded-lg p-6 text-center">
+              <p className="text-muted-foreground mb-4">
+                Nenhum usuário encontrado com o email <strong>{searchQuery}</strong>
+              </p>
+              <Button onClick={handleOpenCreateUserDialog} variant="outline">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Criar Novo Usuário
+              </Button>
             </div>
           )}
         </CardContent>
@@ -433,6 +541,102 @@ export function MembersManager({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleRemoveMember}>
               Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Create User Dialog */}
+      <Dialog open={showCreateUserDialog} onOpenChange={setShowCreateUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
+            <DialogDescription>
+              Crie um novo usuário e adicione-o ao grupo automaticamente
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                placeholder="exemplo@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input
+                id="name"
+                type="text"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                placeholder="Nome do jogador"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Senha (opcional - padrão: Peladeiros2024!)
+              </Label>
+              <Input
+                id="password"
+                type="text"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                placeholder="Deixe em branco para usar a padrão"
+              />
+              <p className="text-xs text-muted-foreground">
+                O usuário poderá alterar a senha após o primeiro acesso
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateUserDialog(false)}
+              disabled={isCreatingUser}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateUser} disabled={isCreatingUser}>
+              {isCreatingUser ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar e Adicionar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Show temporary password dialog */}
+      <AlertDialog
+        open={!!createdUserPassword}
+        onOpenChange={() => setCreatedUserPassword(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Usuário Criado com Sucesso!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anote a senha temporária abaixo e envie para o jogador. Ele poderá
+              alterá-la após o primeiro acesso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="bg-muted p-4 rounded-lg my-4">
+            <p className="text-sm font-medium mb-2">Senha Temporária:</p>
+            <p className="text-lg font-mono font-bold">{createdUserPassword}</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setCreatedUserPassword(null)}>
+              Entendi
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

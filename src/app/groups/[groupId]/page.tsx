@@ -160,7 +160,7 @@ export default async function GroupPage({ params }: RouteParams) {
         SELECT u.id, u.name, COUNT(*) as goals,
           COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
-        INNER JOIN users u ON ea.actor_user_id = u.id
+        INNER JOIN users u ON ea.subject_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'goal'
         GROUP BY u.id, u.name
         ORDER BY goals DESC LIMIT 10
@@ -172,7 +172,7 @@ export default async function GroupPage({ params }: RouteParams) {
         SELECT u.id, u.name, COUNT(*) as assists,
           COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
-        INNER JOIN users u ON ea.actor_user_id = u.id
+        INNER JOIN users u ON ea.subject_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'assist'
         GROUP BY u.id, u.name
         ORDER BY assists DESC LIMIT 10
@@ -184,7 +184,7 @@ export default async function GroupPage({ params }: RouteParams) {
         SELECT u.id, u.name, COUNT(*) as saves,
           COUNT(DISTINCT ea.event_id) as games
         FROM event_actions ea
-        INNER JOIN users u ON ea.actor_user_id = u.id
+        INNER JOIN users u ON ea.subject_user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'save'
         GROUP BY u.id, u.name
         ORDER BY saves DESC LIMIT 10
@@ -259,7 +259,7 @@ export default async function GroupPage({ params }: RouteParams) {
         const actions = await sql`
           SELECT action_type, COUNT(*) as count
           FROM event_actions
-          WHERE event_id = ANY(${myEventIds}) AND actor_user_id = ${user.id}
+          WHERE event_id = ANY(${myEventIds}) AND subject_user_id = ${user.id}
           GROUP BY action_type
         `;
         (actions as unknown as Array<{ action_type: string; count: string }>).forEach((a) => {
@@ -310,115 +310,147 @@ export default async function GroupPage({ params }: RouteParams) {
 
   // Calcular ranking geral
   let generalRanking: GeneralRanking[] = [];
-  
+
   if (eventIds.length > 0) {
     try {
-      // Buscar dados combinados de todos os jogadores
       const rankingData = await sql`
-        WITH player_events AS (
-          -- Get all events each player participated in
-          SELECT 
-            u.id as user_id,
-            u.name,
-            ea.event_id,
-            t.id as team_id,
-            t.is_winner
-          FROM users u
-          INNER JOIN event_attendance ea ON u.id = ea.user_id
-          LEFT JOIN team_members tm ON tm.user_id = u.id AND tm.team_id IN (
-            SELECT id FROM teams WHERE event_id = ea.event_id
-          )
-          LEFT JOIN teams t ON t.id = tm.team_id
-          WHERE ea.event_id = ANY(${eventIds})
-            AND ea.status = 'yes'
-            AND ea.checked_in_at IS NOT NULL
-        ),
-        team_goals_per_event AS (
-          -- Calculate goals scored for each team in each event
-          SELECT 
-            t.id as team_id,
-            t.event_id,
-            COUNT(ea.id) FILTER (WHERE ea.action_type = 'goal') as goals_scored
-          FROM teams t
-          LEFT JOIN event_actions ea ON ea.team_id = t.id AND ea.action_type = 'goal'
+        WITH player_games AS (
+          -- Eventos que cada jogador jogou (está em um time do evento finalizado)
+          SELECT DISTINCT
+            tm.user_id,
+            t.event_id
+          FROM team_members tm
+          INNER JOIN teams t ON tm.team_id = t.id
           WHERE t.event_id = ANY(${eventIds})
-          GROUP BY t.id, t.event_id
         ),
-        player_team_goals AS (
-          -- Associate each player with their team's goals scored and conceded
-          SELECT 
-            pe.user_id,
-            pe.event_id,
-            COALESCE(tg_own.goals_scored, 0) as team_goals_scored,
-            COALESCE(SUM(tg_opp.goals_scored), 0) as team_goals_conceded
-          FROM player_events pe
-          LEFT JOIN team_goals_per_event tg_own ON tg_own.team_id = pe.team_id
-          LEFT JOIN teams t_opp ON t_opp.event_id = pe.event_id AND t_opp.id != pe.team_id
-          LEFT JOIN team_goals_per_event tg_opp ON tg_opp.team_id = t_opp.id
-          GROUP BY pe.user_id, pe.event_id, tg_own.goals_scored
-        ),
-        player_stats AS (
-          SELECT 
-            pe.user_id,
-            pe.name,
-            COUNT(DISTINCT pe.event_id) as games_played,
-            -- Personal stats
-            COUNT(ea_goals.id) as goals,
-            COUNT(ea_assists.id) as assists,
-            COUNT(pr.id) FILTER (WHERE pr.tags @> ARRAY['mvp']) as mvps,
-            -- Match results
-            COUNT(DISTINCT CASE WHEN pe.is_winner = true THEN pe.event_id END) as wins,
-            COUNT(DISTINCT CASE WHEN pe.is_winner = false THEN pe.event_id END) as losses,
-            COUNT(DISTINCT CASE WHEN pe.is_winner IS NULL AND pe.team_id IS NOT NULL THEN pe.event_id END) as draws,
-            -- Team goals (sum across all events player participated in)
-            COALESCE(SUM(ptg.team_goals_scored), 0) as team_goals,
-            COALESCE(SUM(ptg.team_goals_conceded), 0) as team_goals_conceded,
-            -- DM games (count from all events in the group)
-            COUNT(ea_dm.id) FILTER (WHERE ea_dm.status = 'dm') as dm_games
-          FROM player_events pe
-          LEFT JOIN event_actions ea_goals ON ea_goals.event_id = pe.event_id 
-            AND ea_goals.actor_user_id = pe.user_id 
-            AND ea_goals.action_type = 'goal'
-          LEFT JOIN event_actions ea_assists ON ea_assists.event_id = pe.event_id 
-            AND ea_assists.actor_user_id = pe.user_id 
-            AND ea_assists.action_type = 'assist'
-          LEFT JOIN player_ratings pr ON pr.event_id = pe.event_id 
-            AND pr.rated_user_id = pe.user_id
-          LEFT JOIN player_team_goals ptg ON ptg.user_id = pe.user_id 
-            AND ptg.event_id = pe.event_id
-          LEFT JOIN event_attendance ea_dm ON ea_dm.user_id = pe.user_id 
-            AND ea_dm.event_id = ANY(${eventIds})
-          GROUP BY pe.user_id, pe.name
+        game_results AS (
+          -- Resultado de cada jogo para cada jogador
+          SELECT
+            pg.user_id,
+            pg.event_id,
+            t_player.id as player_team_id,
+
+            -- Gols do time do jogador neste evento
+            (SELECT COUNT(*)
+             FROM event_actions ea
+             WHERE ea.team_id = t_player.id
+               AND ea.event_id = pg.event_id
+               AND ea.action_type = 'goal'
+            ) as team_goals,
+
+            -- Gols de todos os outros times neste evento (assumindo 2 times por evento)
+            (SELECT COUNT(*)
+             FROM event_actions ea
+             INNER JOIN teams t ON ea.team_id = t.id
+             WHERE t.event_id = pg.event_id
+               AND t.id != t_player.id
+               AND ea.action_type = 'goal'
+            ) as opponent_goals
+
+          FROM player_games pg
+          INNER JOIN team_members tm ON tm.user_id = pg.user_id
+          INNER JOIN teams t_player ON t_player.id = tm.team_id AND t_player.event_id = pg.event_id
         )
-        SELECT 
-          user_id as id,
-          name,
-          games_played::int as games,
-          goals::int,
-          assists::int,
-          mvps::int,
-          wins::int,
-          draws::int,
-          losses::int,
-          team_goals::int,
-          team_goals_conceded::int,
-          (team_goals::int - team_goals_conceded::int) as goal_difference,
-          dm_games::int,
-          ((SELECT COUNT(*) FROM events WHERE id = ANY(${eventIds}))::int - dm_games::int) as available_matches,
-          (
-            (games_played * 2) +    -- 2 pontos por presença
-            (goals * 3) +           -- 3 pontos por gol
-            (assists * 2) +         -- 2 pontos por assistência
-            (mvps * 5) +            -- 5 pontos por MVP
-            (wins * 1)              -- 1 ponto por vitória
-          )::int as score
-        FROM player_stats
-        WHERE games_played > 0
-        ORDER BY score DESC, games_played DESC, goals DESC
-        LIMIT 15
+        SELECT
+          u.id,
+          u.name,
+
+          -- Jogos jogados
+          (SELECT COUNT(*) FROM player_games WHERE user_id = u.id)::int as games,
+
+          -- Gols do jogador
+          (SELECT COUNT(*)
+           FROM event_actions ea
+           WHERE ea.subject_user_id = u.id
+             AND ea.event_id = ANY(${eventIds})
+             AND ea.action_type = 'goal'
+          )::int as goals,
+
+          -- Assistências
+          (SELECT COUNT(*)
+           FROM event_actions ea
+           WHERE ea.subject_user_id = u.id
+             AND ea.event_id = ANY(${eventIds})
+             AND ea.action_type = 'assist'
+          )::int as assists,
+
+          -- MVPs
+          (SELECT COUNT(*)
+           FROM player_ratings pr
+           WHERE pr.rated_user_id = u.id
+             AND pr.event_id = ANY(${eventIds})
+             AND 'mvp' = ANY(pr.tags)
+          )::int as mvps,
+
+          -- Vitórias (calculado por gols)
+          (SELECT COUNT(*)
+           FROM game_results gr
+           WHERE gr.user_id = u.id
+             AND gr.team_goals > gr.opponent_goals
+          )::int as wins,
+
+          -- Derrotas (calculado por gols)
+          (SELECT COUNT(*)
+           FROM game_results gr
+           WHERE gr.user_id = u.id
+             AND gr.team_goals < gr.opponent_goals
+          )::int as losses,
+
+          -- Empates (calculado por gols)
+          (SELECT COUNT(*)
+           FROM game_results gr
+           WHERE gr.user_id = u.id
+             AND gr.team_goals = gr.opponent_goals
+          )::int as draws,
+
+          -- Total de gols do time
+          (SELECT COALESCE(SUM(gr.team_goals), 0)
+           FROM game_results gr
+           WHERE gr.user_id = u.id
+          )::int as team_goals,
+
+          -- Total de gols sofridos
+          (SELECT COALESCE(SUM(gr.opponent_goals), 0)
+           FROM game_results gr
+           WHERE gr.user_id = u.id
+          )::int as team_goals_conceded,
+
+          -- DM games
+          (SELECT COUNT(DISTINCT ea.event_id)
+           FROM event_attendance ea
+           WHERE ea.user_id = u.id
+             AND ea.event_id = ANY(${eventIds})
+             AND ea.status = 'dm'
+          )::int as dm_games
+
+        FROM users u
+        INNER JOIN group_members gm ON u.id = gm.user_id
+        WHERE gm.group_id = ${groupId}
+          AND EXISTS (
+            SELECT 1 FROM player_games WHERE user_id = u.id
+          )
       `;
 
-      generalRanking = rankingData as GeneralRanking[];
+      // Calcular campos derivados e ordenar
+      generalRanking = (rankingData as any[]).map((player) => ({
+        ...player,
+        goal_difference: player.team_goals - player.team_goals_conceded,
+        available_matches: eventIds.length - player.dm_games,
+        score:
+          player.games * 2 +
+          player.goals * 3 +
+          player.assists * 2 +
+          player.mvps * 5 +
+          player.wins * 1,
+      }))
+      .sort((a, b) => {
+        // Ordenar por score, depois games, depois goals
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.games !== a.games) return b.games - a.games;
+        return b.goals - a.goals;
+      })
+      .slice(0, 15) as GeneralRanking[];
+
     } catch (error) {
       console.error("Error calculating general ranking:", error);
     }

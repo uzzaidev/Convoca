@@ -30,14 +30,12 @@ export async function GET(
     }
 
     // Buscar eventos finalizados do grupo
-    const events = await sql`
+    const finishedEvents = await sql`
       SELECT id FROM events
       WHERE group_id = ${groupId} AND status = 'finished'
     `;
 
-    const eventIds = (events as unknown as Array<{ id: string }>).map(e => e.id);
-
-    if (eventIds.length === 0) {
+    if (finishedEvents.length === 0) {
       return NextResponse.json({
         topScorers: [],
         topAssisters: [],
@@ -47,6 +45,8 @@ export async function GET(
       });
     }
 
+    const eventIds = (finishedEvents as unknown as Array<{ id: string }>).map(e => e.id);
+
     // Artilheiros (top 10)
     const topScorers = await sql`
       SELECT
@@ -55,9 +55,12 @@ export async function GET(
         u.image,
         COUNT(*) as goals
       FROM event_actions ea
-      INNER JOIN users u ON ea.actor_user_id = u.id
-      WHERE ea.event_id = ANY(${eventIds})
+      INNER JOIN users u ON ea.subject_user_id = u.id
+      INNER JOIN events e ON ea.event_id = e.id
+      WHERE e.group_id = ${groupId}
+        AND e.status = 'finished'
         AND ea.action_type = 'goal'
+        AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
       ORDER BY goals DESC
       LIMIT 10
@@ -71,9 +74,12 @@ export async function GET(
         u.image,
         COUNT(*) as assists
       FROM event_actions ea
-      INNER JOIN users u ON ea.actor_user_id = u.id
-      WHERE ea.event_id = ANY(${eventIds})
+      INNER JOIN users u ON ea.subject_user_id = u.id
+      INNER JOIN events e ON ea.event_id = e.id
+      WHERE e.group_id = ${groupId}
+        AND e.status = 'finished'
         AND ea.action_type = 'assist'
+        AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
       ORDER BY assists DESC
       LIMIT 10
@@ -87,9 +93,12 @@ export async function GET(
         u.image,
         COUNT(*) as saves
       FROM event_actions ea
-      INNER JOIN users u ON ea.actor_user_id = u.id
-      WHERE ea.event_id = ANY(${eventIds})
+      INNER JOIN users u ON ea.subject_user_id = u.id
+      INNER JOIN events e ON ea.event_id = e.id
+      WHERE e.group_id = ${groupId}
+        AND e.status = 'finished'
         AND ea.action_type = 'save'
+        AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
       ORDER BY saves DESC
       LIMIT 10
@@ -109,9 +118,11 @@ export async function GET(
             'goals', (
               SELECT COUNT(*)
               FROM event_actions ea2
-              WHERE ea2.team_id = t.id AND ea2.action_type = 'goal'
+              WHERE ea2.team_id = t.id
+                AND ea2.action_type = 'goal'
+                AND ea2.event_id = e.id
             )
-          ))
+          ) ORDER BY t.seed)
           FROM teams t
           WHERE t.event_id = e.id
         ) as teams
@@ -140,23 +151,39 @@ export async function GET(
         u.id,
         u.name,
         u.image,
-        COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
-        COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') as games_dm,
-        COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') as games_absent,
+        -- Jogos que jogou (confirmado + check-in)
+        COUNT(DISTINCT CASE
+          WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
+          THEN ea.event_id
+        END) as games_played,
+        -- Jogos que deu DM
+        COUNT(DISTINCT CASE
+          WHEN ea.status = 'dm'
+          THEN ea.event_id
+        END) as games_dm,
+        -- Jogos que não foi
+        COUNT(DISTINCT CASE
+          WHEN ea.status = 'no'
+          THEN ea.event_id
+        END) as games_absent,
+        -- Total de jogos no período
         (SELECT total FROM total_count) as total_games,
-        ROUND(
-          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
-          NULLIF((SELECT total FROM total_count) - COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm'), 0), 
-          1
-        ) as frequency_percentage
+        -- Frequência percentual (jogos jogados / total de jogos - DMs)
+        CASE
+          WHEN (SELECT total FROM total_count) > 0
+          THEN ROUND(
+            COUNT(DISTINCT CASE WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL THEN ea.event_id END)::numeric * 100.0 /
+            NULLIF((SELECT total FROM total_count)::numeric, 0),
+            1
+          )
+          ELSE 0
+        END as frequency_percentage
       FROM users u
-      INNER JOIN group_members gm ON u.id = gm.user_id
-      LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id IN (SELECT id FROM recent_events)
-      WHERE gm.group_id = ${groupId}
+      INNER JOIN group_members gm ON u.id = gm.user_id AND gm.group_id = ${groupId}
+      LEFT JOIN event_attendance ea ON ea.user_id = u.id
+        AND ea.event_id IN (SELECT id FROM recent_events)
       GROUP BY u.id, u.name, u.image
-      HAVING COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
-         OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') > 0
-         OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') > 0
+      HAVING COUNT(DISTINCT ea.event_id) > 0  -- Pelo menos teve alguma interação
       ORDER BY games_played DESC, frequency_percentage DESC
       LIMIT 15
     `;

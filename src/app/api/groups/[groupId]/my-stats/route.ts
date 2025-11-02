@@ -29,20 +29,89 @@ export async function GET(
       );
     }
 
-    // Buscar eventos finalizados do grupo onde o usuário participou
-    const events = await sql`
-      SELECT e.id
-      FROM events e
-      INNER JOIN event_attendance ea ON e.id = ea.event_id
-      WHERE e.group_id = ${groupId}
-        AND e.status = 'finished'
-        AND ea.user_id = ${user.id}
-        AND ea.checked_in_at IS NOT NULL
+    // Buscar estatísticas completas do usuário
+    const stats = await sql`
+      WITH
+      -- Eventos finalizados do grupo onde o usuário participou (check-in feito)
+      user_events AS (
+        SELECT DISTINCT e.id
+        FROM events e
+        INNER JOIN event_attendance ea ON e.id = ea.event_id
+        WHERE e.group_id = ${groupId}
+          AND e.status = 'finished'
+          AND ea.user_id = ${user.id}
+          AND ea.status = 'yes'
+          AND ea.checked_in_at IS NOT NULL
+      )
+      SELECT
+        -- Jogos jogados
+        COUNT(DISTINCT ue.id) as games_played,
+
+        -- Gols
+        COUNT(DISTINCT CASE
+          WHEN ea.action_type = 'goal' AND ea.subject_user_id = ${user.id}
+          THEN ea.id
+        END) as goals,
+
+        -- Assistências
+        COUNT(DISTINCT CASE
+          WHEN ea.action_type = 'assist' AND ea.subject_user_id = ${user.id}
+          THEN ea.id
+        END) as assists,
+
+        -- Defesas (goleiro)
+        COUNT(DISTINCT CASE
+          WHEN ea.action_type = 'save' AND ea.subject_user_id = ${user.id}
+          THEN ea.id
+        END) as saves,
+
+        -- Cartões amarelos
+        COUNT(DISTINCT CASE
+          WHEN ea.action_type = 'yellow_card' AND ea.subject_user_id = ${user.id}
+          THEN ea.id
+        END) as yellow_cards,
+
+        -- Cartões vermelhos
+        COUNT(DISTINCT CASE
+          WHEN ea.action_type = 'red_card' AND ea.subject_user_id = ${user.id}
+          THEN ea.id
+        END) as red_cards,
+
+        -- Vitórias
+        COUNT(DISTINCT CASE
+          WHEN t.is_winner = true
+          THEN t.event_id
+        END) as wins,
+
+        -- Derrotas
+        COUNT(DISTINCT CASE
+          WHEN t.is_winner = false
+          THEN t.event_id
+        END) as losses,
+
+        -- Média de avaliação
+        COALESCE(AVG(pr.score), 0)::numeric(4,2) as avg_rating,
+
+        -- Contagem de MVPs
+        COUNT(DISTINCT CASE
+          WHEN 'mvp' = ANY(pr.tags)
+          THEN pr.id
+        END) as mvp_count
+
+      FROM user_events ue
+
+      -- Ações do usuário
+      LEFT JOIN event_actions ea ON ea.event_id = ue.id
+
+      -- Times e vitórias/derrotas
+      LEFT JOIN team_members tm ON tm.user_id = ${user.id}
+      LEFT JOIN teams t ON tm.team_id = t.id AND t.event_id = ue.id
+
+      -- Avaliações recebidas
+      LEFT JOIN player_ratings pr ON pr.rated_user_id = ${user.id} AND pr.event_id = ue.id
     `;
 
-    const eventIds = (events as unknown as Array<{ id: string }>).map(e => e.id);
-
-    if (eventIds.length === 0) {
+    if (!stats || stats.length === 0 || stats[0].games_played === '0') {
       return NextResponse.json({
         gamesPlayed: 0,
         goals: 0,
@@ -59,84 +128,38 @@ export async function GET(
       });
     }
 
-    // Estatísticas de ações
-    const actions = await sql`
-      SELECT
-        action_type,
-        COUNT(*) as count
-      FROM event_actions
-      WHERE event_id = ANY(${eventIds})
-        AND actor_user_id = ${user.id}
-      GROUP BY action_type
-    `;
+    const userStats = stats[0];
 
-    const actionsMap: Record<string, number> = {};
-    (actions as unknown as Array<{ action_type: string; count: string }>).forEach((a) => {
-      actionsMap[a.action_type] = parseInt(a.count);
-    });
-
-    // Vitórias, derrotas e empates
-    const winLoss = await sql`
-      SELECT
-        t.is_winner,
-        COUNT(*) as count
-      FROM team_members tm
-      INNER JOIN teams t ON tm.team_id = t.id
-      WHERE t.event_id = ANY(${eventIds})
-        AND tm.user_id = ${user.id}
-        AND t.is_winner IS NOT NULL
-      GROUP BY t.is_winner
-    `;
-
-    let wins = 0;
-    let losses = 0;
-    (winLoss as unknown as Array<{ is_winner: boolean; count: string }>).forEach((wl) => {
-      if (wl.is_winner === true) wins = parseInt(wl.count);
-      if (wl.is_winner === false) losses = parseInt(wl.count);
-    });
-
-    // Média de avaliação
-    const ratingResult = await sql`
-      SELECT AVG(score) as avg_rating
-      FROM player_ratings
-      WHERE event_id = ANY(${eventIds})
-        AND rated_user_id = ${user.id}
-    `;
-
-    const averageRating = ratingResult[0]?.avg_rating
-      ? parseFloat(ratingResult[0].avg_rating).toFixed(1)
-      : null;
-
-    // Tags recebidas (MVP, artilheiro, etc)
+    // Buscar tags recebidas
     const tagsResult = await sql`
       SELECT UNNEST(tags) as tag, COUNT(*) as count
-      FROM player_ratings
-      WHERE event_id = ANY(${eventIds})
-        AND rated_user_id = ${user.id}
+      FROM player_ratings pr
+      INNER JOIN events e ON pr.event_id = e.id
+      WHERE e.group_id = ${groupId}
+        AND e.status = 'finished'
+        AND pr.rated_user_id = ${user.id}
         AND tags IS NOT NULL
       GROUP BY tag
       ORDER BY count DESC
     `;
 
     const tags: Record<string, number> = {};
-    let mvpCount = 0;
     (tagsResult as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
       tags[t.tag] = parseInt(t.count);
-      if (t.tag === 'mvp') mvpCount = parseInt(t.count);
     });
 
     return NextResponse.json({
-      gamesPlayed: eventIds.length,
-      goals: actionsMap['goal'] || 0,
-      assists: actionsMap['assist'] || 0,
-      saves: actionsMap['save'] || 0,
-      yellowCards: actionsMap['yellow_card'] || 0,
-      redCards: actionsMap['red_card'] || 0,
-      averageRating,
-      wins,
-      losses,
+      gamesPlayed: parseInt(userStats.games_played) || 0,
+      goals: parseInt(userStats.goals) || 0,
+      assists: parseInt(userStats.assists) || 0,
+      saves: parseInt(userStats.saves) || 0,
+      yellowCards: parseInt(userStats.yellow_cards) || 0,
+      redCards: parseInt(userStats.red_cards) || 0,
+      averageRating: userStats.avg_rating ? parseFloat(userStats.avg_rating).toFixed(1) : null,
+      wins: parseInt(userStats.wins) || 0,
+      losses: parseInt(userStats.losses) || 0,
       draws: 0, // TODO: calcular empates quando tivermos essa lógica
-      mvpCount,
+      mvpCount: parseInt(userStats.mvp_count) || 0,
       tags,
     });
   } catch (error) {

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install)",
       "Bash(npm run build:*)",
-      "Bash(node generate-hash.js:*)"
+      "Bash(node generate-hash.js:*)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []

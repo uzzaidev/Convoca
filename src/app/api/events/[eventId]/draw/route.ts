@@ -14,6 +14,10 @@ type Player = {
   secondary_position: string | null;
 };
 
+type PlayerWithAssignedPosition = Player & {
+  assigned_position: string;
+};
+
 type DrawConfig = {
   playersPerTeam: number;
   reservesPerTeam: number;
@@ -31,87 +35,139 @@ function drawTeams(players: Player[], numTeams: number = 2, config?: DrawConfig)
   if (!config) {
     console.log('No draw config found, using simple balanced distribution for', players.length, 'players in', numTeams, 'teams');
     const sortedPlayers = [...players].sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
-    const teams = Array.from({ length: numTeams }, () => [] as Player[]);
+    const teams = Array.from({ length: numTeams }, () => [] as PlayerWithAssignedPosition[]);
 
     sortedPlayers.forEach((player, index) => {
       const teamIndex = index % numTeams;
-      teams[teamIndex].push(player);
+      // Assign position based on player preference or default
+      const assignedPosition = player.preferred_position || player.role || 'noPreference';
+      teams[teamIndex].push({ ...player, assigned_position: assignedPosition });
     });
 
     console.log('Balanced distribution result:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
     return teams;
   }
 
-  // Simple and direct approach: fill positions in order
-  console.log('Using position-based distribution with config');
+  console.log('Using position-first distribution with config');
 
-  // Create teams structure
-  const teams: Player[][] = Array.from({ length: numTeams }, () => []);
+  // Create teams structure with position tracking
+  const teams: { players: PlayerWithAssignedPosition[], positionCounts: Record<string, number> }[] = Array.from(
+    { length: numTeams },
+    () => ({ players: [], positionCounts: { gk: 0, defender: 0, midfielder: 0, forward: 0 } })
+  );
 
   // Track assigned players to ensure each player is in only one team
   const assignedPlayers = new Set<string>();
 
-  // Positions in order of priority
+  // Positions in order of priority (GK first as it's most critical)
   const positions = ["gk", "defender", "midfielder", "forward"] as const;
 
-  // For each position, assign players to teams
+  // PHASE 1: Allocate players who chose each position (prioritize by rating - highest first)
   positions.forEach((position) => {
-    const requiredPerTeam = config.positions[position];
-    console.log(`Filling ${position}: ${requiredPerTeam} per team`);
+    const slotsPerTeam = config.positions[position];
+    console.log(`\n=== PHASE 1: Processing ${position} (${slotsPerTeam} slots per team) ===`);
 
-    // Get available players for this position (not yet assigned)
-    const availablePlayers = players.filter(p =>
+    // Get available players who chose this position (not yet assigned)
+    const preferredPlayers = players.filter(p =>
       !assignedPlayers.has(p.user_id) &&
       (p.preferred_position === position || p.secondary_position === position)
     );
 
-    // Sort by rating (highest first)
-    availablePlayers.sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+    // Sort by rating (highest first for phase 1)
+    preferredPlayers.sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
 
-    console.log(`Available players for ${position}:`, availablePlayers.map(p => `${p.name}(${p.base_rating})`));
+    console.log(`Players who chose ${position}:`, preferredPlayers.map(p => `${p.name}(${p.base_rating})`));
 
-    // Assign players to teams round-robin style
+    // Assign players to position slots across teams (round-robin for balance)
     let playerIndex = 0;
-    for (let teamIndex = 0; teamIndex < numTeams; teamIndex++) {
-      for (let pos = 0; pos < requiredPerTeam && playerIndex < availablePlayers.length; pos++) {
-        const player = availablePlayers[playerIndex++];
+    for (let slot = 0; slot < slotsPerTeam; slot++) {
+      for (let teamIndex = 0; teamIndex < numTeams && playerIndex < preferredPlayers.length; teamIndex++) {
+        const player = preferredPlayers[playerIndex++];
         if (player && !assignedPlayers.has(player.user_id)) {
-          teams[teamIndex].push(player);
+          teams[teamIndex].players.push({ ...player, assigned_position: position });
+          teams[teamIndex].positionCounts[position]++;
           assignedPlayers.add(player.user_id);
-          console.log(`Assigned ${player.name} to Team ${teamIndex} as ${position}`);
+          console.log(`✓ Assigned ${player.name} to Team ${teamIndex} as ${position} (Phase 1)`);
         }
       }
     }
   });
 
-  // Fill remaining spots with unassigned players
-  const remainingPlayers = players.filter(p => !assignedPlayers.has(p.user_id));
-  remainingPlayers.sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+  // PHASE 2: Fill unfilled position slots with remaining players (prioritize by rating - lowest first)
+  console.log('\n=== PHASE 2: Filling unfilled position slots ===');
 
-  console.log(`Filling remaining ${remainingPlayers.length} players`);
+  positions.forEach((position) => {
+    const slotsPerTeam = config.positions[position];
 
+    // Check each team for unfilled slots
+    teams.forEach((team, teamIndex) => {
+      const currentCount = team.positionCounts[position];
+      const slotsNeeded = slotsPerTeam - currentCount;
+
+      if (slotsNeeded > 0) {
+        console.log(`Team ${teamIndex} needs ${slotsNeeded} more ${position}(s)`);
+
+        // Get remaining unassigned players (sorted by lowest rating first)
+        const remainingPlayers = players
+          .filter(p => !assignedPlayers.has(p.user_id))
+          .sort((a, b) => (a.base_rating || 0) - (b.base_rating || 0));
+
+        // Fill the needed slots
+        for (let i = 0; i < slotsNeeded && remainingPlayers.length > 0; i++) {
+          const player = remainingPlayers.shift();
+          if (player) {
+            team.players.push({ ...player, assigned_position: position });
+            team.positionCounts[position]++;
+            assignedPlayers.add(player.user_id);
+            console.log(`⚠ Assigned ${player.name} to Team ${teamIndex} as ${position} (Phase 2 - forced)`);
+          }
+        }
+      }
+    });
+  });
+
+  // PHASE 3: Add remaining players as reserves (highest rating first for fair distribution)
+  const remainingPlayers = players
+    .filter(p => !assignedPlayers.has(p.user_id))
+    .sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+
+  console.log(`\n=== PHASE 3: Adding ${remainingPlayers.length} reserves ===`);
+
+  const maxPlayersPerTeam = config.playersPerTeam + config.reservesPerTeam;
   let playerIndex = 0;
-  const totalSpots = numTeams * (config.playersPerTeam + config.reservesPerTeam);
 
-  // Fill until we reach the total spots or run out of players
-  while (playerIndex < remainingPlayers.length && assignedPlayers.size < Math.min(totalSpots, players.length)) {
+  // Fill reserves round-robin until teams are full or no more players
+  while (playerIndex < remainingPlayers.length) {
+    let assignedInThisRound = false;
+
     for (let teamIndex = 0; teamIndex < numTeams && playerIndex < remainingPlayers.length; teamIndex++) {
-      const currentTeamSize = teams[teamIndex].length;
-      const maxTeamSize = config.playersPerTeam + config.reservesPerTeam;
-
-      if (currentTeamSize < maxTeamSize) {
+      if (teams[teamIndex].players.length < maxPlayersPerTeam) {
         const player = remainingPlayers[playerIndex++];
         if (player && !assignedPlayers.has(player.user_id)) {
-          teams[teamIndex].push(player);
+          // Reserves keep their preferred position or default to 'noPreference'
+          const assignedPosition = player.preferred_position || player.role || 'noPreference';
+          teams[teamIndex].players.push({ ...player, assigned_position: assignedPosition });
           assignedPlayers.add(player.user_id);
-          console.log(`Assigned ${player.name} to Team ${teamIndex} as reserve`);
+          console.log(`+ Assigned ${player.name} to Team ${teamIndex} as reserve`);
+          assignedInThisRound = true;
         }
       }
     }
+
+    // If no assignments were made in this round, break to avoid infinite loop
+    if (!assignedInThisRound) break;
   }
 
-  console.log('Final team sizes:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
-  return teams;
+  // Log final team compositions
+  console.log('\n=== FINAL TEAMS ===');
+  teams.forEach((team, i) => {
+    console.log(`Team ${i}: ${team.players.length} players`);
+    console.log(`  Positions: GK:${team.positionCounts.gk}, DEF:${team.positionCounts.defender}, MID:${team.positionCounts.midfielder}, FWD:${team.positionCounts.forward}`);
+    console.log(`  Total Rating: ${team.players.reduce((sum, p) => sum + (p.base_rating || 0), 0)}`);
+  });
+
+  // Return just the player arrays (maintain backward compatibility)
+  return teams.map(team => team.players);
 }
 
 // POST /api/events/:eventId/draw - Draw teams for event
@@ -264,7 +320,8 @@ export async function POST(
           }
 
           const isStarter = k < (config?.playersPerTeam || 7);
-          const position = player.preferred_position || player.role || 'noPreference';
+          // Use the assigned_position from the draw algorithm
+          const position = player.assigned_position || player.preferred_position || player.role || 'noPreference';
 
           await sql`
             INSERT INTO team_members (team_id, user_id, position, starter)

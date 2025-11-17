@@ -102,10 +102,16 @@ export function CreateChargeModal({ groupId, onClose, onSuccess }: CreateChargeM
         if (!response.ok) throw new Error("Erro ao buscar participantes");
         
         const data = await response.json();
-        // Filtrar apenas participantes que compareceram (status 'yes' e checked_in_at não nulo)
+        console.log("Event data:", data);
+        console.log("Attendance:", data.event?.attendance);
+        
+        // Filtrar participantes que confirmaram presença (status 'yes')
+        // Se tiver checked_in_at, significa que jogou
+        // Se não tiver checked_in_at mas status for 'yes', também incluir (confirmou mas pode não ter feito check-in)
         const attendees = (data.event?.attendance || []).filter(
-          (att: Participant) => att.status === 'yes' && att.checked_in_at
+          (att: Participant) => att.status === 'yes'
         );
+        console.log("Filtered attendees:", attendees);
         setParticipants(attendees);
       } catch (error) {
         console.error("Erro ao buscar participantes:", error);

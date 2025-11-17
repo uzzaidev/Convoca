@@ -4,6 +4,86 @@ import { sql } from "@/db/client";
 import { createEventSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
 
+// GET /api/events - List events (with filters)
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireAuth();
+    const { searchParams } = new URL(request.url);
+    
+    const groupId = searchParams.get("groupId");
+    const status = searchParams.get("status");
+    const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : 10;
+
+    if (!groupId) {
+      return NextResponse.json(
+        { error: "groupId é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is member of the group
+    const [membership] = await sql`
+      SELECT role FROM group_members
+      WHERE group_id = ${groupId} AND user_id = ${user.id}
+    `;
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "Você não é membro deste grupo" },
+        { status: 403 }
+      );
+    }
+
+    // Build query with filters
+    let query = sql`
+      SELECT
+        e.id,
+        e.starts_at,
+        e.status,
+        e.max_players,
+        v.name as venue_name
+      FROM events e
+      LEFT JOIN venues v ON e.venue_id = v.id
+      WHERE e.group_id = ${groupId}
+    `;
+
+    // Add status filter if provided
+    if (status) {
+      query = sql`
+        SELECT
+          e.id,
+          e.starts_at,
+          e.status,
+          e.max_players,
+          v.name as venue_name
+        FROM events e
+        LEFT JOIN venues v ON e.venue_id = v.id
+        WHERE e.group_id = ${groupId} AND e.status = ${status}
+      `;
+    }
+
+    // Order by date and limit
+    query = sql`
+      ${query}
+      ORDER BY e.starts_at DESC
+      LIMIT ${limit}
+    `;
+
+    const events = await query;
+
+    return NextResponse.json({ events });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Não autenticado") {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+    logger.error(error, "Error fetching events");
+    return NextResponse.json(
+      { error: "Erro ao buscar eventos" },
+      { status: 500 }
+    );
+  }
+}
+
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {

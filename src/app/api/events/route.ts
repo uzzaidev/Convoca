@@ -35,21 +35,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query with filters
-    let query = sql`
-      SELECT
-        e.id,
-        e.starts_at,
-        e.status,
-        e.max_players,
-        v.name as venue_name
-      FROM events e
-      LEFT JOIN venues v ON e.venue_id = v.id
-      WHERE e.group_id = ${groupId}
-    `;
-
-    // Add status filter if provided
+    let events;
+    
     if (status) {
-      query = sql`
+      events = await sql`
         SELECT
           e.id,
           e.starts_at,
@@ -59,17 +48,24 @@ export async function GET(request: NextRequest) {
         FROM events e
         LEFT JOIN venues v ON e.venue_id = v.id
         WHERE e.group_id = ${groupId} AND e.status = ${status}
+        ORDER BY e.starts_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      events = await sql`
+        SELECT
+          e.id,
+          e.starts_at,
+          e.status,
+          e.max_players,
+          v.name as venue_name
+        FROM events e
+        LEFT JOIN venues v ON e.venue_id = v.id
+        WHERE e.group_id = ${groupId}
+        ORDER BY e.starts_at DESC
+        LIMIT ${limit}
       `;
     }
-
-    // Order by date and limit
-    query = sql`
-      ${query}
-      ORDER BY e.starts_at DESC
-      LIMIT ${limit}
-    `;
-
-    const events = await query;
 
     return NextResponse.json({ events });
   } catch (error) {

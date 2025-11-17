@@ -3,63 +3,24 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Check, X, Trash2, DollarSign } from "lucide-react";
+import { Plus, DollarSign, Check } from "lucide-react";
 import { CreateChargeModal } from "./create-charge-modal";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-
-type Charge = {
-  id: string;
-  type: "monthly" | "daily" | "fine" | "other";
-  amount_cents: number;
-  due_date: string | null;
-  status: "pending" | "paid" | "canceled";
-  created_at: string;
-  user_id: string;
-  user_name: string;
-  user_image: string | null;
-};
+import { ChargesDataTable, type Charge } from "./charges-data-table";
 
 type PaymentsContentProps = {
   groupId: string;
   isAdmin: boolean;
 };
 
-const chargeTypeLabels: Record<string, string> = {
-  monthly: "Mensalidade",
-  daily: "Diária",
-  fine: "Multa",
-  other: "Outro",
-};
-
-const statusLabels: Record<string, string> = {
-  pending: "Pendente",
-  paid: "Pago",
-  canceled: "Cancelado",
-};
-
-const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "secondary",
-  paid: "default",
-  canceled: "destructive",
-};
-
 export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
   const [charges, setCharges] = useState<Charge[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "canceled">("all");
 
   const fetchCharges = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") {
-        params.append("status", statusFilter);
-      }
-      
-      const response = await fetch(`/api/groups/${groupId}/charges?${params.toString()}`);
+      const response = await fetch(`/api/groups/${groupId}/charges`);
       if (!response.ok) throw new Error("Erro ao buscar cobranças");
       
       const data = await response.json();
@@ -74,7 +35,7 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
   useEffect(() => {
     fetchCharges();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId, statusFilter]);
+  }, [groupId]);
 
   const handleMarkAsPaid = async (chargeId: string) => {
     try {
@@ -86,7 +47,6 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
 
       if (!response.ok) throw new Error("Erro ao atualizar cobrança");
 
-      // Atualizar lista
       fetchCharges();
     } catch (error) {
       console.error("Erro ao marcar como pago:", error);
@@ -95,8 +55,6 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
   };
 
   const handleCancelCharge = async (chargeId: string) => {
-    if (!confirm("Tem certeza que deseja cancelar esta cobrança?")) return;
-
     try {
       const response = await fetch(`/api/groups/${groupId}/charges/${chargeId}`, {
         method: "PATCH",
@@ -106,7 +64,6 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
 
       if (!response.ok) throw new Error("Erro ao cancelar cobrança");
 
-      // Atualizar lista
       fetchCharges();
     } catch (error) {
       console.error("Erro ao cancelar cobrança:", error);
@@ -124,7 +81,6 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
 
       if (!response.ok) throw new Error("Erro ao excluir cobrança");
 
-      // Atualizar lista
       fetchCharges();
     } catch (error) {
       console.error("Erro ao excluir cobrança:", error);
@@ -178,114 +134,30 @@ export function PaymentsContent({ groupId, isAdmin }: PaymentsContentProps) {
         </Card>
       </div>
 
-      {/* Ações e Filtros */}
+      {/* Tabela de Cobranças */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle>Cobranças</CardTitle>
-            <div className="flex items-center gap-2">
-              {/* Filtros */}
-              <div className="flex gap-1">
-                <Button
-                  variant={statusFilter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter("all")}
-                >
-                  Todas
-                </Button>
-                <Button
-                  variant={statusFilter === "pending" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter("pending")}
-                >
-                  Pendentes
-                </Button>
-                <Button
-                  variant={statusFilter === "paid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setStatusFilter("paid")}
-                >
-                  Pagas
-                </Button>
-              </div>
-
-              {/* Criar cobrança (apenas admin) */}
-              {isAdmin && (
-                <Button onClick={() => setShowCreateModal(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Cobrança
-                </Button>
-              )}
-            </div>
+            {isAdmin && (
+              <Button onClick={() => setShowCreateModal(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Cobrança
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-center text-muted-foreground py-8">Carregando...</p>
-          ) : charges.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhuma cobrança encontrada
-            </p>
           ) : (
-            <div className="space-y-3">
-              {charges.map((charge) => (
-                <div
-                  key={charge.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{charge.user_name}</span>
-                      <Badge variant={statusVariants[charge.status]}>
-                        {statusLabels[charge.status]}
-                      </Badge>
-                      <Badge variant="outline">{chargeTypeLabels[charge.type]}</Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Valor: <span className="font-medium">{formatCurrency(charge.amount_cents)}</span>
-                      {charge.due_date && (
-                        <>
-                          {" • "}
-                          Vencimento: {format(new Date(charge.due_date), "dd/MM/yyyy", { locale: ptBR })}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Ações (apenas admin) */}
-                  {isAdmin && (
-                    <div className="flex items-center gap-2">
-                      {charge.status === "pending" && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleMarkAsPaid(charge.id)}
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Marcar como Pago
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCancelCharge(charge.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteCharge(charge.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <ChargesDataTable
+              data={charges}
+              isAdmin={isAdmin}
+              onMarkAsPaid={handleMarkAsPaid}
+              onCancel={handleCancelCharge}
+              onDelete={handleDeleteCharge}
+            />
           )}
         </CardContent>
       </Card>

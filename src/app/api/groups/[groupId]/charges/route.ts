@@ -34,26 +34,56 @@ export async function GET(
     const userId = searchParams.get("userId"); // filter by user
 
     // Build query with filters
-    let query = sql`
-      SELECT
-        c.id,
-        c.type,
-        c.amount_cents,
-        c.due_date,
-        c.status,
-        c.created_at,
-        c.updated_at,
-        u.id as user_id,
-        u.name as user_name,
-        u.image as user_image
-      FROM charges c
-      INNER JOIN users u ON c.user_id = u.id
-      WHERE c.group_id = ${groupId}
-    `;
-
-    // Add status filter if provided
-    if (status && ["pending", "paid", "canceled"].includes(status)) {
-      query = sql`
+    let charges;
+    
+    if (userId) {
+      // Filter by both status (if provided) and userId
+      if (status && ["pending", "paid", "canceled"].includes(status)) {
+        charges = await sql`
+          SELECT
+            c.id,
+            c.type,
+            c.amount_cents,
+            c.due_date,
+            c.status,
+            c.created_at,
+            c.updated_at,
+            u.id as user_id,
+            u.name as user_name,
+            u.image as user_image
+          FROM charges c
+          INNER JOIN users u ON c.user_id = u.id
+          WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
+          ORDER BY
+            CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+            c.due_date DESC,
+            c.created_at DESC
+        `;
+      } else {
+        charges = await sql`
+          SELECT
+            c.id,
+            c.type,
+            c.amount_cents,
+            c.due_date,
+            c.status,
+            c.created_at,
+            c.updated_at,
+            u.id as user_id,
+            u.name as user_name,
+            u.image as user_image
+          FROM charges c
+          INNER JOIN users u ON c.user_id = u.id
+          WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
+          ORDER BY
+            CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+            c.due_date DESC,
+            c.created_at DESC
+        `;
+      }
+    } else if (status && ["pending", "paid", "canceled"].includes(status)) {
+      // Filter by status only
+      charges = await sql`
         SELECT
           c.id,
           c.type,
@@ -68,12 +98,14 @@ export async function GET(
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
         WHERE c.group_id = ${groupId} AND c.status = ${status}
+        ORDER BY
+          CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+          c.due_date DESC,
+          c.created_at DESC
       `;
-    }
-
-    // Add user filter if provided
-    if (userId) {
-      query = sql`
+    } else {
+      // No filters, get all charges
+      charges = await sql`
         SELECT
           c.id,
           c.type,
@@ -88,21 +120,12 @@ export async function GET(
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
         WHERE c.group_id = ${groupId}
-          ${status && ["pending", "paid", "canceled"].includes(status) ? sql`AND c.status = ${status}` : sql``}
-          AND c.user_id = ${userId}
+        ORDER BY
+          CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+          c.due_date DESC,
+          c.created_at DESC
       `;
     }
-
-    // Order by due date (newest first if no due date)
-    query = sql`
-      ${query}
-      ORDER BY
-        CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
-        c.due_date DESC,
-        c.created_at DESC
-    `;
-
-    const charges = await query;
 
     return NextResponse.json({ charges });
   } catch (error) {

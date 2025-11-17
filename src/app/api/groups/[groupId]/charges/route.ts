@@ -1,0 +1,198 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-helpers";
+import { sql } from "@/db/client";
+import logger from "@/lib/logger";
+import { createChargeSchema } from "@/lib/validations-charges";
+
+type Params = Promise<{ groupId: string }>;
+
+// GET /api/groups/:groupId/charges - List all charges for a group
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
+  try {
+    const { groupId } = await params;
+    const user = await requireAuth();
+
+    // Check if user is member of the group
+    const [membership] = await sql`
+      SELECT role FROM group_members
+      WHERE group_id = ${groupId} AND user_id = ${user.id}
+    `;
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "Você não é membro deste grupo" },
+        { status: 403 }
+      );
+    }
+
+    // Get filter parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status"); // pending, paid, canceled
+    const userId = searchParams.get("userId"); // filter by user
+
+    // Build query with filters
+    let query = sql`
+      SELECT
+        c.id,
+        c.type,
+        c.amount_cents,
+        c.due_date,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        u.id as user_id,
+        u.name as user_name,
+        u.image as user_image
+      FROM charges c
+      INNER JOIN users u ON c.user_id = u.id
+      WHERE c.group_id = ${groupId}
+    `;
+
+    // Add status filter if provided
+    if (status && ["pending", "paid", "canceled"].includes(status)) {
+      query = sql`
+        SELECT
+          c.id,
+          c.type,
+          c.amount_cents,
+          c.due_date,
+          c.status,
+          c.created_at,
+          c.updated_at,
+          u.id as user_id,
+          u.name as user_name,
+          u.image as user_image
+        FROM charges c
+        INNER JOIN users u ON c.user_id = u.id
+        WHERE c.group_id = ${groupId} AND c.status = ${status}
+      `;
+    }
+
+    // Add user filter if provided
+    if (userId) {
+      query = sql`
+        SELECT
+          c.id,
+          c.type,
+          c.amount_cents,
+          c.due_date,
+          c.status,
+          c.created_at,
+          c.updated_at,
+          u.id as user_id,
+          u.name as user_name,
+          u.image as user_image
+        FROM charges c
+        INNER JOIN users u ON c.user_id = u.id
+        WHERE c.group_id = ${groupId}
+          ${status && ["pending", "paid", "canceled"].includes(status) ? sql`AND c.status = ${status}` : sql``}
+          AND c.user_id = ${userId}
+      `;
+    }
+
+    // Order by due date (newest first if no due date)
+    query = sql`
+      ${query}
+      ORDER BY
+        CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+        c.due_date DESC,
+        c.created_at DESC
+    `;
+
+    const charges = await query;
+
+    return NextResponse.json({ charges });
+  } catch (error) {
+    logger.error({ error }, "Error fetching charges");
+    return NextResponse.json(
+      { error: "Erro ao buscar cobranças" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/groups/:groupId/charges - Create a new charge (admin only)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
+  try {
+    const { groupId } = await params;
+    const user = await requireAuth();
+
+    // Check if current user is admin
+    const [membership] = await sql`
+      SELECT role FROM group_members
+      WHERE group_id = ${groupId} AND user_id = ${user.id}
+    `;
+
+    if (!membership || membership.role !== "admin") {
+      return NextResponse.json(
+        { error: "Apenas admins podem criar cobranças" },
+        { status: 403 }
+      );
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = createChargeSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { userId, type, amountCents, dueDate } = validation.data;
+
+    // Check if target user is a member of the group
+    const [targetMember] = await sql`
+      SELECT user_id FROM group_members
+      WHERE group_id = ${groupId} AND user_id = ${userId}
+    `;
+
+    if (!targetMember) {
+      return NextResponse.json(
+        { error: "Usuário não é membro deste grupo" },
+        { status: 400 }
+      );
+    }
+
+    // Create charge
+    const [charge] = await sql`
+      INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status)
+      VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending')
+      RETURNING *
+    `;
+
+    logger.info(
+      { groupId, chargeId: charge.id, userId, createdBy: user.id },
+      "Charge created"
+    );
+
+    // Get user info
+    const [userInfo] = await sql`
+      SELECT id, name, image FROM users WHERE id = ${userId}
+    `;
+
+    return NextResponse.json({
+      message: "Cobrança criada com sucesso",
+      charge: {
+        ...charge,
+        user_id: userInfo.id,
+        user_name: userInfo.name,
+        user_image: userInfo.image,
+      },
+    });
+  } catch (error) {
+    logger.error({ error }, "Error creating charge");
+    return NextResponse.json(
+      { error: "Erro ao criar cobrança" },
+      { status: 500 }
+    );
+  }
+}

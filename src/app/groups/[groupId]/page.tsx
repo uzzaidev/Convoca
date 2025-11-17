@@ -9,7 +9,7 @@ import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
-import { Settings, Plus, ChevronLeft } from "lucide-react";
+import { Settings, Plus, ChevronLeft, DollarSign } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -489,6 +489,12 @@ export default async function GroupPage({ params }: RouteParams) {
                     <Link href={`/groups/${groupId}/events/new`}>
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Evento
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/groups/${groupId}/payments`}>
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Pagamentos
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">

@@ -46,8 +46,6 @@ export const eventActionSchema = z.object({
 export const playerRatingSchema = z.object({
   eventId: z.string().uuid(),
   ratedUserId: z.string().uuid(),
-  score: z.number().int().min(0).max(10),
-  tags: z.array(z.string()).optional(),
 });
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

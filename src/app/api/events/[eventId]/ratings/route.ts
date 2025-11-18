@@ -6,7 +6,7 @@ import logger from "@/lib/logger";
 
 type Params = Promise<{ eventId: string }>;
 
-// GET /api/events/:eventId/ratings - Get all ratings for event
+// GET /api/events/:eventId/ratings - Get user's vote for this event
 export async function GET(
   request: NextRequest,
   { params }: { params: Params }
@@ -36,29 +36,30 @@ export async function GET(
       );
     }
 
-    // Get user's individual ratings for this event
-    const userRatings = await sql`
-      SELECT
-        rated_user_id as player_id,
-        score as rating
+    // Get user's vote for this event (single vote)
+    const [vote] = await sql`
+      SELECT rated_user_id as player_id
       FROM player_ratings
-      WHERE event_id = ${eventId} AND rater_user_id = ${user.id}
+      WHERE event_id = ${eventId} 
+        AND rater_user_id = ${user.id}
+        AND 'mvp' = ANY(tags)
+      LIMIT 1
     `;
 
-    return NextResponse.json({ ratings: userRatings });
+    return NextResponse.json({ vote: vote || null });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
-    logger.error(error, "Error fetching ratings");
+    logger.error(error, "Error fetching vote");
     return NextResponse.json(
-      { error: "Erro ao buscar avaliações" },
+      { error: "Erro ao buscar voto" },
       { status: 500 }
     );
   }
 }
 
-// POST /api/events/:eventId/ratings - Submit player ratings
+// POST /api/events/:eventId/ratings - Submit MVP vote (single player)
 export async function POST(
   request: NextRequest,
   { params }: { params: Params }
@@ -77,7 +78,7 @@ export async function POST(
       );
     }
 
-    const { ratedUserId, score, tags } = validation.data;
+    const { ratedUserId } = validation.data;
 
     const [event] = await sql`
       SELECT group_id FROM events WHERE id = ${eventId}
@@ -95,20 +96,40 @@ export async function POST(
 
     if (!attendance) {
       return NextResponse.json(
-        { error: "Você precisa ter participado do evento para avaliar" },
+        { error: "Você precisa ter participado do evento para votar" },
         { status: 403 }
       );
     }
 
-    // Can't rate yourself
+    // Can't vote for yourself
     if (ratedUserId === user.id) {
       return NextResponse.json(
-        { error: "Você não pode se autoavaliar" },
+        { error: "Você não pode votar em si mesmo" },
         { status: 400 }
       );
     }
 
-    const [rating] = await sql`
+    // Check if the rated player participated
+    const [ratedAttendance] = await sql`
+      SELECT * FROM event_attendance
+      WHERE event_id = ${eventId} AND user_id = ${ratedUserId} AND status = 'yes'
+    `;
+
+    if (!ratedAttendance) {
+      return NextResponse.json(
+        { error: "Só é possível votar em jogadores que participaram" },
+        { status: 400 }
+      );
+    }
+
+    // Remove any previous vote from this user for this event
+    await sql`
+      DELETE FROM player_ratings
+      WHERE event_id = ${eventId} AND rater_user_id = ${user.id}
+    `;
+
+    // Insert new vote with 'mvp' tag and NULL score
+    const [vote] = await sql`
       INSERT INTO player_ratings (
         event_id,
         rater_user_id,
@@ -120,29 +141,25 @@ export async function POST(
         ${eventId},
         ${user.id},
         ${ratedUserId},
-        ${score},
-        ${tags ? tags : null}
+        NULL,
+        ARRAY['mvp']::TEXT[]
       )
-      ON CONFLICT (event_id, rater_user_id, rated_user_id)
-      DO UPDATE SET
-        score = ${score},
-        tags = ${tags ? tags : null}
       RETURNING *
     `;
 
     logger.info(
-      { eventId, raterUserId: user.id, ratedUserId, score },
-      "Player rated"
+      { eventId, raterUserId: user.id, ratedUserId },
+      "MVP vote submitted"
     );
 
-    return NextResponse.json({ rating });
+    return NextResponse.json({ vote });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
-    logger.error(error, "Error submitting rating");
+    logger.error(error, "Error submitting vote");
     return NextResponse.json(
-      { error: "Erro ao avaliar jogador" },
+      { error: "Erro ao votar" },
       { status: 500 }
     );
   }

@@ -33,12 +33,124 @@ export async function GET(
     const status = searchParams.get("status"); // pending, paid, canceled
     const userId = searchParams.get("userId"); // filter by user
 
+    // Check if event_id column exists (for backward compatibility)
+    let hasEventColumn = false;
+    try {
+      const columnCheck = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'charges' AND column_name = 'event_id'
+      `;
+      hasEventColumn = columnCheck.length > 0;
+    } catch (e) {
+      logger.warn("Could not check for event_id column, assuming it doesn't exist");
+    }
+
     // Build query with filters
     let charges;
     
     if (userId) {
       // Filter by both status (if provided) and userId
       if (status && ["pending", "paid", "canceled"].includes(status)) {
+        if (hasEventColumn) {
+          charges = await sql`
+            SELECT
+              c.id,
+              c.type,
+              c.amount_cents,
+              c.due_date,
+              c.status,
+              c.event_id,
+              c.created_at,
+              c.updated_at,
+              u.id as user_id,
+              u.name as user_name,
+              u.image as user_image,
+              e.name as event_name,
+              e.date as event_date
+            FROM charges c
+            INNER JOIN users u ON c.user_id = u.id
+            LEFT JOIN events e ON c.event_id = e.id
+            WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
+            ORDER BY
+              CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+              c.due_date DESC,
+              c.created_at DESC
+          `;
+        } else {
+          charges = await sql`
+            SELECT
+              c.id,
+              c.type,
+              c.amount_cents,
+              c.due_date,
+              c.status,
+              c.created_at,
+              c.updated_at,
+              u.id as user_id,
+              u.name as user_name,
+              u.image as user_image
+            FROM charges c
+            INNER JOIN users u ON c.user_id = u.id
+            WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
+            ORDER BY
+              CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+              c.due_date DESC,
+              c.created_at DESC
+          `;
+        }
+      } else {
+        if (hasEventColumn) {
+          charges = await sql`
+            SELECT
+              c.id,
+              c.type,
+              c.amount_cents,
+              c.due_date,
+              c.status,
+              c.event_id,
+              c.created_at,
+              c.updated_at,
+              u.id as user_id,
+              u.name as user_name,
+              u.image as user_image,
+              e.name as event_name,
+              e.date as event_date
+            FROM charges c
+            INNER JOIN users u ON c.user_id = u.id
+            LEFT JOIN events e ON c.event_id = e.id
+            WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
+            ORDER BY
+              CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+              c.due_date DESC,
+              c.created_at DESC
+          `;
+        } else {
+          charges = await sql`
+            SELECT
+              c.id,
+              c.type,
+              c.amount_cents,
+              c.due_date,
+              c.status,
+              c.created_at,
+              c.updated_at,
+              u.id as user_id,
+              u.name as user_name,
+              u.image as user_image
+            FROM charges c
+            INNER JOIN users u ON c.user_id = u.id
+            WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
+            ORDER BY
+              CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+              c.due_date DESC,
+              c.created_at DESC
+          `;
+        }
+      }
+    } else if (status && ["pending", "paid", "canceled"].includes(status)) {
+      // Filter by status only
+      if (hasEventColumn) {
         charges = await sql`
           SELECT
             c.id,
@@ -57,7 +169,7 @@ export async function GET(
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
           LEFT JOIN events e ON c.event_id = e.id
-          WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
+          WHERE c.group_id = ${groupId} AND c.status = ${status}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
             c.due_date DESC,
@@ -71,6 +183,30 @@ export async function GET(
             c.amount_cents,
             c.due_date,
             c.status,
+            c.created_at,
+            c.updated_at,
+            u.id as user_id,
+            u.name as user_name,
+            u.image as user_image
+          FROM charges c
+          INNER JOIN users u ON c.user_id = u.id
+          WHERE c.group_id = ${groupId} AND c.status = ${status}
+          ORDER BY
+            CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+            c.due_date DESC,
+            c.created_at DESC
+        `;
+      }
+    } else {
+      // No filters, get all charges
+      if (hasEventColumn) {
+        charges = await sql`
+          SELECT
+            c.id,
+            c.type,
+            c.amount_cents,
+            c.due_date,
+            c.status,
             c.event_id,
             c.created_at,
             c.updated_at,
@@ -82,65 +218,34 @@ export async function GET(
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
           LEFT JOIN events e ON c.event_id = e.id
-          WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
+          WHERE c.group_id = ${groupId}
+          ORDER BY
+            CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+            c.due_date DESC,
+            c.created_at DESC
+        `;
+      } else {
+        charges = await sql`
+          SELECT
+            c.id,
+            c.type,
+            c.amount_cents,
+            c.due_date,
+            c.status,
+            c.created_at,
+            c.updated_at,
+            u.id as user_id,
+            u.name as user_name,
+            u.image as user_image
+          FROM charges c
+          INNER JOIN users u ON c.user_id = u.id
+          WHERE c.group_id = ${groupId}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
             c.due_date DESC,
             c.created_at DESC
         `;
       }
-    } else if (status && ["pending", "paid", "canceled"].includes(status)) {
-      // Filter by status only
-      charges = await sql`
-        SELECT
-          c.id,
-          c.type,
-          c.amount_cents,
-          c.due_date,
-          c.status,
-          c.event_id,
-          c.created_at,
-          c.updated_at,
-          u.id as user_id,
-          u.name as user_name,
-          u.image as user_image,
-          e.name as event_name,
-          e.date as event_date
-        FROM charges c
-        INNER JOIN users u ON c.user_id = u.id
-        LEFT JOIN events e ON c.event_id = e.id
-        WHERE c.group_id = ${groupId} AND c.status = ${status}
-        ORDER BY
-          CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
-          c.due_date DESC,
-          c.created_at DESC
-      `;
-    } else {
-      // No filters, get all charges
-      charges = await sql`
-        SELECT
-          c.id,
-          c.type,
-          c.amount_cents,
-          c.due_date,
-          c.status,
-          c.event_id,
-          c.created_at,
-          c.updated_at,
-          u.id as user_id,
-          u.name as user_name,
-          u.image as user_image,
-          e.name as event_name,
-          e.date as event_date
-        FROM charges c
-        INNER JOIN users u ON c.user_id = u.id
-        LEFT JOIN events e ON c.event_id = e.id
-        WHERE c.group_id = ${groupId}
-        ORDER BY
-          CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
-          c.due_date DESC,
-          c.created_at DESC
-      `;
     }
 
     return NextResponse.json({ charges });
@@ -201,12 +306,34 @@ export async function POST(
       );
     }
 
+    // Check if event_id column exists (for backward compatibility)
+    let hasEventColumn = false;
+    try {
+      const columnCheck = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'charges' AND column_name = 'event_id'
+      `;
+      hasEventColumn = columnCheck.length > 0;
+    } catch (e) {
+      logger.warn("Could not check for event_id column, assuming it doesn't exist");
+    }
+
     // Create charge
-    const [charge] = await sql`
-      INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status, event_id)
-      VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending', ${eventId || null})
-      RETURNING *
-    `;
+    let charge;
+    if (hasEventColumn) {
+      [charge] = await sql`
+        INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status, event_id)
+        VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending', ${eventId || null})
+        RETURNING *
+      `;
+    } else {
+      [charge] = await sql`
+        INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status)
+        VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending')
+        RETURNING *
+      `;
+    }
 
     logger.info(
       { groupId, chargeId: charge.id, userId, createdBy: user.id },

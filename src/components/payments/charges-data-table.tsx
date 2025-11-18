@@ -54,6 +54,9 @@ export type Charge = {
   status: "pending" | "paid" | "canceled";
   created_at: string;
   updated_at: string;
+  event_id: string | null;
+  event_name: string | null;
+  event_date: string | null;
 };
 
 const chargeTypeLabels: Record<string, string> = {
@@ -94,6 +97,7 @@ export function ChargesDataTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [columnOrder, setColumnOrder] = React.useState<string[]>([]);
 
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -150,6 +154,23 @@ export function ChargesDataTable({
           <Badge variant="outline">
             {chargeTypeLabels[type]}
           </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "event_name",
+      header: "Partida",
+      cell: ({ row }) => {
+        const eventName = row.getValue("event_name") as string | null;
+        const eventDate = row.original.event_date;
+        if (!eventName) return <span className="text-muted-foreground">-</span>;
+        return (
+          <div className="text-sm">
+            <div className="font-medium">{eventName}</div>
+            {eventDate && (
+              <div className="text-muted-foreground">{formatDate(eventDate)}</div>
+            )}
+          </div>
         );
       },
     },
@@ -251,11 +272,13 @@ export function ChargesDataTable({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onColumnOrderChange: setColumnOrder,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      columnOrder,
     },
   });
 
@@ -324,6 +347,7 @@ export function ChargesDataTable({
                     {column.id === "user_name" && "Jogador"}
                     {column.id === "amount_cents" && "Valor"}
                     {column.id === "type" && "Tipo"}
+                    {column.id === "event_name" && "Partida"}
                     {column.id === "due_date" && "Vencimento"}
                     {column.id === "status" && "Status"}
                     {column.id === "created_at" && "Criado em"}

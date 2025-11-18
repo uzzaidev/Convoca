@@ -46,13 +46,17 @@ export async function GET(
             c.amount_cents,
             c.due_date,
             c.status,
+            c.event_id,
             c.created_at,
             c.updated_at,
             u.id as user_id,
             u.name as user_name,
-            u.image as user_image
+            u.image as user_image,
+            e.name as event_name,
+            e.date as event_date
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
+          LEFT JOIN events e ON c.event_id = e.id
           WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -67,13 +71,17 @@ export async function GET(
             c.amount_cents,
             c.due_date,
             c.status,
+            c.event_id,
             c.created_at,
             c.updated_at,
             u.id as user_id,
             u.name as user_name,
-            u.image as user_image
+            u.image as user_image,
+            e.name as event_name,
+            e.date as event_date
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
+          LEFT JOIN events e ON c.event_id = e.id
           WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -90,13 +98,17 @@ export async function GET(
           c.amount_cents,
           c.due_date,
           c.status,
+          c.event_id,
           c.created_at,
           c.updated_at,
           u.id as user_id,
           u.name as user_name,
-          u.image as user_image
+          u.image as user_image,
+          e.name as event_name,
+          e.date as event_date
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
+        LEFT JOIN events e ON c.event_id = e.id
         WHERE c.group_id = ${groupId} AND c.status = ${status}
         ORDER BY
           CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -112,13 +124,17 @@ export async function GET(
           c.amount_cents,
           c.due_date,
           c.status,
+          c.event_id,
           c.created_at,
           c.updated_at,
           u.id as user_id,
           u.name as user_name,
-          u.image as user_image
+          u.image as user_image,
+          e.name as event_name,
+          e.date as event_date
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
+        LEFT JOIN events e ON c.event_id = e.id
         WHERE c.group_id = ${groupId}
         ORDER BY
           CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -170,7 +186,7 @@ export async function POST(
       );
     }
 
-    const { userId, type, amountCents, dueDate } = validation.data;
+    const { userId, type, amountCents, dueDate, eventId } = validation.data;
 
     // Check if target user is a member of the group
     const [targetMember] = await sql`
@@ -187,8 +203,8 @@ export async function POST(
 
     // Create charge
     const [charge] = await sql`
-      INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status)
-      VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending')
+      INSERT INTO charges (group_id, user_id, type, amount_cents, due_date, status, event_id)
+      VALUES (${groupId}, ${userId}, ${type}, ${amountCents}, ${dueDate || null}, 'pending', ${eventId || null})
       RETURNING *
     `;
 

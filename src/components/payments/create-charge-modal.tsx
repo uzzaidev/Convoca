@@ -196,6 +196,7 @@ export function CreateChargeModal({ groupId, onClose, onSuccess }: CreateChargeM
             type: eventFormData.type,
             amountCents: amountPerPerson,
             dueDate: eventFormData.dueDate || undefined,
+            eventId: eventFormData.eventId, // Link charge to event
           }),
         })
       );

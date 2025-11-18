@@ -9,6 +9,7 @@ export const createChargeSchema = z.object({
   amountCents: z.number().int().min(1, "Valor deve ser maior que zero"),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
   description: z.string().optional(),
+  eventId: z.string().uuid("ID do evento inválido").optional().nullable(),
 });
 
 // Schema para atualizar status de cobrança

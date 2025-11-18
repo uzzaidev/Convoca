@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Star, Save, Loader2, CheckCircle2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Trophy, Save, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type Team = {
@@ -18,9 +19,8 @@ type Team = {
   }> | null;
 };
 
-type PlayerRating = {
+type Vote = {
   player_id: string;
-  rating: number;
 };
 
 type RatingsTabProps = {
@@ -36,9 +36,9 @@ export function RatingsTab({
 }: RatingsTabProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [existingRatings, setExistingRatings] = useState<Record<string, number>>({});
+  const [currentVote, setCurrentVote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Get all players from all teams
@@ -51,44 +51,31 @@ export function RatingsTab({
   );
 
   useEffect(() => {
-    fetchExistingRatings();
+    fetchCurrentVote();
   }, [eventId]);
 
-  const fetchExistingRatings = async () => {
+  const fetchCurrentVote = async () => {
     try {
       const response = await fetch(`/api/events/${eventId}/ratings`);
       if (response.ok) {
         const data = await response.json();
-        const ratingsMap: Record<string, number> = {};
-        data.ratings?.forEach((r: PlayerRating) => {
-          ratingsMap[r.player_id] = r.rating;
-        });
-        setExistingRatings(ratingsMap);
-        setRatings(ratingsMap);
+        if (data.vote) {
+          setCurrentVote(data.vote.player_id);
+          setSelectedPlayerId(data.vote.player_id);
+        }
       }
     } catch (error) {
-      console.error("Error fetching ratings:", error);
+      console.error("Error fetching vote:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRatingChange = (playerId: string, value: number[]) => {
-    setRatings((prev) => ({
-      ...prev,
-      [playerId]: value[0],
-    }));
-  };
-
-  const handleSaveRatings = async () => {
-    const ratingsToSave = Object.entries(ratings).filter(
-      ([playerId, rating]) => rating > 0
-    );
-
-    if (ratingsToSave.length === 0) {
+  const handleSaveVote = async () => {
+    if (!selectedPlayerId) {
       toast({
-        title: "Nenhuma avaliação",
-        description: "Avalie pelo menos um jogador",
+        title: "Nenhum jogador selecionado",
+        description: "Selecione um jogador para votar como Craque da Partida",
         variant: "destructive",
       });
       return;
@@ -97,56 +84,31 @@ export function RatingsTab({
     setIsSaving(true);
 
     try {
-      let successCount = 0;
-      let errorMessages: string[] = [];
+      const response = await fetch(`/api/events/${eventId}/ratings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ratedUserId: selectedPlayerId,
+        }),
+      });
 
-      // Send each rating individually
-      for (const [playerId, rating] of ratingsToSave) {
-        try {
-          const response = await fetch(`/api/events/${eventId}/ratings`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              ratedUserId: playerId,
-              score: rating,
-            }),
-          });
-
-          if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || "Erro ao salvar avaliação");
-          }
-
-          successCount++;
-        } catch (error) {
-          errorMessages.push(
-            error instanceof Error ? error.message : "Erro desconhecido"
-          );
-        }
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Erro ao salvar voto");
       }
 
-      if (successCount > 0) {
-        toast({
-          title: "Avaliações salvas!",
-          description: `${successCount} avaliações foram registradas`,
-        });
+      toast({
+        title: "Voto salvo!",
+        description: "Seu voto para Craque da Partida foi registrado",
+      });
 
-        setExistingRatings(ratings);
-        router.refresh();
-      }
-
-      if (errorMessages.length > 0) {
-        toast({
-          title: "Alguns erros ocorreram",
-          description: errorMessages[0],
-          variant: "destructive",
-        });
-      }
+      setCurrentVote(selectedPlayerId);
+      router.refresh();
     } catch (error) {
       toast({
-        title: "Erro ao salvar avaliações",
+        title: "Erro ao salvar voto",
         description: error instanceof Error ? error.message : "Tente novamente",
         variant: "destructive",
       });
@@ -160,7 +122,7 @@ export function RatingsTab({
       <Card>
         <CardContent className="py-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando avaliações...</p>
+          <p className="text-muted-foreground">Carregando...</p>
         </CardContent>
       </Card>
     );
@@ -171,76 +133,73 @@ export function RatingsTab({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
-            Avaliar Jogadores
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Craque da Partida
           </CardTitle>
           <CardDescription>
             {isAdmin
-              ? "Como admin, você pode avaliar todos os jogadores"
-              : "Avalie seus companheiros de partida de 0 a 10"}
+              ? "Como admin, você pode votar em qualquer jogador"
+              : "Vote em um jogador como Craque da Partida"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {teams.map((team) => (
-              <div key={team.id}>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  {team.name}
-                  <Badge variant="secondary" className="text-xs">
-                    {team.members?.length || 0} jogadores
-                  </Badge>
-                </h3>
+          <RadioGroup
+            value={selectedPlayerId || ""}
+            onValueChange={setSelectedPlayerId}
+          >
+            <div className="space-y-6">
+              {teams.map((team) => (
+                <div key={team.id}>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    {team.name}
+                    <Badge variant="secondary" className="text-xs">
+                      {team.members?.length || 0} jogadores
+                    </Badge>
+                  </h3>
 
-                <div className="space-y-4">
-                  {team.members?.map((player) => {
-                    const currentRating = ratings[player.userId] || 0;
-                    const hasExistingRating = existingRatings[player.userId] !== undefined;
+                  <div className="space-y-2">
+                    {team.members?.map((player) => {
+                      const isSelected = selectedPlayerId === player.userId;
+                      const isCurrentVote = currentVote === player.userId;
 
-                    return (
-                      <div
-                        key={player.userId}
-                        className="p-4 rounded-lg bg-muted/30 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{player.userName}</span>
-                            {hasExistingRating && (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            <span className="text-lg font-bold min-w-[2ch] text-right">
-                              {currentRating}
-                            </span>
-                          </div>
+                      return (
+                        <div
+                          key={player.userId}
+                          className={`p-4 rounded-lg bg-muted/30 flex items-center gap-3 hover:bg-muted/50 transition-colors cursor-pointer ${
+                            isSelected ? "ring-2 ring-yellow-500 bg-yellow-500/10" : ""
+                          }`}
+                        >
+                          <RadioGroupItem
+                            value={player.userId}
+                            id={player.userId}
+                          />
+                          <Label
+                            htmlFor={player.userId}
+                            className="flex-1 cursor-pointer flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{player.userName}</span>
+                              {isCurrentVote && (
+                                <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-700 border-yellow-500/50">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Seu voto
+                                </Badge>
+                              )}
+                            </div>
+                          </Label>
                         </div>
-
-                        <Slider
-                          value={[currentRating]}
-                          onValueChange={(value) => handleRatingChange(player.userId, value)}
-                          max={10}
-                          step={1}
-                          className="w-full"
-                        />
-
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>0</span>
-                          <span>5</span>
-                          <span>10</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </RadioGroup>
 
           <div className="flex justify-end mt-6">
             <Button
-              onClick={handleSaveRatings}
-              disabled={isSaving}
+              onClick={handleSaveVote}
+              disabled={isSaving || !selectedPlayerId}
               size="lg"
             >
               {isSaving ? (
@@ -248,7 +207,7 @@ export function RatingsTab({
               ) : (
                 <Save className="h-5 w-5 mr-2" />
               )}
-              Salvar Avaliações
+              Salvar Voto
             </Button>
           </div>
         </CardContent>

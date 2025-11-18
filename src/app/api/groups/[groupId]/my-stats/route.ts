@@ -89,9 +89,6 @@ export async function GET(
           THEN t.event_id
         END) as losses,
 
-        -- Média de avaliação
-        COALESCE(AVG(pr.score), 0)::numeric(4,2) as avg_rating,
-
         -- Contagem de MVPs
         COUNT(DISTINCT CASE
           WHEN 'mvp' = ANY(pr.tags)
@@ -155,7 +152,7 @@ export async function GET(
       saves: parseInt(userStats.saves) || 0,
       yellowCards: parseInt(userStats.yellow_cards) || 0,
       redCards: parseInt(userStats.red_cards) || 0,
-      averageRating: userStats.avg_rating ? parseFloat(userStats.avg_rating).toFixed(1) : null,
+      averageRating: null,
       wins: parseInt(userStats.wins) || 0,
       losses: parseInt(userStats.losses) || 0,
       draws: 0, // TODO: calcular empates quando tivermos essa lógica

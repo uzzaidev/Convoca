@@ -38,7 +38,6 @@ export function MyStatsCard({
     { label: "Gols", value: goals, icon: <Target className="h-6 w-6 text-green-600" /> },
     { label: "Assistências", value: assists, icon: <TrendingUp className="h-6 w-6 text-blue-600" /> },
     { label: "Vitórias", value: wins, icon: <Trophy className="h-6 w-6 text-yellow-600" /> },
-    { label: "Nota Média", value: averageRating || "—", icon: <Star className="h-6 w-6 text-purple-600" /> },
     { label: "MVPs", value: mvpCount, icon: <Crown className="h-6 w-6 text-orange-600" /> },
   ];
 
@@ -49,7 +48,7 @@ export function MyStatsCard({
         <CardDescription>Seu desempenho neste grupo</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {stats.map((stat, index) => (
             <div
               key={index}

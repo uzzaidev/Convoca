@@ -122,9 +122,6 @@ export async function GET(
             THEN t.event_id
           END) as wins,
 
-          -- Média de avaliações recebidas
-          COALESCE(AVG(pr.score), 0)::numeric(4,2) as avg_rating,
-
           -- Contagem de MVPs
           COUNT(DISTINCT CASE
             WHEN 'mvp' = ANY(pr.tags)
@@ -173,14 +170,13 @@ export async function GET(
           (games_played * 1) +
           (goals * 3) +
           (assists * 2) +
-          (avg_rating * 5) +
           (wins * 5) +
           (mvp_count * 10)
         )::numeric(10,2) as performance_score
 
       FROM player_stats
       WHERE games_played > 0  -- Só mostrar quem jogou
-      ORDER BY performance_score DESC, avg_rating DESC, goals DESC
+      ORDER BY performance_score DESC, mvp_count DESC, goals DESC
     `;
 
     // DEBUG: Log detalhado dos rankings

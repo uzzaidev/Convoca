@@ -145,7 +145,43 @@ export async function GET(
 
     return NextResponse.json({ charges });
   } catch (error) {
-    logger.error({ error }, "Error fetching charges");
+    logger.error({ error, groupId: (await params).groupId }, "Error fetching charges");
+    
+    // Check if error is due to missing event_id column
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('event_id') || errorMessage.includes('column')) {
+      logger.warn("Possible missing event_id column, trying query without it");
+      
+      // Fallback query without event_id
+      try {
+        const { groupId } = await params;
+        const charges = await sql`
+          SELECT
+            c.id,
+            c.type,
+            c.amount_cents,
+            c.due_date,
+            c.status,
+            c.created_at,
+            c.updated_at,
+            u.id as user_id,
+            u.name as user_name,
+            u.image as user_image
+          FROM charges c
+          INNER JOIN users u ON c.user_id = u.id
+          WHERE c.group_id = ${groupId}
+          ORDER BY
+            CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
+            c.due_date DESC,
+            c.created_at DESC
+        `;
+        
+        return NextResponse.json({ charges });
+      } catch (fallbackError) {
+        logger.error({ fallbackError }, "Fallback query also failed");
+      }
+    }
+    
     return NextResponse.json(
       { error: "Erro ao buscar cobranças" },
       { status: 500 }

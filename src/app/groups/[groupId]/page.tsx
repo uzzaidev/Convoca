@@ -505,7 +505,11 @@ export default async function GroupPage({ params }: RouteParams) {
 
         {/* Próximas Partidas */}
         <div className="mb-8">
-          <UpcomingEventsCard events={upcomingEvents} />
+          <UpcomingEventsCard
+            events={upcomingEvents}
+            groupId={groupId}
+            userRole={group.user_role}
+          />
         </div>
 
         {/* Minhas Estatísticas */}

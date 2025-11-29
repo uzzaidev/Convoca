@@ -5,8 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3, MoreVertical } from "lucide-react";
+import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3, MoreVertical, Maximize2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -102,6 +110,8 @@ export function RankingsCard({
 }: RankingsCardProps) {
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
     // Tentar carregar do localStorage
     if (typeof window !== 'undefined') {
@@ -149,9 +159,79 @@ export function RankingsCard({
   const sortedGeneralRanking = [...generalRanking].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
-    
+
     return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
   });
+
+  // Função para exportar para PDF
+  const exportToPDF = async (tabName: string, data?: PlayerStat[]) => {
+    setIsExporting(true);
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(18);
+      doc.text(`Rankings - ${tabName}`, pageWidth / 2, 15, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, 22, { align: 'center' });
+
+      let tableData: any[] = [];
+      let headers: string[] = [];
+
+      if (tabName === 'Geral') {
+        headers = ['#', 'Jogador', 'Jogos', 'Gols', 'Assist.', 'MVPs', 'Vitórias', 'Pontos'];
+        tableData = sortedGeneralRanking.map((player, index) => [
+          index + 1,
+          player.name,
+          player.games,
+          player.goals,
+          player.assists,
+          player.mvps,
+          player.wins,
+          player.score
+        ]);
+      } else if (data) {
+        headers = ['#', 'Jogador', 'Jogos', 'Estatística'];
+        tableData = data.map((player, index) => [
+          index + 1,
+          player.name,
+          player.games ?? '-',
+          player.value
+        ]);
+      } else if (tabName === 'Frequência') {
+        headers = ['#', 'Jogador', 'Presentes', 'DM', 'Ausentes', 'Total', '%'];
+        tableData = playerFrequency.map((player, index) => [
+          index + 1,
+          player.name,
+          player.games_played,
+          player.games_dm,
+          player.games_absent,
+          player.total_games,
+          `${parseFloat(player.frequency_percentage || '0').toFixed(1)}%`
+        ]);
+      }
+
+      (doc as any).autoTable({
+        head: [headers],
+        body: tableData,
+        startY: 30,
+        theme: 'striped',
+        headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3 },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+      });
+
+      doc.save(`ranking-${tabName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Erro ao exportar PDF. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Transformar dados para formato consistente
   const scorersData: PlayerStat[] = topScorers.map((p) => {
@@ -187,7 +267,7 @@ export function RankingsCard({
     };
   });
 
-  const renderRankingList = (data: PlayerStat[], emptyMessage: string) => {
+  const renderRankingList = (data: PlayerStat[], emptyMessage: string, fullscreen = false) => {
     if (data.length === 0) {
       return (
         <p className="text-center text-muted-foreground py-8">{emptyMessage}</p>
@@ -195,7 +275,7 @@ export function RankingsCard({
     }
 
     return (
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -209,7 +289,7 @@ export function RankingsCard({
             {data.map((player, index) => {
               const isCurrentUser = player.id === currentUserId;
               return (
-                <TableRow 
+                <TableRow
                   key={player.id}
                   className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
                 >
@@ -253,7 +333,7 @@ export function RankingsCard({
         </span>
       );
     }
-    
+
     if (col.key === 'goal_difference') {
       return (
         <span className={value > 0 ? "text-green-600 dark:text-green-500" : value < 0 ? "text-red-600 dark:text-red-500" : ""}>
@@ -261,19 +341,19 @@ export function RankingsCard({
         </span>
       );
     }
-    
+
     if (col.key === 'score') {
       return <span className="text-lg font-bold tabular-nums">{value}</span>;
     }
-    
+
     if (value === 0) {
       return <span className="text-muted-foreground">0</span>;
     }
-    
+
     return value;
   };
 
-  const renderGeneralRanking = () => {
+  const renderGeneralRanking = (fullscreen = false) => {
     if (generalRanking.length === 0) {
       return (
         <p className="text-center text-muted-foreground py-8">
@@ -286,7 +366,7 @@ export function RankingsCard({
       if (sortField !== field) {
         return <ArrowUpDown className="ml-2 h-4 w-4" />;
       }
-      return sortDirection === 'asc' 
+      return sortDirection === 'asc'
         ? <ArrowUp className="ml-2 h-4 w-4" />
         : <ArrowDown className="ml-2 h-4 w-4" />;
     };
@@ -296,99 +376,131 @@ export function RankingsCard({
     return (
       <div className="space-y-2">
         {/* Menu de seleção de colunas */}
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8">
-                <MoreVertical className="h-4 w-4" />
-                <span className="ml-2 hidden sm:inline">Colunas</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {COLUMNS.map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.key}
-                  checked={visibleColumns[col.key]}
-                  onCheckedChange={() => toggleColumn(col.key)}
-                >
-                  {col.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex justify-between items-center gap-2">
+          <div className="text-xs text-muted-foreground hidden md:block">
+            Dica: Arraste horizontalmente para ver mais colunas
+          </div>
+          <div className="flex gap-2">
+            {!fullscreen && (
+              <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="ml-2 hidden sm:inline">Expandir</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      Ranking Geral
+                    </DialogTitle>
+                    <DialogDescription>
+                      Ranking baseado em: presença (2 pts), gols (3 pts), assistências (2 pts),
+                      MVPs (5 pts) e vitórias (1 pt)
+                    </DialogDescription>
+                  </DialogHeader>
+                  {renderGeneralRanking(true)}
+                </DialogContent>
+              </Dialog>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">Colunas</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {COLUMNS.map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.key}
+                    checked={visibleColumns[col.key]}
+                    onCheckedChange={() => toggleColumn(col.key)}
+                  >
+                    {col.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px] text-center sticky left-0 bg-background z-10">#</TableHead>
-                <TableHead className="sticky bg-background z-10" style={{ left: `${STICKY_NAME_LEFT}px` }}>Jogador</TableHead>
-                {visibleColumnsList.map((col) => (
-                  <TableHead key={col.key} className={col.key === 'score' ? "text-right" : "text-center"}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => toggleSort(col.key)}
-                      className="h-8 w-full"
-                    >
-                      {col.label}
-                      {getSortIcon(col.key)}
-                    </Button>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedGeneralRanking.map((player, index) => {
-                const isCurrentUser = player.id === currentUserId;
-                return (
-                  <TableRow 
-                    key={player.id}
-                    className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
-                  >
-                    <TableCell className="text-center sticky left-0 bg-inherit z-10">
-                      <div
-                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                          index === 0
-                            ? "bg-yellow-500 text-yellow-950"
-                            : index === 1
-                            ? "bg-slate-300 text-slate-900"
-                            : index === 2
-                            ? "bg-orange-600 text-orange-50"
-                            : "bg-muted text-muted-foreground"
-                        }`}
+          <div className="min-w-full inline-block align-middle">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px] text-center sticky left-0 bg-background z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">#</TableHead>
+                  <TableHead className="min-w-[140px] sticky bg-background z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ left: `${STICKY_NAME_LEFT}px` }}>Jogador</TableHead>
+                  {visibleColumnsList.map((col) => (
+                    <TableHead key={col.key} className={col.key === 'score' ? "text-right min-w-[100px]" : "text-center min-w-[80px]"}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSort(col.key)}
+                        className="h-8 w-full text-xs"
                       >
-                        {index + 1}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium sticky bg-inherit z-10" style={{ left: `${STICKY_NAME_LEFT}px` }}>{player.name}</TableCell>
-                    {visibleColumnsList.map((col) => {
-                      const value = player[col.key];
-                      const isScore = col.key === 'score';
-                      
-                      return (
-                        <TableCell 
-                          key={col.key} 
-                          className={isScore ? "text-right" : "text-center tabular-nums"}
+                        {col.label}
+                        {getSortIcon(col.key)}
+                      </Button>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedGeneralRanking.map((player, index) => {
+                  const isCurrentUser = player.id === currentUserId;
+                  return (
+                    <TableRow
+                      key={player.id}
+                      className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                    >
+                      <TableCell className="text-center sticky left-0 bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                        <div
+                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                            index === 0
+                              ? "bg-yellow-500 text-yellow-950"
+                              : index === 1
+                              ? "bg-slate-300 text-slate-900"
+                              : index === 2
+                              ? "bg-orange-600 text-orange-50"
+                              : "bg-muted text-muted-foreground"
+                          }`}
                         >
-                          {formatCellValue(col, value)}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                          {index + 1}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium sticky bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate max-w-[140px]" style={{ left: `${STICKY_NAME_LEFT}px` }}>
+                        <span className="block truncate" title={player.name}>{player.name}</span>
+                      </TableCell>
+                      {visibleColumnsList.map((col) => {
+                        const value = player[col.key];
+                        const isScore = col.key === 'score';
+
+                        return (
+                          <TableCell
+                            key={col.key}
+                            className={isScore ? "text-right" : "text-center tabular-nums"}
+                          >
+                            {formatCellValue(col, value)}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     );
   };
 
-  const renderFrequency = () => {
+  const renderFrequency = (fullscreen = false) => {
     if (playerFrequency.length === 0) {
       return (
         <p className="text-center text-muted-foreground py-8">
@@ -398,7 +510,7 @@ export function RankingsCard({
     }
 
     return (
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -423,7 +535,7 @@ export function RankingsCard({
                   : "text-red-600 dark:text-red-500";
 
               return (
-                <TableRow 
+                <TableRow
                   key={player.id}
                   className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
                 >
@@ -483,69 +595,172 @@ export function RankingsCard({
 
   return (
     <Card className="col-span-full bg-card/50">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
           Rankings
         </CardTitle>
         <CardDescription>Melhores jogadores do grupo</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-2 md:px-6">
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-4">
-            <TabsTrigger value="geral">Geral</TabsTrigger>
-            <TabsTrigger value="artilheiros">Artilheiros</TabsTrigger>
-            <TabsTrigger value="garcons">Garçons</TabsTrigger>
-            <TabsTrigger value="goleiros">Goleiros</TabsTrigger>
-            <TabsTrigger value="frequencia">Frequência</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 mb-4 h-auto">
+            <TabsTrigger value="geral" className="flex flex-col sm:flex-row gap-1 py-2">
+              <Trophy className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="artilheiros" className="flex flex-col sm:flex-row gap-1 py-2">
+              <Goal className="h-4 w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Artilheiros</span>
+              <span className="text-xs sm:hidden">Art.</span>
+            </TabsTrigger>
+            <TabsTrigger value="garcons" className="flex flex-col sm:flex-row gap-1 py-2">
+              <Target className="h-4 w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Garçons</span>
+              <span className="text-xs sm:hidden">Gar.</span>
+            </TabsTrigger>
+            <TabsTrigger value="goleiros" className="flex flex-col sm:flex-row gap-1 py-2">
+              <Hand className="h-4 w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Goleiros</span>
+              <span className="text-xs sm:hidden">Gol.</span>
+            </TabsTrigger>
+            <TabsTrigger value="frequencia" className="flex flex-col sm:flex-row gap-1 py-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Frequência</span>
+              <span className="text-xs sm:hidden">Freq.</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="geral" className="space-y-4">
-            <div className="text-sm text-muted-foreground mb-2">
+          <TabsContent value="geral" className="space-y-4 mt-0">
+            <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2">
               Ranking baseado em: presença (2 pts), gols (3 pts), assistências (2 pts),
               MVPs (5 pts) e vitórias (1 pt)
             </div>
             {renderGeneralRanking()}
           </TabsContent>
 
-          <TabsContent value="artilheiros" className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Goal className="h-5 w-5 text-green-600 dark:text-green-500" />
-              <span className="text-sm text-muted-foreground">
-                Top 10 goleadores
-              </span>
+          <TabsContent value="artilheiros" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+              <div className="flex items-center gap-2">
+                <Goal className="h-5 w-5 text-green-600 dark:text-green-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">
+                  Top 10 goleadores
+                </span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="ml-2 hidden sm:inline">Expandir</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Goal className="h-5 w-5 text-green-600" />
+                      Artilheiros
+                    </DialogTitle>
+                    <DialogDescription>Top 10 goleadores do grupo</DialogDescription>
+                  </DialogHeader>
+                  {renderRankingList(scorersData, "Nenhum gol registrado ainda", true)}
+                </DialogContent>
+              </Dialog>
             </div>
             {renderRankingList(scorersData, "Nenhum gol registrado ainda")}
           </TabsContent>
 
-          <TabsContent value="garcons" className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-              <span className="text-sm text-muted-foreground">
-                Top 10 assistências
-              </span>
+          <TabsContent value="garcons" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">
+                  Top 10 assistências
+                </span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="ml-2 hidden sm:inline">Expandir</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-blue-600" />
+                      Garçons
+                    </DialogTitle>
+                    <DialogDescription>Top 10 assistências do grupo</DialogDescription>
+                  </DialogHeader>
+                  {renderRankingList(assistersData, "Nenhuma assistência registrada ainda", true)}
+                </DialogContent>
+              </Dialog>
             </div>
             {renderRankingList(assistersData, "Nenhuma assistência registrada ainda")}
           </TabsContent>
 
-          <TabsContent value="goleiros" className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Hand className="h-5 w-5 text-purple-600 dark:text-purple-500" />
-              <span className="text-sm text-muted-foreground">
-                Top 10 defesas
-              </span>
+          <TabsContent value="goleiros" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+              <div className="flex items-center gap-2">
+                <Hand className="h-5 w-5 text-purple-600 dark:text-purple-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">
+                  Top 10 defesas
+                </span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="ml-2 hidden sm:inline">Expandir</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Hand className="h-5 w-5 text-purple-600" />
+                      Goleiros
+                    </DialogTitle>
+                    <DialogDescription>Top 10 defesas do grupo</DialogDescription>
+                  </DialogHeader>
+                  {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda", true)}
+                </DialogContent>
+              </Dialog>
             </div>
             {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda")}
           </TabsContent>
 
-          <TabsContent value="frequencia" className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-              <span className="text-sm text-muted-foreground">
-                {playerFrequency.length > 0 && playerFrequency[0].total_games 
-                  ? `Últimos ${playerFrequency[0].total_games} jogos - % de participação calculada sobre jogos disponíveis (total - DM)`
-                  : 'Últimos 10 jogos - % de participação calculada sobre jogos disponíveis (total - DM)'}
-              </span>
+          <TabsContent value="frequencia" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">
+                  {playerFrequency.length > 0 && playerFrequency[0].total_games
+                    ? `Últimos ${playerFrequency[0].total_games} jogos`
+                    : 'Últimos 10 jogos'}
+                </span>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="ml-2 hidden sm:inline">Expandir</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-blue-600" />
+                      Frequência
+                    </DialogTitle>
+                    <DialogDescription>
+                      {playerFrequency.length > 0 && playerFrequency[0].total_games
+                        ? `Últimos ${playerFrequency[0].total_games} jogos - % de participação calculada sobre jogos disponíveis (total - DM)`
+                        : 'Últimos 10 jogos - % de participação calculada sobre jogos disponíveis (total - DM)'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  {renderFrequency(true)}
+                </DialogContent>
+              </Dialog>
             </div>
             {renderFrequency()}
           </TabsContent>

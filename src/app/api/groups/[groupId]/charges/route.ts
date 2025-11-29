@@ -52,11 +52,12 @@ export async function GET(
             u.id as user_id,
             u.name as user_name,
             u.image as user_image,
-            e.name as event_name,
-            e.date as event_date
+            g.name as event_name,
+            e.starts_at as event_date
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
           LEFT JOIN events e ON c.event_id = e.id
+          LEFT JOIN groups g ON e.group_id = g.id
           WHERE c.group_id = ${groupId} AND c.status = ${status} AND c.user_id = ${userId}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -77,11 +78,12 @@ export async function GET(
             u.id as user_id,
             u.name as user_name,
             u.image as user_image,
-            e.name as event_name,
-            e.date as event_date
+            g.name as event_name,
+            e.starts_at as event_date
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
           LEFT JOIN events e ON c.event_id = e.id
+          LEFT JOIN groups g ON e.group_id = g.id
           WHERE c.group_id = ${groupId} AND c.user_id = ${userId}
           ORDER BY
             CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -104,11 +106,12 @@ export async function GET(
           u.id as user_id,
           u.name as user_name,
           u.image as user_image,
-          e.name as event_name,
-          e.date as event_date
+          g.name as event_name,
+          e.starts_at as event_date
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
         LEFT JOIN events e ON c.event_id = e.id
+        LEFT JOIN groups g ON e.group_id = g.id
         WHERE c.group_id = ${groupId} AND c.status = ${status}
         ORDER BY
           CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -130,11 +133,12 @@ export async function GET(
           u.id as user_id,
           u.name as user_name,
           u.image as user_image,
-          e.name as event_name,
-          e.date as event_date
+          g.name as event_name,
+          e.starts_at as event_date
         FROM charges c
         INNER JOIN users u ON c.user_id = u.id
         LEFT JOIN events e ON c.event_id = e.id
+        LEFT JOIN groups g ON e.group_id = g.id
         WHERE c.group_id = ${groupId}
         ORDER BY
           CASE WHEN c.due_date IS NULL THEN 1 ELSE 0 END,
@@ -166,7 +170,9 @@ export async function GET(
             c.updated_at,
             u.id as user_id,
             u.name as user_name,
-            u.image as user_image
+            u.image as user_image,
+            NULL as event_name,
+            NULL as event_date
           FROM charges c
           INNER JOIN users u ON c.user_id = u.id
           WHERE c.group_id = ${groupId}
@@ -175,7 +181,7 @@ export async function GET(
             c.due_date DESC,
             c.created_at DESC
         `;
-        
+
         return NextResponse.json({ charges });
       } catch (fallbackError) {
         logger.error({ fallbackError }, "Fallback query also failed");

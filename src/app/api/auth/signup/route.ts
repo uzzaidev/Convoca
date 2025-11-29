@@ -3,6 +3,7 @@ import { sql } from "@/db/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import logger from "@/lib/logger";
+import { checkRateLimit, RateLimitPresets } from "@/lib/rate-limit";
 
 const signupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -12,8 +13,27 @@ const signupSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - 5 signup attempts per minute per IP
+    const rateLimit = await checkRateLimit(request, RateLimitPresets.AUTH);
+
+    if (rateLimit.limited) {
+      const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: `Muitas tentativas. Tente novamente em ${retryAfter} segundos.` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': RateLimitPresets.AUTH.maxRequests.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString(),
+          }
+        }
+      );
+    }
+
     const body = await request.json();
-    
+
     // Validar dados
     const validatedData = signupSchema.parse(body);
     const { name, email, password } = validatedData;
@@ -33,11 +53,6 @@ export async function POST(request: NextRequest) {
     // Hash da senha
     const passwordHash = await bcrypt.hash(password, 10);
 
-    console.log('🔍 [SIGNUP DEBUG] Email:', email.toLowerCase());
-    console.log('🔍 [SIGNUP DEBUG] Senha original:', password);
-    console.log('🔍 [SIGNUP DEBUG] Hash gerado:', passwordHash);
-    console.log('🔍 [SIGNUP DEBUG] Tamanho do hash:', passwordHash.length);
-
     // Criar usuário
     const newUser = await sql`
       INSERT INTO users (name, email, password_hash)
@@ -49,9 +64,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, name, email
     `;
 
-    console.log('✅ [SIGNUP DEBUG] Usuário criado com ID:', newUser[0].id);
-
-    logger.info({ userId: newUser[0].id, email: newUser[0].email }, "Novo usuário criado");
+    logger.info({ userId: newUser[0].id }, "Novo usuário criado");
 
     return NextResponse.json(
       {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { validateParams, groupUserIdSchema } from "@/lib/validations-params";
 
 type Params = Promise<{ groupId: string; userId: string }>;
 
@@ -11,7 +12,18 @@ export async function PATCH(
   { params }: { params: Params }
 ) {
   try {
-    const { groupId, userId } = await params;
+    // Validate UUIDs
+    const paramsData = await params;
+    const validation = validateParams(paramsData, groupUserIdSchema);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    const { groupId, userId } = validation.data;
     const user = await requireAuth();
 
     // Check if current user is admin
@@ -50,6 +62,22 @@ export async function PATCH(
       );
     }
 
+    // If trying to demote an admin to member, check if they're the last admin
+    if (targetMember.role === 'admin' && role === 'member') {
+      const [adminCount] = await sql`
+        SELECT COUNT(*) as count
+        FROM group_members
+        WHERE group_id = ${groupId} AND role = 'admin'
+      `;
+
+      if (parseInt(adminCount.count) <= 1) {
+        return NextResponse.json(
+          { error: 'Não é possível rebaixar o último admin do grupo. Promova outro membro primeiro.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update member role
     const [updated] = await sql`
       UPDATE group_members
@@ -85,7 +113,18 @@ export async function DELETE(
   { params }: { params: Params }
 ) {
   try {
-    const { groupId, userId } = await params;
+    // Validate UUIDs
+    const paramsData = await params;
+    const validation = validateParams(paramsData, groupUserIdSchema);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    const { groupId, userId } = validation.data;
     const user = await requireAuth();
 
     // Check if current user is admin

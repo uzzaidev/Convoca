@@ -47,15 +47,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials) {
-        console.log('\n========================================');
-        console.log('[AUTH] FUNÇÃO AUTHORIZE CHAMADA!');
-        console.log('========================================\n');
-
         try {
           // Validar credenciais
           const { email, password } = credentialsSchema.parse(credentials);
-
-          console.log('[AUTH DEBUG] Email recebido:', email);
 
           // Buscar usuário no banco
           const result = await sql`
@@ -64,21 +58,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             WHERE email = ${email.toLowerCase()}
           `;
 
-          console.log('[AUTH DEBUG] Usuário encontrado:', result.length > 0);
-
           if (result.length === 0) {
-            console.log('[AUTH DEBUG] Nenhum usuário encontrado com este email');
             return null;
           }
 
           const user = result[0];
-          console.log('[AUTH DEBUG] User ID:', user.id);
-          console.log('[AUTH DEBUG] Tem password_hash?', !!user.password_hash);
-          console.log('[AUTH DEBUG] Tamanho do hash:', user.password_hash?.length);
 
           // Verificar senha
           if (!user.password_hash) {
-            console.log('[AUTH DEBUG] password_hash está vazio!');
             return null;
           }
 
@@ -88,12 +75,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           );
 
           if (!isValidPassword) {
-            console.log('[AUTH DEBUG] Senha incorreta!');
             return null;
           }
 
           // Retornar dados do usuário (sem senha)
-          console.log('[AUTH DEBUG] Login bem-sucedido! Retornando usuário');
           return {
             id: user.id,
             name: user.name,
@@ -101,10 +86,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             image: null,
           };
         } catch (error) {
-          console.error('\n[AUTH ERROR] ERRO NA AUTENTICAÇÃO:');
-          console.error(error);
-          console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
-          console.error('\n');
+          // Log error without exposing PII
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[AUTH] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
+          }
           return null;
         }
       },
@@ -137,6 +122,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 dias
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? `__Secure-next-auth.session-token`
+        : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? `__Secure-next-auth.callback-url`
+        : `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? `__Host-next-auth.csrf-token`
+        : `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   trustHost: true,

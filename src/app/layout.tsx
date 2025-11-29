@@ -9,6 +9,20 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Peladeiros",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -17,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className="font-sans min-h-screen overflow-x-hidden">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className="font-sans min-h-screen overflow-x-hidden" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
       </body>

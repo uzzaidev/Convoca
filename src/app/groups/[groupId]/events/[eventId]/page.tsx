@@ -182,32 +182,33 @@ export default async function EventDetailPage({ params }: RouteParams) {
   ` as unknown as GroupMember[] : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Botão voltar */}
-        <div className="mb-6">
-          <Link href={`/groups/${groupId}`}>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ChevronLeft className="h-4 w-4" />
-              Voltar para o grupo
-            </Button>
-          </Link>
-        </div>
 
-        {/* Cabeçalho do evento */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="mb-4">
+            <Link href={`/groups/${groupId}`}>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar para o grupo
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-200 mb-3">
             <Calendar className="h-4 w-4" />
             {formatDate(event.starts_at)}
           </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold mb-1">{event.group_name}</h1>
+              <h1 className="text-4xl font-bold mb-2">{event.group_name}</h1>
               {event.venue_name && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-200">
                   <MapPin className="h-4 w-4" />
-                  <span>{event.venue_name}</span>
+                  <span className="text-lg">{event.venue_name}</span>
                 </div>
               )}
             </div>
@@ -219,7 +220,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
                   ? "destructive"
                   : "secondary"
               }
-              className="w-fit"
+              className="bg-white/20 border-white/30 text-white"
             >
               {event.status === "finished"
                 ? "Finalizado"
@@ -229,22 +230,22 @@ export default async function EventDetailPage({ params }: RouteParams) {
             </Badge>
           </div>
 
-          {/* Barra de progresso discreta */}
+          {/* Barra de progresso */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span className="font-medium">
+            <div className="flex items-center gap-2 text-white">
+              <Users className="h-5 w-5" />
+              <span className="font-semibold text-lg">
                 {event.confirmed_count}/{event.max_players}
               </span>
             </div>
-            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden max-w-xs">
+            <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden max-w-xs">
               <div
                 className={`h-full transition-all ${
                   event.confirmed_count >= event.max_players
-                    ? "bg-green-500"
+                    ? "bg-green-400"
                     : event.confirmed_count >= event.max_players * 0.7
-                    ? "bg-yellow-500"
-                    : "bg-blue-500"
+                    ? "bg-yellow-400"
+                    : "bg-blue-400"
                 }`}
                 style={{
                   width: `${Math.min(
@@ -256,6 +257,9 @@ export default async function EventDetailPage({ params }: RouteParams) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
 
         {/* Sistema de Abas */}
         <EventTabs

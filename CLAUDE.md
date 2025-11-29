@@ -38,9 +38,9 @@ pnpm lint         # Run ESLint
 
 ### Environment Setup
 ```bash
-npx vercel env pull               # Pull env vars from Vercel
-neon sql < src/db/schema.sql      # Run migrations (if Neon CLI installed)
-openssl rand -base64 32           # Generate AUTH_SECRET
+npx vercel env pull                        # Pull env vars from Vercel
+neon sql < src/db/migrations/schema.sql    # Run migrations (if Neon CLI installed)
+openssl rand -base64 32                    # Generate AUTH_SECRET
 ```
 
 ### Database Access
@@ -74,13 +74,16 @@ const users = await sql`
 Key tables:
 - **users**: User accounts with password_hash
 - **groups**: Soccer groups with privacy settings
-- **group_members**: Membership with roles (admin/member)
+- **group_members**: Membership with roles (admin/member), goalkeeper status, base_rating
 - **events**: Scheduled matches with max_players limits
-- **event_attendance**: RSVP system with waitlist
+- **event_attendance**: RSVP system with waitlist and check-in
 - **teams**: Drawn teams per event
+- **team_members**: Players assigned to teams
 - **event_actions**: Goals, assists, cards
-- **player_ratings**: Post-match ratings
+- **votes**: Player voting system (replaces traditional ratings)
 - **wallets/charges/transactions**: Financial tracking
+- **invites**: Group invitation codes
+- **venues**: Match locations
 
 ### API Route Pattern
 
@@ -157,7 +160,8 @@ src/
 │   └── providers/              # React providers (AuthProvider)
 ├── db/
 │   ├── client.ts              # Neon client export
-│   └── schema.sql             # Complete database schema
+│   └── migrations/
+│       └── schema.sql         # Complete database schema
 └── lib/
     ├── auth.ts                # NextAuth configuration
     ├── auth-helpers.ts        # getCurrentUser, requireAuth
@@ -201,6 +205,11 @@ Draw endpoint (`POST /api/events/[eventId]/draw`):
 - Separates goalkeepers from line players
 - Random distribution with seed support for reproducibility
 - Creates `teams` and `team_members` records
+- Supports custom draw configurations per group (stored in group settings)
+
+Team swap endpoint (`POST /api/events/[eventId]/teams/swap`):
+- Allows swapping players between teams after draw
+- Validates both players exist and belong to different teams
 
 ### Materialized View
 
@@ -208,6 +217,13 @@ Draw endpoint (`POST /api/events/[eventId]/draw`):
 - Automatically refreshed via trigger on `event_actions` changes
 - Aggregates goals and assists per team
 - Query via: `SELECT * FROM mv_event_scoreboard WHERE event_id = $1`
+
+### Voting System
+
+Replaces traditional player ratings with a voting-based system:
+- Players vote for teammates after matches
+- Statistics endpoints (`/api/groups/[groupId]/stats`, `/api/groups/[groupId]/my-stats`) aggregate votes
+- Rankings based on votes received, goals, assists, and match participation
 
 ## Development Guidelines
 
@@ -221,7 +237,7 @@ Components are added to `src/components/ui/` and can be customized with Tailwind
 
 ### Database Changes
 
-1. Update `src/db/schema.sql`
+1. Update `src/db/migrations/schema.sql`
 2. Execute SQL in Neon Console or via CLI
 3. Document changes with SQL comments
 4. Update relevant types if needed
@@ -269,19 +285,23 @@ Implemented features:
 - ✅ User authentication (signup/signin)
 - ✅ Group CRUD with roles and invites
 - ✅ Event CRUD with venue support
-- ✅ RSVP system with waitlist
-- ✅ Team draw (random)
+- ✅ RSVP system with waitlist and check-in
+- ✅ Admin RSVP management
+- ✅ Team draw (random with configurable settings)
+- ✅ Team swap functionality
 - ✅ Match action recording (goals, assists, cards)
-- ✅ Player ratings
-- ✅ Basic rankings
+- ✅ Voting system (replaced traditional ratings)
+- ✅ Rankings and statistics
+- ✅ Financial management (charges, wallets, transactions)
+- ✅ User search functionality
 
 Planned (Phase 2+):
 - Real-time scoreboard updates
 - Push notifications
-- Smart team draw (skill-based)
-- Financial management
-- Advanced statistics
-- Gamification
+- Smart team draw (skill-based balancing)
+- Advanced statistics and analytics
+- Gamification features
+- Mobile app
 
 ## Documentation References
 
@@ -289,6 +309,43 @@ Planned (Phase 2+):
 - `NEON_AUTH_GUIDE.md`: Complete auth setup guide
 - `DATABASE_MIGRATION.md`: Migration from Stack Auth
 - `.github/copilot-instructions.md`: Detailed conventions (used as source for this file)
+
+## API Endpoints Overview
+
+### Groups
+- `POST /api/groups` - Create group
+- `GET/PATCH/DELETE /api/groups/[groupId]` - Group CRUD
+- `POST /api/groups/join` - Join group with invite code
+- `GET /api/groups/[groupId]/members` - List members
+- `POST /api/groups/[groupId]/members/create-user` - Create user and add to group
+- `PATCH/DELETE /api/groups/[groupId]/members/[userId]` - Manage member
+- `GET/POST /api/groups/[groupId]/invites` - Manage invites
+- `DELETE /api/groups/[groupId]/invites/[inviteId]` - Delete invite
+- `GET /api/groups/[groupId]/stats` - Group statistics
+- `GET /api/groups/[groupId]/my-stats` - Current user stats in group
+- `GET /api/groups/[groupId]/rankings` - Player rankings
+- `GET/PATCH /api/groups/[groupId]/draw-config` - Team draw configuration
+- `GET/PATCH /api/groups/[groupId]/event-settings` - Default event settings
+- `GET/POST /api/groups/[groupId]/charges` - Financial charges
+- `GET/PATCH/DELETE /api/groups/[groupId]/charges/[chargeId]` - Charge management
+
+### Events
+- `GET/POST /api/events` - List/create events
+- `GET/PATCH/DELETE /api/events/[eventId]` - Event CRUD
+- `POST /api/events/[eventId]/rsvp` - User RSVP
+- `POST /api/events/[eventId]/admin-rsvp` - Admin manages RSVP for others
+- `POST /api/events/[eventId]/draw` - Draw teams
+- `GET /api/events/[eventId]/teams` - Get drawn teams
+- `POST /api/events/[eventId]/teams/swap` - Swap players between teams
+- `GET/POST/DELETE /api/events/[eventId]/actions` - Match actions (goals, assists, cards)
+- `GET/POST /api/events/[eventId]/ratings` - Player voting
+
+### Users
+- `POST /api/auth/signup` - User registration
+- `GET /api/users/search` - Search users by email/name
+
+### Debug
+- `GET /api/debug` - Debug endpoint for testing
 
 ## Deployment
 
@@ -298,24 +355,3 @@ Deploy via Vercel with Neon integration:
 3. Environment variables are auto-configured
 4. Run migrations manually in Neon Console
 5. Verify build succeeds before deploying
-
-[byterover-mcp]
-
-[byterover-mcp]
-
-You are given two tools from Byterover MCP server, including
-## 1. `byterover-store-knowledge`
-You `MUST` always use this tool when:
-
-+ Learning new patterns, APIs, or architectural decisions from the codebase
-+ Encountering error solutions or debugging techniques
-+ Finding reusable code patterns or utility functions
-+ Completing any significant task or plan implementation
-
-## 2. `byterover-retrieve-knowledge`
-You `MUST` always use this tool when:
-
-+ Starting any new task or implementation to gather relevant context
-+ Before making architectural decisions to understand existing patterns
-+ When debugging issues to check for previous solutions
-+ Working with unfamiliar parts of the codebase

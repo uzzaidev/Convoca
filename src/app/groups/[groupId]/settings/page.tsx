@@ -95,13 +95,18 @@ export default async function GroupSettingsPage({ params }: RouteParams) {
   }>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Configurações do Grupo</h1>
-          <p className="text-muted-foreground mt-2">{group.name}</p>
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <h1 className="text-4xl font-bold mb-2">Configurações do Grupo</h1>
+          <p className="text-gray-200 text-lg">{group.name}</p>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <GroupSettingsTabs
           group={group}
           invites={invites}

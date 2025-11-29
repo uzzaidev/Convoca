@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { GroupsCard } from "@/components/dashboard/groups-card";
 import { UpcomingEventsCard } from "@/components/dashboard/upcoming-events-card";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 
 type Group = {
   id: string;
@@ -89,31 +89,69 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Bem-vindo, {user.name || user.email}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button asChild variant="outline" className="w-fit">
-              <Link href="/groups/join" className="flex items-center gap-2">
-                Entrar em Grupo
-              </Link>
-            </Button>
-            <Button asChild className="w-fit">
-              <Link href="/groups/new" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Criar Grupo
-              </Link>
-            </Button>
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                Olá, {user.name?.split(' ')[0] || user.email}! 👋
+              </h1>
+              <p className="text-gray-200 text-lg">
+                Gerencie seus grupos e peladas em um só lugar
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button asChild variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
+                <Link href="/groups/join" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Entrar em Grupo
+                </Link>
+              </Button>
+              <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-0">
+                <Link href="/groups/new" className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Criar Grupo
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
 
+      {/* Stats Section */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 rounded-lg bg-green-50 border border-green-200">
+              <div className="text-3xl font-bold text-green-600">{groups.length}</div>
+              <div className="text-sm text-gray-600 mt-1">
+                {groups.length === 1 ? 'Grupo' : 'Grupos'}
+              </div>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-navy/5 border border-navy/20">
+              <div className="text-3xl font-bold text-navy">{upcomingEvents.length}</div>
+              <div className="text-sm text-gray-600 mt-1">
+                {upcomingEvents.length === 1 ? 'Pelada Agendada' : 'Peladas Agendadas'}
+              </div>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-green-dark/10 border border-green-dark/30 col-span-2 md:col-span-1">
+              <div className="text-3xl font-bold text-green-dark">
+                {upcomingEvents.filter(e => e.user_status === 'yes').length}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                {upcomingEvents.filter(e => e.user_status === 'yes').length === 1 ? 'Confirmação' : 'Confirmações'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-2">
           <GroupsCard groups={groups} />
           <UpcomingEventsCard events={upcomingEvents} />

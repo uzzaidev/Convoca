@@ -45,36 +45,39 @@ export default async function PaymentsPage({ params }: RouteParams) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Botão voltar */}
-        <div className="mb-6">
-          <Link href={`/groups/${groupId}`}>
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Voltar para o grupo
-            </Button>
-          </Link>
-        </div>
 
-        {/* Header */}
-        <div className="mb-8">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="mb-4">
+            <Link href={`/groups/${groupId}`}>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar para o grupo
+              </Button>
+            </Link>
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold">Pagamentos</h1>
-              <p className="text-muted-foreground mt-2">{group.name}</p>
+              <h1 className="text-4xl font-bold mb-2">Pagamentos</h1>
+              <p className="text-gray-200 text-lg">{group.name}</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge
                 variant={group.user_role === "admin" ? "default" : "secondary"}
-                className="w-fit"
+                className="bg-white/20 border-white/30 text-white"
               >
                 {group.user_role === "admin" ? "Admin" : "Membro"}
               </Badge>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
 
         {/* Conteúdo de pagamentos */}
         <PaymentsContent

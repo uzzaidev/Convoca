@@ -50,6 +50,14 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        navy: {
+          DEFAULT: "hsl(var(--navy))",
+          light: "hsl(var(--navy-light))",
+        },
+        "green-dark": {
+          DEFAULT: "hsl(var(--green-dark))",
+          light: "hsl(var(--green-light))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

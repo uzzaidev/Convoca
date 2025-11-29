@@ -43,13 +43,18 @@ export default async function NewEventPage({ params }: RouteParams) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader userName={user.name || user.email} />
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Criar Novo Evento</h1>
-          <p className="text-muted-foreground mt-2">{group.name}</p>
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+        <div className="container mx-auto px-4 py-12 max-w-2xl">
+          <h1 className="text-4xl font-bold mb-2">Criar Novo Evento</h1>
+          <p className="text-gray-200 text-lg">{group.name}</p>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
         <EventForm groupId={groupId} mode="create" />
       </div>
     </div>

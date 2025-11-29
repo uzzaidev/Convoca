@@ -29,6 +29,12 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Custom colors for landing page */
+    --navy: 215 60% 16%;
+    --navy-light: 215 50% 25%;
+    --green-dark: 152 70% 22%;
+    --green-light: 152 60% 35%;
   }
 
   .dark {

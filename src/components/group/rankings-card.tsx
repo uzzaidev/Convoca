@@ -381,6 +381,16 @@ export function RankingsCard({
             Dica: Arraste horizontalmente para ver mais colunas
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => exportToPDF('Geral')}
+              disabled={isExporting}
+            >
+              <Download className="h-4 w-4" />
+              <span className="ml-2 hidden sm:inline">Exportar PDF</span>
+            </Button>
             {!fullscreen && (
               <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
                 <DialogTrigger asChild>
@@ -602,7 +612,7 @@ export function RankingsCard({
         </CardTitle>
         <CardDescription>Melhores jogadores do grupo</CardDescription>
       </CardHeader>
-      <CardContent className="px-2 md:px-6">
+      <CardContent className="px-0 md:px-6">
         <Tabs defaultValue="geral" className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-4 h-auto">
             <TabsTrigger value="geral" className="flex flex-col sm:flex-row gap-1 py-2">
@@ -632,7 +642,7 @@ export function RankingsCard({
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-0">
-            <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2">
+            <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2 md:px-0">
               Ranking baseado em: presença (2 pts), gols (3 pts), assistências (2 pts),
               MVPs (5 pts) e vitórias (1 pt)
             </div>
@@ -640,20 +650,31 @@ export function RankingsCard({
           </TabsContent>
 
           <TabsContent value="artilheiros" className="space-y-4 mt-0">
-            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2 md:px-0">
               <div className="flex items-center gap-2">
                 <Goal className="h-5 w-5 text-green-600 dark:text-green-500" />
                 <span className="text-xs md:text-sm text-muted-foreground">
                   Top 10 goleadores
                 </span>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Maximize2 className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">Expandir</span>
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => exportToPDF('Artilheiros', scorersData)}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">PDF</span>
+                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Maximize2 className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">Expandir</span>
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -665,25 +686,37 @@ export function RankingsCard({
                   {renderRankingList(scorersData, "Nenhum gol registrado ainda", true)}
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             {renderRankingList(scorersData, "Nenhum gol registrado ainda")}
           </TabsContent>
 
           <TabsContent value="garcons" className="space-y-4 mt-0">
-            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2 md:px-0">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-blue-600 dark:text-blue-500" />
                 <span className="text-xs md:text-sm text-muted-foreground">
                   Top 10 assistências
                 </span>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Maximize2 className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">Expandir</span>
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => exportToPDF('Garçons', assistersData)}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">PDF</span>
+                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Maximize2 className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">Expandir</span>
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -695,25 +728,37 @@ export function RankingsCard({
                   {renderRankingList(assistersData, "Nenhuma assistência registrada ainda", true)}
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             {renderRankingList(assistersData, "Nenhuma assistência registrada ainda")}
           </TabsContent>
 
           <TabsContent value="goleiros" className="space-y-4 mt-0">
-            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2 md:px-0">
               <div className="flex items-center gap-2">
                 <Hand className="h-5 w-5 text-purple-600 dark:text-purple-500" />
                 <span className="text-xs md:text-sm text-muted-foreground">
                   Top 10 defesas
                 </span>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Maximize2 className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">Expandir</span>
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => exportToPDF('Goleiros', goalkeepersData)}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">PDF</span>
+                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Maximize2 className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">Expandir</span>
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -725,12 +770,13 @@ export function RankingsCard({
                   {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda", true)}
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda")}
           </TabsContent>
 
           <TabsContent value="frequencia" className="space-y-4 mt-0">
-            <div className="flex items-center justify-between gap-2 mb-2 px-2">
+            <div className="flex items-center justify-between gap-2 mb-2 px-2 md:px-0">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-500" />
                 <span className="text-xs md:text-sm text-muted-foreground">
@@ -739,13 +785,24 @@ export function RankingsCard({
                     : 'Últimos 10 jogos'}
                 </span>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Maximize2 className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">Expandir</span>
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => exportToPDF('Frequência')}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">PDF</span>
+                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Maximize2 className="h-4 w-4" />
+                      <span className="ml-2 hidden sm:inline">Expandir</span>
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -761,6 +818,7 @@ export function RankingsCard({
                   {renderFrequency(true)}
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             {renderFrequency()}
           </TabsContent>

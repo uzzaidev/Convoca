@@ -42,6 +42,7 @@ export async function GET(
         charges = await sql`
           SELECT
             c.id,
+            c.group_id,
             c.type,
             c.amount_cents,
             c.due_date,
@@ -68,6 +69,7 @@ export async function GET(
         charges = await sql`
           SELECT
             c.id,
+            c.group_id,
             c.type,
             c.amount_cents,
             c.due_date,
@@ -96,6 +98,7 @@ export async function GET(
       charges = await sql`
         SELECT
           c.id,
+          c.group_id,
           c.type,
           c.amount_cents,
           c.due_date,
@@ -123,6 +126,7 @@ export async function GET(
       charges = await sql`
         SELECT
           c.id,
+          c.group_id,
           c.type,
           c.amount_cents,
           c.due_date,
@@ -162,6 +166,7 @@ export async function GET(
         const charges = await sql`
           SELECT
             c.id,
+            c.group_id,
             c.type,
             c.amount_cents,
             c.due_date,

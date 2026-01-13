@@ -88,7 +88,26 @@ export function PendingPaymentsCard({ userId }: { userId: string }) {
     );
   }
 
-  const totalAmount = charges.reduce((sum, c) => sum + c.amount_cents, 0);
+  // Converter centavos para reais e calcular total
+  const totalAmount = charges.reduce((sum, c) => sum + c.amount_cents / 100, 0);
+
+  // Agrupar cobranças por grupo
+  const chargesByGroup = charges.reduce((acc, charge) => {
+    const groupId = charge.group_id;
+    if (!acc[groupId]) {
+      acc[groupId] = {
+        group_id: groupId,
+        group_name: charge.group_name,
+        charges: [],
+        total: 0,
+      };
+    }
+    acc[groupId].charges.push(charge);
+    acc[groupId].total += charge.amount_cents / 100;
+    return acc;
+  }, {} as Record<string, { group_id: string; group_name: string; charges: PendingCharge[]; total: number }>);
+
+  const groups = Object.values(chargesByGroup);
 
   return (
     <Card className="border-yellow-200 bg-yellow-50">
@@ -106,44 +125,53 @@ export function PendingPaymentsCard({ userId }: { userId: string }) {
       <CardContent className="space-y-4">
         {charges.length > 0 && (
           <>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm font-medium text-yellow-900">
                 Total em aberto: {formatCurrency(totalAmount)}
               </p>
-              <div className="space-y-1">
-                {charges.map((charge) => (
-                  <div
-                    key={charge.id}
-                    className="flex items-center justify-between text-sm p-2 rounded bg-white/50"
-                  >
-                    <div>
-                      <p className="font-medium text-yellow-900">{charge.group_name}</p>
-                      <p className="text-xs text-yellow-700">
-                        {charge.type === "monthly"
-                          ? "Mensalidade"
-                          : charge.type === "daily"
-                          ? "Diária"
-                          : charge.type === "fine"
-                          ? "Multa"
-                          : "Outro"}
-                        {charge.due_date &&
-                          ` - Vence em ${new Date(charge.due_date).toLocaleDateString("pt-BR")}`}
-                      </p>
-                    </div>
-                    <p className="font-semibold text-yellow-900">
-                      {formatCurrency(charge.amount_cents)}
+
+              {/* Agrupar por grupo */}
+              {groups.map((group) => (
+                <div key={group.group_id} className="space-y-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-semibold text-sm text-yellow-900">{group.group_name}</p>
+                    <p className="font-semibold text-sm text-yellow-900">
+                      {formatCurrency(group.total)}
                     </p>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1 ml-2">
+                    {group.charges.map((charge) => (
+                      <div
+                        key={charge.id}
+                        className="flex items-center justify-between text-xs p-2 rounded bg-white/50"
+                      >
+                        <div>
+                          <p className="text-yellow-700">
+                            {charge.type === "monthly"
+                              ? "Mensalidade"
+                              : charge.type === "daily"
+                              ? "Diária"
+                              : charge.type === "fine"
+                              ? "Multa"
+                              : "Outro"}
+                            {charge.due_date &&
+                              ` - Vence em ${new Date(charge.due_date).toLocaleDateString("pt-BR")}`}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-yellow-900">
+                          {formatCurrency(charge.amount_cents / 100)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-            {charges.length > 0 && (
-              <Button asChild variant="outline" className="w-full" size="sm">
-                <Link href={`/groups/${charges[0].group_id}/payments`}>
-                  Ver Todos os Pagamentos
-                </Link>
-              </Button>
-            )}
+            <Button asChild variant="outline" className="w-full" size="sm">
+              <Link href={`/groups/${charges[0].group_id}/payments`}>
+                Ver Todos os Pagamentos
+              </Link>
+            </Button>
           </>
         )}
       </CardContent>

@@ -72,16 +72,39 @@ export async function POST(
       }
     }
 
+    // Get current attendance status to track self-removal
+    const [currentAttendance] = await sql`
+      SELECT status FROM event_attendance
+      WHERE event_id = ${eventId} AND user_id = ${user.id}
+    `;
+
+    // Determine if this is a self-removal (yes → no) or re-confirmation (no → yes)
+    const isSelfRemoval = currentAttendance?.status === 'yes' && status === 'no';
+    const isReconfirmation = currentAttendance?.status === 'no' && status === 'yes';
+
     // Upsert attendance
     const [attendance] = await sql`
-      INSERT INTO event_attendance (event_id, user_id, role, status, preferred_position, secondary_position)
-      VALUES (${eventId}, ${user.id}, ${role}, ${finalStatus}, ${preferredPosition || null}, ${secondaryPosition || null})
+      INSERT INTO event_attendance (event_id, user_id, role, status, preferred_position, secondary_position, removed_by_self_at)
+      VALUES (
+        ${eventId},
+        ${user.id},
+        ${role},
+        ${finalStatus},
+        ${preferredPosition || null},
+        ${secondaryPosition || null},
+        ${isSelfRemoval ? sql`NOW()` : null}
+      )
       ON CONFLICT (event_id, user_id)
       DO UPDATE SET
         role = ${role},
         status = ${finalStatus},
         preferred_position = ${preferredPosition || null},
         secondary_position = ${secondaryPosition || null},
+        removed_by_self_at = CASE
+          WHEN ${isSelfRemoval} THEN NOW()
+          WHEN ${isReconfirmation} THEN NULL
+          ELSE event_attendance.removed_by_self_at
+        END,
         updated_at = NOW()
       RETURNING *
     `;

@@ -16,6 +16,7 @@ type Player = {
   preferred_position: string | null;
   secondary_position: string | null;
   created_at: string;
+  removed_by_self_at: string | null;
 };
 
 type WaitlistPlayer = {

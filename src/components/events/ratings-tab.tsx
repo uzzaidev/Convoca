@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Trophy, Save, Loader2, CheckCircle2 } from "lucide-react";
+import { Trophy, Save, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { MvpTiebreakerCard } from "./mvp-tiebreaker-card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Team = {
   id: string;
@@ -40,6 +42,8 @@ export function RatingsTab({
   const [isSaving, setIsSaving] = useState(false);
   const [currentVote, setCurrentVote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [showTiebreaker, setShowTiebreaker] = useState(false);
 
   // Get all players from all teams
   const allPlayers = teams.flatMap((team) =>
@@ -117,6 +121,49 @@ export function RatingsTab({
     }
   };
 
+  const handleFinalizeVoting = async () => {
+    setIsFinalizing(true);
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ratings/finalize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Erro ao finalizar votação");
+      }
+
+      const data = await response.json();
+
+      if (data.hasTie) {
+        toast({
+          title: "Empate detectado!",
+          description: `${data.tiebreaker.tiedPlayers.length} jogadores empatados. Inicie uma nova rodada de votação ou escolha o vencedor.`,
+        });
+        setShowTiebreaker(true);
+      } else {
+        toast({
+          title: "MVP definido!",
+          description: `${data.winner.userName} é o Craque da Partida com ${data.winner.voteCount} votos!`,
+        });
+      }
+
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao finalizar votação",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -130,6 +177,44 @@ export function RatingsTab({
 
   return (
     <div className="space-y-6">
+      {/* Tiebreaker Card - shown when there's an active tiebreaker */}
+      {showTiebreaker && (
+        <MvpTiebreakerCard
+          eventId={eventId}
+          isAdmin={isAdmin}
+          onTiebreakerResolved={() => {
+            setShowTiebreaker(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* Admin Alert with Finalize Button */}
+      {isAdmin && !showTiebreaker && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-blue-700">
+              Como admin, você pode finalizar a votação para verificar se há empate
+            </span>
+            <Button
+              onClick={handleFinalizeVoting}
+              disabled={isFinalizing}
+              size="sm"
+              variant="default"
+              className="ml-4"
+            >
+              {isFinalizing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trophy className="h-4 w-4 mr-2" />
+              )}
+              Finalizar Votação
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

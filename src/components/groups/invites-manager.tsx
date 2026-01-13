@@ -30,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Copy, Trash2, Loader2 } from "lucide-react";
+import { Plus, Copy, Trash2, Loader2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -46,10 +46,11 @@ type Invite = {
 
 type InvitesManagerProps = {
   groupId: string;
+  groupName: string;
   initialInvites: Invite[];
 };
 
-export function InvitesManager({ groupId, initialInvites }: InvitesManagerProps) {
+export function InvitesManager({ groupId, groupName, initialInvites }: InvitesManagerProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
@@ -141,12 +142,20 @@ export function InvitesManager({ groupId, initialInvites }: InvitesManagerProps)
     }
   };
 
-  const copyToClipboard = (code: string) => {
-    navigator.clipboard.writeText(code);
+  const copyInviteUrl = (code: string) => {
+    const inviteUrl = `${window.location.origin}/groups/join?code=${code}`;
+    navigator.clipboard.writeText(inviteUrl);
     toast({
-      title: "Código copiado!",
-      description: "O código foi copiado para a área de transferência.",
+      title: "Link copiado!",
+      description: "O link do convite foi copiado para a área de transferência.",
     });
+  };
+
+  const shareViaWhatsApp = (code: string) => {
+    const inviteUrl = `${window.location.origin}/groups/join?code=${code}`;
+    const message = `Você foi convidado para o grupo "${groupName}" no Peladeiros! Acesse: ${inviteUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
@@ -248,15 +257,25 @@ export function InvitesManager({ groupId, initialInvites }: InvitesManagerProps)
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(invite.code)}
+                      onClick={() => copyInviteUrl(invite.code)}
+                      title="Copiar link"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => shareViaWhatsApp(invite.code)}
+                      title="Compartilhar no WhatsApp"
+                    >
+                      <Share2 className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDeleteInvite(invite.id)}
                       disabled={isDeleting === invite.id}
+                      title="Deletar convite"
                     >
                       {isDeleting === invite.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

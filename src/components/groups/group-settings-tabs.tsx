@@ -60,7 +60,7 @@ export function GroupSettingsTabs({
         <EventSettingsForm groupId={group.id} />
       </TabsContent>
       <TabsContent value="invites" className="mt-6">
-        <InvitesManager groupId={group.id} initialInvites={invites} />
+        <InvitesManager groupId={group.id} groupName={group.name} initialInvites={invites} />
       </TabsContent>
       <TabsContent value="members" className="mt-6">
         <MembersManager

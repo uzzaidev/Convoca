@@ -6,7 +6,9 @@
       "Bash(node generate-hash.js:*)",
       "Bash(pnpm build:*)",
       "Bash(npx shadcn@latest add:*)",
-      "mcp__byterover-mcp__byterover-retrieve-knowledge"
+      "mcp__byterover-mcp__byterover-retrieve-knowledge",
+      "Bash(ls:*)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []

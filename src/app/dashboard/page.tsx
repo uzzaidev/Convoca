@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { GroupsCard } from "@/components/dashboard/groups-card";
 import { UpcomingEventsCard } from "@/components/dashboard/upcoming-events-card";
+import { PendingPaymentsCard } from "@/components/dashboard/pending-payments-card";
 import { Plus, Users } from "lucide-react";
 
 type Group = {
@@ -152,6 +153,11 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Payment Notifications */}
+        <div className="mb-8">
+          <PendingPaymentsCard userId={user.id} />
+        </div>
+
         <div className="grid gap-8 lg:grid-cols-2">
           <GroupsCard groups={groups} />
           <UpcomingEventsCard events={upcomingEvents} />

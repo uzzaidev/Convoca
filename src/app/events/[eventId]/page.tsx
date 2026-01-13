@@ -24,6 +24,7 @@ type Player = {
   preferred_position: string | null;
   secondary_position: string | null;
   created_at: string;
+  removed_by_self_at: string | null;
 };
 
 type WaitlistPlayer = {
@@ -150,7 +151,8 @@ export default async function EventRsvpPage({ params }: RouteParams) {
       ea.role,
       ea.preferred_position,
       ea.secondary_position,
-      ea.created_at
+      ea.created_at,
+      ea.removed_by_self_at
     FROM event_attendance ea
     INNER JOIN users u ON ea.user_id = u.id
     WHERE ea.event_id = ${eventId} AND ea.status = 'yes'

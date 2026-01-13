@@ -36,6 +36,18 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
   const [secondaryPosition, setSecondaryPosition] = useState<Position | null>(
     (currentAttendance?.secondary_position as Position) || null
   );
+  const [showSecondaryPosition, setShowSecondaryPosition] = useState(
+    !!currentAttendance?.preferred_position
+  );
+
+  const handlePrimaryPositionSelect = (position: Position) => {
+    setPreferredPosition(position);
+    setShowSecondaryPosition(true);
+    // Reset secondary if same as new primary
+    if (secondaryPosition === position) {
+      setSecondaryPosition(null);
+    }
+  };
 
   const handleRsvp = async (status: "yes" | "no") => {
     if (status === "yes" && !preferredPosition) {
@@ -101,7 +113,7 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
 
   return (
     <div className="space-y-6">
-      {/* Seleção de posição preferencial */}
+      {/* Step 1: Seleção de posição preferencial */}
       <div className="space-y-3">
         <Label className="text-base">1ª Posição Preferencial *</Label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -112,7 +124,7 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
                 key={pos.value}
                 type="button"
                 disabled={isEventFinished || isSubmitting}
-                onClick={() => setPreferredPosition(pos.value)}
+                onClick={() => handlePrimaryPositionSelect(pos.value)}
                 className={`p-4 rounded-lg border-2 transition-all text-center ${
                   preferredPosition === pos.value
                     ? "border-primary bg-primary/10 shadow-md"
@@ -129,40 +141,56 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
         </div>
       </div>
 
-      {/* Seleção de posição secundária */}
-      <div className="space-y-3">
-        <Label className="text-base">2ª Posição (Opcional)</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {POSITIONS.map((pos) => {
-            const IconComponent = pos.Icon;
-            return (
-              <button
-                key={pos.value}
-                type="button"
-                disabled={isEventFinished || isSubmitting}
-                onClick={() =>
-                  setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
-                }
-                className={`p-4 rounded-lg border-2 transition-all text-center ${
-                  secondaryPosition === pos.value
-                    ? "border-primary bg-primary/10 shadow-md"
-                    : "border-muted hover:border-primary/50"
-                } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                <div className="flex justify-center mb-2">
-                  <IconComponent className="h-8 w-8" />
-                </div>
-                <div className="text-sm font-medium">{pos.label}</div>
-              </button>
-            );
-          })}
-        </div>
-        {secondaryPosition && (
-          <p className="text-xs text-muted-foreground">
-            Clique novamente para remover a 2ª posição
+      {/* Step 2: Seleção de posição secundária (conditional) */}
+      {showSecondaryPosition && preferredPosition && (
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <Label className="text-base">2ª Posição (Opcional)</Label>
+          <p className="text-sm text-muted-foreground">
+            Você escolheu {POSITIONS.find(p => p.value === preferredPosition)?.label}.
+            Quer adicionar uma segunda opção?
           </p>
-        )}
-      </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {POSITIONS.filter(pos => pos.value !== preferredPosition).map((pos) => {
+              const IconComponent = pos.Icon;
+              return (
+                <button
+                  key={pos.value}
+                  type="button"
+                  disabled={isEventFinished || isSubmitting}
+                  onClick={() =>
+                    setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
+                  }
+                  className={`p-4 rounded-lg border-2 transition-all text-center ${
+                    secondaryPosition === pos.value
+                      ? "border-primary bg-primary/10 shadow-md"
+                      : "border-muted hover:border-primary/50"
+                  } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  <div className="flex justify-center mb-2">
+                    <IconComponent className="h-8 w-8" />
+                  </div>
+                  <div className="text-sm font-medium">{pos.label}</div>
+                </button>
+              );
+            })}
+          </div>
+          {secondaryPosition ? (
+            <p className="text-xs text-muted-foreground">
+              Clique novamente para remover a 2ª posição
+            </p>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setSecondaryPosition(null)}
+              className="w-full sm:w-auto"
+            >
+              Pular (sem 2ª posição)
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Botões de ação */}
       <div className="flex flex-col sm:flex-row gap-3 pt-4">

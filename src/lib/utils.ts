@@ -28,3 +28,11 @@ export function generateInviteCode(): string {
 export function formatRating(rating: string | number): string {
   return parseFloat(rating.toString()).toFixed(1);
 }
+
+export function formatCurrency(amount: string | number): string {
+  const value = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}

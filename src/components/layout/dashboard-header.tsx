@@ -1,10 +1,33 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { DollarSign } from "lucide-react";
 
 export function DashboardHeader({ userName }: { userName: string }) {
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch("/api/users/me/pending-charges-count");
+        const data = await res.json();
+        setPendingCount(data.count || 0);
+      } catch (error) {
+        console.error("Error fetching pending charges:", error);
+      }
+    };
+
+    fetchPendingCount();
+
+    // Poll every 60 seconds
+    const interval = setInterval(fetchPendingCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   async function handleLogout() {
     await signOut({ callbackUrl: "/" });
   }
@@ -28,6 +51,26 @@ export function DashboardHeader({ userName }: { userName: string }) {
           <span className="text-sm text-gray-600 hidden sm:inline">
             Olá, {userName}
           </span>
+          {pendingCount > 0 && (
+            <div className="relative">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="relative text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+              >
+                <Link href="/dashboard">
+                  <DollarSign className="h-5 w-5" />
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {pendingCount > 9 ? "9+" : pendingCount}
+                  </Badge>
+                </Link>
+              </Button>
+            </div>
+          )}
           <Button variant="outline" onClick={handleLogout} className="border-navy text-navy hover:bg-navy hover:text-white">
             Sair
           </Button>

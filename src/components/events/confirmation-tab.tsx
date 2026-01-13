@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, CheckCircle2, UserCog } from "lucide-react";
 import { EventRsvpForm } from "./event-rsvp-form";
 import { AdminPlayerManager } from "./admin-player-manager";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type Player = {
   id: string;
@@ -14,6 +16,7 @@ type Player = {
   preferred_position: string | null;
   secondary_position: string | null;
   created_at: string;
+  removed_by_self_at: string | null;
 };
 
 type WaitlistPlayer = {
@@ -132,24 +135,26 @@ export function ConfirmationTab({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{player.name}</p>
-                  {player.preferred_position && (
+                  {player.role === "gk" ? (
+                    <Badge variant="outline" className="text-xs">
+                      Goleiro
+                    </Badge>
+                  ) : player.preferred_position && (
                     <p className="text-xs text-muted-foreground capitalize">
-                      {player.preferred_position === "gk" ? "Goleiro" :
-                       player.preferred_position === "defender" ? "Zagueiro" :
-                       player.preferred_position === "midfielder" ? "Meio" : "Atacante"}
+                      {player.preferred_position === "defender" ? "Zagueiro" :
+                       player.preferred_position === "midfielder" ? "Meio-campo" : "Atacante"}
                       {player.secondary_position && ` / ${
-                        player.secondary_position === "gk" ? "Goleiro" :
                         player.secondary_position === "defender" ? "Zagueiro" :
-                        player.secondary_position === "midfielder" ? "Meio" : "Atacante"
+                        player.secondary_position === "midfielder" ? "Meio-campo" : "Atacante"
                       }`}
                     </p>
                   )}
+                  {isAdmin && player.removed_by_self_at && (
+                    <p className="text-xs text-muted-foreground italic mt-1">
+                      Saiu em {format(new Date(player.removed_by_self_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  )}
                 </div>
-                {player.role === "gk" && (
-                  <Badge variant="outline" className="text-xs">
-                    GK
-                  </Badge>
-                )}
               </div>
             ))}
           </div>

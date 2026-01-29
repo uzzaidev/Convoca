@@ -88,21 +88,34 @@ export async function POST(
       return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
     }
 
-    // Check if user is member and attended
+    // Check if user is member of the group
+    const [membership] = await sql`
+      SELECT role FROM group_members
+      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
+    `;
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "Você não é membro deste grupo" },
+        { status: 403 }
+      );
+    }
+
+    // Check if user attended - admins can vote regardless
     const [attendance] = await sql`
       SELECT * FROM event_attendance
       WHERE event_id = ${eventId} AND user_id = ${user.id} AND status = 'yes'
     `;
 
-    if (!attendance) {
+    if (!attendance && membership.role !== 'admin') {
       return NextResponse.json(
         { error: "Você precisa ter participado do evento para votar" },
         { status: 403 }
       );
     }
 
-    // Can't vote for yourself
-    if (ratedUserId === user.id) {
+    // Can't vote for yourself (unless you're admin for testing purposes)
+    if (ratedUserId === user.id && membership.role !== 'admin') {
       return NextResponse.json(
         { error: "Você não pode votar em si mesmo" },
         { status: 400 }

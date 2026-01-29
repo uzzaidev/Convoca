@@ -30,13 +30,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Contar votos de cada jogador
     const voteCounts = await sql`
       SELECT
-        voted_user_id,
+        rated_user_id,
         u.name as user_name,
         COUNT(*) as vote_count
-      FROM votes
-      INNER JOIN users u ON votes.voted_user_id = u.id
-      WHERE event_id = ${eventId}
-      GROUP BY voted_user_id, u.name
+      FROM player_ratings
+      INNER JOIN users u ON player_ratings.rated_user_id = u.id
+      WHERE event_id = ${eventId} AND 'mvp' = ANY(tags)
+      GROUP BY rated_user_id, u.name
       ORDER BY vote_count DESC
     `;
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         success: true,
         hasTie: false,
         winner: {
-          userId: tiedPlayers[0].voted_user_id,
+          userId: tiedPlayers[0].rated_user_id,
           userName: tiedPlayers[0].user_name,
           voteCount: maxVotes,
         },
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Há empate! Criar registro de tiebreaker
-    const tiedUserIds = tiedPlayers.map((p) => p.voted_user_id);
+    const tiedUserIds = tiedPlayers.map((p) => p.rated_user_id);
 
     // Verificar se já existe tiebreaker para este evento
     const [existingTiebreaker] = await sql`
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         round,
         status: tiebreaker.status,
         tiedPlayers: tiedPlayers.map((p) => ({
-          userId: p.voted_user_id,
+          userId: p.rated_user_id,
           userName: p.user_name,
           voteCount: maxVotes,
         })),

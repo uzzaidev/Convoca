@@ -88,32 +88,17 @@ export async function POST(
       );
     }
 
-    // Perform the swap by updating team_id for both players
-    // We need to use a temporary team_id to avoid unique constraint violation
-    // Step 1: Move player 1 to a temporary location
-    const tempTeamId = "00000000-0000-0000-0000-000000000000";
-    
+    // Perform the swap atomically using a single UPDATE with CASE
     await sql`
       UPDATE team_members
-      SET team_id = ${tempTeamId}
-      WHERE team_id = ${validatedData.player1.currentTeamId}
-        AND user_id = ${validatedData.player1.userId}
-    `;
-
-    // Step 2: Move player 2 to player 1's team
-    await sql`
-      UPDATE team_members
-      SET team_id = ${validatedData.player1.currentTeamId}
-      WHERE team_id = ${validatedData.player2.currentTeamId}
-        AND user_id = ${validatedData.player2.userId}
-    `;
-
-    // Step 3: Move player 1 from temporary to player 2's team
-    await sql`
-      UPDATE team_members
-      SET team_id = ${validatedData.player2.currentTeamId}
-      WHERE team_id = ${tempTeamId}
-        AND user_id = ${validatedData.player1.userId}
+      SET team_id = CASE
+        WHEN user_id = ${validatedData.player1.userId} AND team_id = ${validatedData.player1.currentTeamId}
+          THEN ${validatedData.player2.currentTeamId}
+        WHEN user_id = ${validatedData.player2.userId} AND team_id = ${validatedData.player2.currentTeamId}
+          THEN ${validatedData.player1.currentTeamId}
+      END
+      WHERE (user_id = ${validatedData.player1.userId} AND team_id = ${validatedData.player1.currentTeamId})
+         OR (user_id = ${validatedData.player2.userId} AND team_id = ${validatedData.player2.currentTeamId})
     `;
 
     logger.info(

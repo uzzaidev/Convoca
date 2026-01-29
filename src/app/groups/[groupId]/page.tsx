@@ -157,36 +157,60 @@ export default async function GroupPage({ params }: RouteParams) {
     try {
       // Artilheiros
       const topScorers = await sql`
+        WITH player_games AS (
+          SELECT tm.user_id, COUNT(DISTINCT t.event_id) as total_games
+          FROM team_members tm
+          INNER JOIN teams t ON tm.team_id = t.id
+          WHERE t.event_id = ANY(${eventIds})
+          GROUP BY tm.user_id
+        )
         SELECT u.id, u.name, COUNT(*) as goals,
-          COUNT(DISTINCT ea.event_id) as games
+          COALESCE(pg.total_games, 0) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.subject_user_id = u.id
+        LEFT JOIN player_games pg ON pg.user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'goal'
-        GROUP BY u.id, u.name
+        GROUP BY u.id, u.name, pg.total_games
         ORDER BY goals DESC LIMIT 10
       `;
       stats.topScorers = topScorers as Array<{ id: string; name: string; goals: string; games: string }>;
 
       // Garçons
       const topAssisters = await sql`
+        WITH player_games AS (
+          SELECT tm.user_id, COUNT(DISTINCT t.event_id) as total_games
+          FROM team_members tm
+          INNER JOIN teams t ON tm.team_id = t.id
+          WHERE t.event_id = ANY(${eventIds})
+          GROUP BY tm.user_id
+        )
         SELECT u.id, u.name, COUNT(*) as assists,
-          COUNT(DISTINCT ea.event_id) as games
+          COALESCE(pg.total_games, 0) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.subject_user_id = u.id
+        LEFT JOIN player_games pg ON pg.user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'assist'
-        GROUP BY u.id, u.name
+        GROUP BY u.id, u.name, pg.total_games
         ORDER BY assists DESC LIMIT 10
       `;
       stats.topAssisters = topAssisters as Array<{ id: string; name: string; assists: string; games: string }>;
 
       // Goleiros
       const topGoalkeepers = await sql`
+        WITH player_games AS (
+          SELECT tm.user_id, COUNT(DISTINCT t.event_id) as total_games
+          FROM team_members tm
+          INNER JOIN teams t ON tm.team_id = t.id
+          WHERE t.event_id = ANY(${eventIds})
+          GROUP BY tm.user_id
+        )
         SELECT u.id, u.name, COUNT(*) as saves,
-          COUNT(DISTINCT ea.event_id) as games
+          COALESCE(pg.total_games, 0) as games
         FROM event_actions ea
         INNER JOIN users u ON ea.subject_user_id = u.id
+        LEFT JOIN player_games pg ON pg.user_id = u.id
         WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'save'
-        GROUP BY u.id, u.name
+        GROUP BY u.id, u.name, pg.total_games
         ORDER BY saves DESC LIMIT 10
       `;
       stats.topGoalkeepers = topGoalkeepers as Array<{ id: string; name: string; saves: string; games: string }>;

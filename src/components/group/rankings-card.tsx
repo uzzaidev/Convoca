@@ -69,6 +69,7 @@ type ColumnConfig = {
 };
 
 const COLUMNS: ColumnConfig[] = [
+  { key: 'score', label: 'Pontos', defaultVisible: true },
   { key: 'games', label: 'Jogos', defaultVisible: true },
   { key: 'goals', label: 'Gols', defaultVisible: true },
   { key: 'assists', label: 'Assist.', defaultVisible: true },
@@ -81,7 +82,6 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'available_matches', label: 'Partidas Disp.', defaultVisible: false },
   { key: 'dm_games', label: 'Jogos no DM', defaultVisible: false },
   { key: 'mvps', label: 'MVPs', defaultVisible: true },
-  { key: 'score', label: 'Pontos', defaultVisible: true },
 ];
 
 // Constants for sticky column positioning

@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { ArrowLeftRight, Loader2, Pencil, Check, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,9 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
     teamId: string;
   } | null>(null);
   const [isSwapping, setIsSwapping] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const [editingTeamName, setEditingTeamName] = useState<string>("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Update teams when the prop changes (after re-draw)
   React.useEffect(() => {
@@ -169,6 +173,66 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
     }
   };
 
+  const handleEditTeamName = (teamId: string, currentName: string) => {
+    setEditingTeamId(teamId);
+    setEditingTeamName(currentName);
+  };
+
+  const handleSaveTeamName = async (teamId: string) => {
+    if (!editingTeamName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome do time não pode estar vazio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingName(true);
+    try {
+      const response = await fetch(`/api/events/${eventId}/teams/${teamId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: editingTeamName.trim() }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao atualizar nome do time");
+      }
+
+      // Update local state
+      setTeams(teams.map(team =>
+        team.id === teamId
+          ? { ...team, name: editingTeamName.trim() }
+          : team
+      ));
+
+      toast({
+        title: "Nome atualizado!",
+        description: `Time renomeado para "${editingTeamName.trim()}"`,
+      });
+
+      setEditingTeamId(null);
+      setEditingTeamName("");
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao atualizar nome",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTeamId(null);
+    setEditingTeamName("");
+  };
+
   const getPositionLabel = (position: string) => {
     switch (position) {
       case "gk":
@@ -232,10 +296,58 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
           {teams.map((team) => (
             <Card key={team.id} className="border-2">
               <CardContent className="pt-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  {team.name}
-                  <Badge variant="secondary">{team.members?.length || 0}</Badge>
-                </h3>
+                <div className="font-semibold mb-3 flex items-center gap-2">
+                  {editingTeamId === team.id ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        value={editingTeamName}
+                        onChange={(e) => setEditingTeamName(e.target.value)}
+                        className="h-8 text-sm"
+                        placeholder="Nome do time"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveTeamName(team.id);
+                          if (e.key === "Escape") handleCancelEdit();
+                        }}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => handleSaveTeamName(team.id)}
+                        disabled={isSavingName}
+                      >
+                        {isSavingName ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4 text-green-600" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={handleCancelEdit}
+                        disabled={isSavingName}
+                      >
+                        <X className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span>{team.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6"
+                        onClick={() => handleEditTeamName(team.id, team.name)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Badge variant="secondary">{team.members?.length || 0}</Badge>
+                    </>
+                  )}
+                </div>
                 <div className="space-y-2 min-h-[100px]">
                   {team.members?.map((member) => (
                     <button

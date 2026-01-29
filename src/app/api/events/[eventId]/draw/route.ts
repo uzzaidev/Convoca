@@ -29,22 +29,32 @@ type DrawConfig = {
   };
 };
 
+// Fisher-Yates shuffle algorithm for random distribution
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Smart team draw algorithm that considers positions, ratings, and configuration
 function drawTeams(players: Player[], numTeams: number = 2, config?: DrawConfig) {
-  // If no config provided, use simple balanced distribution
+  // If no config provided, use simple random distribution
   if (!config) {
-    console.log('No draw config found, using simple balanced distribution for', players.length, 'players in', numTeams, 'teams');
-    const sortedPlayers = [...players].sort((a, b) => (b.base_rating || 0) - (a.base_rating || 0));
+    console.log('No draw config found, using simple random distribution for', players.length, 'players in', numTeams, 'teams');
+    const shuffledPlayers = shuffleArray(players);
     const teams = Array.from({ length: numTeams }, () => [] as PlayerWithAssignedPosition[]);
 
-    sortedPlayers.forEach((player, index) => {
+    shuffledPlayers.forEach((player, index) => {
       const teamIndex = index % numTeams;
       // Assign position based on player preference or default
       const assignedPosition = player.preferred_position || player.role || 'noPreference';
       teams[teamIndex].push({ ...player, assigned_position: assignedPosition });
     });
 
-    console.log('Balanced distribution result:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
+    console.log('Random distribution result:', teams.map((team, i) => `Team ${i}: ${team.length} players`));
     return teams;
   }
 

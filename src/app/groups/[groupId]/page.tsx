@@ -77,6 +77,17 @@ type MyStats = {
   tags: Record<string, number>;
 };
 
+type ScoringConfig = {
+  pointsWin: number;
+  pointsDraw: number;
+  pointsLoss: number;
+  pointsGoal: number;
+  pointsAssist: number;
+  pointsMvp: number;
+  pointsPresence: number;
+  rankingMode: "standard" | "complete";
+};
+
 export default async function GroupPage({ params }: RouteParams) {
   const user = await getCurrentUser();
 
@@ -128,6 +139,33 @@ export default async function GroupPage({ params }: RouteParams) {
   `;
 
   const eventIds = (events as unknown as Array<{ id: string }>).map(e => e.id);
+
+  // Buscar configuração de pontuação do grupo
+  const [scoringConfigResult] = await sql`
+    SELECT
+      points_win as "pointsWin",
+      points_draw as "pointsDraw",
+      points_loss as "pointsLoss",
+      points_goal as "pointsGoal",
+      points_assist as "pointsAssist",
+      points_mvp as "pointsMvp",
+      points_presence as "pointsPresence",
+      ranking_mode as "rankingMode"
+    FROM scoring_configs
+    WHERE group_id = ${groupId}
+  `;
+
+  // Configuração padrão de futebol (V=3, E=1, D=0)
+  const scoringConfig: ScoringConfig = (scoringConfigResult as ScoringConfig) || {
+    pointsWin: 3,
+    pointsDraw: 1,
+    pointsLoss: 0,
+    pointsGoal: 0,
+    pointsAssist: 0,
+    pointsMvp: 0,
+    pointsPresence: 0,
+    rankingMode: "standard" as const,
+  };
 
   // Inicializar estruturas vazias
   const stats: Stats = {
@@ -446,22 +484,25 @@ export default async function GroupPage({ params }: RouteParams) {
           )
       `;
 
-      // Calcular campos derivados e ordenar
+      // Calcular campos derivados e ordenar usando configuração de pontuação
       generalRanking = (rankingData as any[]).map((player) => ({
         ...player,
         goal_difference: player.team_goals - player.team_goals_conceded,
         available_matches: eventIds.length - player.dm_games,
         score:
-          player.games * 2 +
-          player.goals * 3 +
-          player.assists * 2 +
-          player.mvps * 5 +
-          player.wins * 1,
+          (player.wins * scoringConfig.pointsWin) +
+          (player.draws * scoringConfig.pointsDraw) +
+          (player.losses * scoringConfig.pointsLoss) +
+          (player.goals * scoringConfig.pointsGoal) +
+          (player.assists * scoringConfig.pointsAssist) +
+          (player.mvps * scoringConfig.pointsMvp) +
+          (player.games * scoringConfig.pointsPresence),
       }))
       .sort((a, b) => {
-        // Ordenar por score, depois games, depois goals
+        // Ordenar por score, depois wins, depois goal_difference, depois goals
         if (b.score !== a.score) return b.score - a.score;
-        if (b.games !== a.games) return b.games - a.games;
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
         return b.goals - a.goals;
       })
       .slice(0, 15) as GeneralRanking[];
@@ -550,6 +591,7 @@ export default async function GroupPage({ params }: RouteParams) {
             generalRanking={generalRanking}
             playerFrequency={stats.playerFrequency}
             currentUserId={user.id}
+            scoringConfig={scoringConfig}
           />
         </div>
 

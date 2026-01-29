@@ -152,10 +152,34 @@ export function InvitesManager({ groupId, groupName, initialInvites }: InvitesMa
   };
 
   const shareViaWhatsApp = (code: string) => {
-    const inviteUrl = `${window.location.origin}/groups/join?code=${code}`;
-    const message = `Você foi convidado para o grupo "${groupName}" no Peladeiros! Acesse: ${inviteUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+    try {
+      // Garante que window está disponível
+      if (typeof window === 'undefined') return;
+      
+      const origin = window.location.origin || 'https://peladeiros.vercel.app';
+      const inviteUrl = `${origin}/groups/join?code=${code}`;
+      const message = `Você foi convidado para o grupo "${groupName}" no Peladeiros! Acesse: ${inviteUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      
+      // Tenta abrir o WhatsApp
+      const newWindow = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      
+      if (!newWindow) {
+        // Se bloqueado por popup blocker, mostra mensagem
+        toast({
+          title: "Bloqueio de pop-up",
+          description: "Por favor, permita pop-ups para compartilhar no WhatsApp",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao compartilhar no WhatsApp:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível abrir o WhatsApp. Tente copiar o link.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

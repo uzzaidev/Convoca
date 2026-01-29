@@ -683,8 +683,7 @@ export function RankingsCard({
 
           <TabsContent value="geral" className="space-y-4 mt-0">
             <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2 md:px-0">
-              Ranking baseado em: presença (2 pts), gols (3 pts), assistências (2 pts),
-              MVPs (5 pts) e vitórias (1 pt)
+              {scoringDescription}
             </div>
             {renderGeneralRanking()}
           </TabsContent>

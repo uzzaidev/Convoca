@@ -101,13 +101,15 @@ export async function POST(
       );
     }
 
-    // Check if user attended - admins can vote regardless
-    const [attendance] = await sql`
-      SELECT * FROM event_attendance
-      WHERE event_id = ${eventId} AND user_id = ${user.id} AND status = 'yes'
+    // Check if user is in one of the teams - admins can vote regardless
+    const [userInTeam] = await sql`
+      SELECT tm.user_id
+      FROM team_members tm
+      INNER JOIN teams t ON tm.team_id = t.id
+      WHERE t.event_id = ${eventId} AND tm.user_id = ${user.id}
     `;
 
-    if (!attendance && membership.role !== 'admin') {
+    if (!userInTeam && membership.role !== 'admin') {
       return NextResponse.json(
         { error: "Você precisa ter participado do evento para votar" },
         { status: 403 }
@@ -122,13 +124,15 @@ export async function POST(
       );
     }
 
-    // Check if the rated player participated
-    const [ratedAttendance] = await sql`
-      SELECT * FROM event_attendance
-      WHERE event_id = ${eventId} AND user_id = ${ratedUserId} AND status = 'yes'
+    // Check if the rated player is in one of the teams
+    const [ratedInTeam] = await sql`
+      SELECT tm.user_id
+      FROM team_members tm
+      INNER JOIN teams t ON tm.team_id = t.id
+      WHERE t.event_id = ${eventId} AND tm.user_id = ${ratedUserId}
     `;
 
-    if (!ratedAttendance) {
+    if (!ratedInTeam) {
       return NextResponse.json(
         { error: "Só é possível votar em jogadores que participaram" },
         { status: 400 }

@@ -91,6 +91,28 @@ const STICKY_NAME_LEFT = STICKY_RANK_WIDTH;
 type SortField = ColumnKey;
 type SortDirection = 'asc' | 'desc';
 
+type ScoringConfig = {
+  pointsWin: number;
+  pointsDraw: number;
+  pointsLoss: number;
+  pointsGoal: number;
+  pointsAssist: number;
+  pointsMvp: number;
+  pointsPresence: number;
+  rankingMode: "standard" | "complete";
+};
+
+const DEFAULT_SCORING: ScoringConfig = {
+  pointsWin: 3,
+  pointsDraw: 1,
+  pointsLoss: 0,
+  pointsGoal: 0,
+  pointsAssist: 0,
+  pointsMvp: 0,
+  pointsPresence: 0,
+  rankingMode: "standard",
+};
+
 type RankingsCardProps = {
   topScorers: Array<{ id: string; name: string; goals: string; games?: string }>;
   topAssisters: Array<{ id: string; name: string; assists: string; games?: string }>;
@@ -98,7 +120,24 @@ type RankingsCardProps = {
   generalRanking: GeneralRanking[];
   playerFrequency: PlayerFrequency[];
   currentUserId: string;
+  scoringConfig?: ScoringConfig;
 };
+
+// Generate dynamic scoring description
+function getScoringDescription(config: ScoringConfig): string {
+  const parts: string[] = [];
+
+  if (config.pointsWin > 0) parts.push(`vitória (${config.pointsWin} pts)`);
+  if (config.pointsDraw > 0) parts.push(`empate (${config.pointsDraw} pt${config.pointsDraw > 1 ? 's' : ''})`);
+  if (config.pointsLoss > 0) parts.push(`derrota (${config.pointsLoss} pt${config.pointsLoss > 1 ? 's' : ''})`);
+  if (config.pointsGoal > 0) parts.push(`gol (${config.pointsGoal} pt${config.pointsGoal > 1 ? 's' : ''})`);
+  if (config.pointsAssist > 0) parts.push(`assistência (${config.pointsAssist} pt${config.pointsAssist > 1 ? 's' : ''})`);
+  if (config.pointsMvp > 0) parts.push(`MVP (${config.pointsMvp} pt${config.pointsMvp > 1 ? 's' : ''})`);
+  if (config.pointsPresence > 0) parts.push(`presença (${config.pointsPresence} pt${config.pointsPresence > 1 ? 's' : ''})`);
+
+  if (parts.length === 0) return "Sem pontuação configurada";
+  return `Pontuação: ${parts.join(', ')}`;
+}
 
 export function RankingsCard({
   topScorers,
@@ -107,7 +146,9 @@ export function RankingsCard({
   generalRanking,
   playerFrequency,
   currentUserId,
+  scoringConfig = DEFAULT_SCORING,
 }: RankingsCardProps) {
+  const scoringDescription = getScoringDescription(scoringConfig);
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -406,8 +447,7 @@ export function RankingsCard({
                       Ranking Geral
                     </DialogTitle>
                     <DialogDescription>
-                      Ranking baseado em: presença (2 pts), gols (3 pts), assistências (2 pts),
-                      MVPs (5 pts) e vitórias (1 pt)
+                      {scoringDescription}
                     </DialogDescription>
                   </DialogHeader>
                   {renderGeneralRanking(true)}

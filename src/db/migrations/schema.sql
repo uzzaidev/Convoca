@@ -214,6 +214,33 @@ CREATE TABLE IF NOT EXISTS event_settings (
   UNIQUE(group_id)
 );
 
+-- Scoring configurations (configurações de pontuação do ranking por grupo)
+CREATE TABLE IF NOT EXISTS scoring_configs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  -- Match result points (pontos por resultado)
+  points_win INTEGER DEFAULT 3 CHECK (points_win >= 0 AND points_win <= 10),
+  points_draw INTEGER DEFAULT 1 CHECK (points_draw >= 0 AND points_draw <= 10),
+  points_loss INTEGER DEFAULT 0 CHECK (points_loss >= 0 AND points_loss <= 10),
+  -- Individual action points (pontos por ação individual)
+  points_goal INTEGER DEFAULT 0 CHECK (points_goal >= 0 AND points_goal <= 10),
+  points_assist INTEGER DEFAULT 0 CHECK (points_assist >= 0 AND points_assist <= 10),
+  points_mvp INTEGER DEFAULT 0 CHECK (points_mvp >= 0 AND points_mvp <= 10),
+  points_presence INTEGER DEFAULT 0 CHECK (points_presence >= 0 AND points_presence <= 10),
+  -- Ranking mode: 'standard' (V/E/D only), 'complete' (V/E/D + individual stats)
+  ranking_mode VARCHAR(20) DEFAULT 'standard' CHECK (ranking_mode IN ('standard', 'complete')),
+  -- Metadata
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(group_id)
+);
+
+-- Migration: Create scoring_configs table if it doesn't exist
+-- Run this manually in production:
+-- CREATE TABLE IF NOT EXISTS scoring_configs (...);
+-- Or use: INSERT INTO scoring_configs (group_id) SELECT id FROM groups WHERE id NOT IN (SELECT group_id FROM scoring_configs);
+
 -- Materialized view for event scoreboard
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_event_scoreboard AS
 SELECT

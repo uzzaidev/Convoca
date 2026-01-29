@@ -5,6 +5,18 @@ import logger from "@/lib/logger";
 
 type Params = Promise<{ groupId: string }>;
 
+// Default scoring config (standard football: V=3, E=1, D=0)
+const DEFAULT_SCORING = {
+  pointsWin: 3,
+  pointsDraw: 1,
+  pointsLoss: 0,
+  pointsGoal: 0,
+  pointsAssist: 0,
+  pointsMvp: 0,
+  pointsPresence: 0,
+  rankingMode: "standard",
+};
+
 // GET /api/groups/:groupId/rankings - Get player rankings for a group
 export async function GET(
   request: NextRequest,
@@ -27,60 +39,24 @@ export async function GET(
       );
     }
 
-    // DEBUG: Ver eventos finalizados e ações
-    const debugEvents = await sql`
+    // Get scoring configuration for this group
+    const [scoringConfig] = await sql`
       SELECT
-        e.id as event_id,
-        e.status,
-        COUNT(DISTINCT ea.id) as total_actions,
-        COUNT(DISTINCT CASE WHEN ea.action_type = 'goal' THEN ea.id END) as total_goals
-      FROM events e
-      LEFT JOIN event_actions ea ON e.id = ea.event_id
-      WHERE e.group_id = ${groupId}
-      GROUP BY e.id, e.status
+        points_win as "pointsWin",
+        points_draw as "pointsDraw",
+        points_loss as "pointsLoss",
+        points_goal as "pointsGoal",
+        points_assist as "pointsAssist",
+        points_mvp as "pointsMvp",
+        points_presence as "pointsPresence",
+        ranking_mode as "rankingMode"
+      FROM scoring_configs
+      WHERE group_id = ${groupId}
     `;
 
-    logger.info({
-      groupId,
-      events: debugEvents.map((e: any) => ({
-        event_id: e.event_id,
-        status: e.status,
-        total_actions: e.total_actions,
-        total_goals: e.total_goals
-      }))
-    }, "Events and actions in group");
+    const config = scoringConfig || DEFAULT_SCORING;
 
-    // DEBUG: Ver todas as ações de gol com detalhes
-    const debugGoals = await sql`
-      SELECT
-        ea.id,
-        ea.event_id,
-        ea.action_type,
-        ea.subject_user_id,
-        u.name as player_name,
-        e.status as event_status
-      FROM event_actions ea
-      LEFT JOIN users u ON ea.subject_user_id = u.id
-      LEFT JOIN events e ON ea.event_id = e.id
-      WHERE e.group_id = ${groupId}
-        AND ea.action_type = 'goal'
-      ORDER BY e.starts_at DESC
-      LIMIT 20
-    `;
-
-    logger.info({
-      groupId,
-      totalGoals: debugGoals.length,
-      goals: debugGoals.map((g: any) => ({
-        action_id: g.id,
-        event_id: g.event_id,
-        event_status: g.event_status,
-        player_name: g.player_name,
-        subject_user_id: g.subject_user_id
-      }))
-    }, "All goals in group");
-
-    // Get player statistics and rankings
+    // Get player statistics and rankings with dynamic scoring
     const rankings = await sql`
       WITH
       -- Eventos finalizados do grupo
@@ -90,7 +66,49 @@ export async function GET(
         WHERE group_id = ${groupId}
           AND status = 'finished'
       ),
-      -- Estatísticas de cada jogador
+      -- Placar de cada time por evento (gols marcados)
+      team_scores AS (
+        SELECT
+          t.id as team_id,
+          t.event_id,
+          t.name as team_name,
+          t.is_winner,
+          COALESCE(
+            (SELECT COUNT(*) FROM event_actions ea
+             WHERE ea.team_id = t.id AND ea.action_type = 'goal'),
+            0
+          ) as goals_scored
+        FROM teams t
+        WHERE t.event_id IN (SELECT id FROM finished_events)
+      ),
+      -- Jogos de cada jogador com resultado (V/E/D)
+      player_matches AS (
+        SELECT
+          tm.user_id,
+          t.event_id,
+          ts_own.goals_scored as team_goals,
+          COALESCE(
+            (SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+             WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id),
+            0
+          ) as opponent_goals,
+          CASE
+            WHEN ts_own.goals_scored > COALESCE(
+              (SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+               WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id), 0)
+            THEN 'win'
+            WHEN ts_own.goals_scored = COALESCE(
+              (SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+               WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id), 0)
+            THEN 'draw'
+            ELSE 'loss'
+          END as result
+        FROM team_members tm
+        INNER JOIN teams t ON tm.team_id = t.id
+        INNER JOIN team_scores ts_own ON ts_own.team_id = t.id
+        WHERE t.event_id IN (SELECT id FROM finished_events)
+      ),
+      -- Estatísticas agregadas de cada jogador
       player_stats AS (
         SELECT
           u.id as user_id,
@@ -104,6 +122,11 @@ export async function GET(
             THEN ea.event_id
           END) as games_played,
 
+          -- Vitórias, Empates, Derrotas
+          COUNT(DISTINCT CASE WHEN pm.result = 'win' THEN pm.event_id END) as wins,
+          COUNT(DISTINCT CASE WHEN pm.result = 'draw' THEN pm.event_id END) as draws,
+          COUNT(DISTINCT CASE WHEN pm.result = 'loss' THEN pm.event_id END) as losses,
+
           -- Gols marcados
           COUNT(DISTINCT CASE
             WHEN eact_goals.action_type = 'goal'
@@ -116,11 +139,9 @@ export async function GET(
             THEN eact_assists.id
           END) as assists,
 
-          -- Vitórias (jogador no time vencedor)
-          COUNT(DISTINCT CASE
-            WHEN t.is_winner = true
-            THEN t.event_id
-          END) as wins,
+          -- Gols do time e gols sofridos
+          COALESCE(SUM(DISTINCT pm.team_goals), 0) as team_goals,
+          COALESCE(SUM(DISTINCT pm.opponent_goals), 0) as goals_conceded,
 
           -- Contagem de MVPs
           COUNT(DISTINCT CASE
@@ -135,6 +156,9 @@ export async function GET(
         LEFT JOIN event_attendance ea ON u.id = ea.user_id
           AND ea.event_id IN (SELECT id FROM finished_events)
 
+        -- Resultados dos jogos
+        LEFT JOIN player_matches pm ON u.id = pm.user_id
+
         -- Gols
         LEFT JOIN event_actions eact_goals ON u.id = eact_goals.subject_user_id
           AND eact_goals.action_type = 'goal'
@@ -145,11 +169,6 @@ export async function GET(
           AND eact_assists.action_type = 'assist'
           AND eact_assists.event_id IN (SELECT id FROM finished_events)
 
-        -- Times e vitórias
-        LEFT JOIN team_members tm ON u.id = tm.user_id
-        LEFT JOIN teams t ON tm.team_id = t.id
-          AND t.event_id IN (SELECT id FROM finished_events)
-
         -- Avaliações
         LEFT JOIN player_ratings pr ON u.id = pr.rated_user_id
           AND pr.event_id IN (SELECT id FROM finished_events)
@@ -158,6 +177,9 @@ export async function GET(
       )
       SELECT
         *,
+        -- Saldo de gols
+        (team_goals - goals_conceded) as goal_difference,
+
         -- Taxa de vitória
         CASE
           WHEN games_played > 0
@@ -165,36 +187,37 @@ export async function GET(
           ELSE 0
         END as win_rate,
 
-        -- Pontuação de performance
+        -- Pontuação dinâmica baseada na configuração
         (
-          (games_played * 1) +
-          (goals * 3) +
-          (assists * 2) +
-          (wins * 5) +
-          (mvp_count * 10)
-        )::numeric(10,2) as performance_score
+          (wins * ${config.pointsWin}) +
+          (draws * ${config.pointsDraw}) +
+          (losses * ${config.pointsLoss}) +
+          (goals * ${config.pointsGoal}) +
+          (assists * ${config.pointsAssist}) +
+          (mvp_count * ${config.pointsMvp}) +
+          (games_played * ${config.pointsPresence})
+        )::integer as points
 
       FROM player_stats
       WHERE games_played > 0  -- Só mostrar quem jogou
-      ORDER BY performance_score DESC, mvp_count DESC, goals DESC
+      ORDER BY points DESC, wins DESC, goal_difference DESC, goals DESC
     `;
 
-    // DEBUG: Log detalhado dos rankings
     logger.info({
       groupId,
       totalPlayers: rankings.length,
-      sample: rankings.slice(0, 3).map((r: any) => ({
-        name: r.player_name,
-        games_played: r.games_played,
-        goals: r.goals,
-        assists: r.assists,
-        wins: r.wins,
-        avg_rating: r.avg_rating,
-        performance_score: r.performance_score
-      }))
+      config: {
+        pointsWin: config.pointsWin,
+        pointsDraw: config.pointsDraw,
+        pointsLoss: config.pointsLoss,
+        rankingMode: config.rankingMode,
+      }
     }, "Rankings calculated");
 
-    return NextResponse.json({ rankings });
+    return NextResponse.json({
+      rankings,
+      scoringConfig: config,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

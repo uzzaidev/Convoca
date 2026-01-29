@@ -5,6 +5,7 @@ import { InvitesManager } from "@/components/groups/invites-manager";
 import { MembersManager } from "@/components/groups/members-manager";
 import { GroupInfoForm } from "@/components/groups/group-info-form";
 import { EventSettingsForm } from "@/components/groups/event-settings-form";
+import { ScoringConfigForm } from "@/components/groups/scoring-config-form";
 
 type Group = {
   id: string;
@@ -47,9 +48,10 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="info">Informações</TabsTrigger>
         <TabsTrigger value="events">Eventos</TabsTrigger>
+        <TabsTrigger value="scoring">Pontuação</TabsTrigger>
         <TabsTrigger value="invites">Convites</TabsTrigger>
         <TabsTrigger value="members">Membros</TabsTrigger>
       </TabsList>
@@ -58,6 +60,9 @@ export function GroupSettingsTabs({
       </TabsContent>
       <TabsContent value="events" className="mt-6">
         <EventSettingsForm groupId={group.id} />
+      </TabsContent>
+      <TabsContent value="scoring" className="mt-6">
+        <ScoringConfigForm groupId={group.id} />
       </TabsContent>
       <TabsContent value="invites" className="mt-6">
         <InvitesManager groupId={group.id} groupName={group.name} initialInvites={invites} />

@@ -214,7 +214,23 @@ export async function POST(
       );
     }
 
-    // Get confirmed players
+    // Check if event is in a valid state for drawing
+    if (event.status === "canceled") {
+      return NextResponse.json(
+        { error: "Não é possível sortear times de um evento cancelado" },
+        { status: 400 }
+      );
+    }
+
+    if (event.status === "finished") {
+      return NextResponse.json(
+        { error: "Não é possível sortear times de um evento finalizado" },
+        { status: 400 }
+      );
+    }
+
+    // Get confirmed AND checked-in players only
+    // Players must have status = 'yes' AND have checked in (checked_in_at IS NOT NULL)
     const confirmedPlayersRaw = await sql`
       SELECT
         ea.user_id,
@@ -226,19 +242,48 @@ export async function POST(
       FROM event_attendance ea
       INNER JOIN users u ON ea.user_id = u.id
       INNER JOIN group_members gm ON ea.user_id = gm.user_id AND gm.group_id = ${event.group_id}
-      WHERE ea.event_id = ${eventId} AND ea.status = 'yes'
+      WHERE ea.event_id = ${eventId}
+        AND ea.status = 'yes'
+        AND ea.checked_in_at IS NOT NULL
     `;
 
     const confirmedPlayers = confirmedPlayersRaw as Player[];
 
     if (confirmedPlayers.length < 4) {
       return NextResponse.json(
-        { error: "Necessário pelo menos 4 jogadores confirmados" },
+        { error: "Necessário pelo menos 4 jogadores com check-in confirmado. Certifique-se de que os jogadores fizeram check-in antes do sorteio." },
         { status: 400 }
       );
     }
 
-    // Delete existing teams
+    // Check if a draw is already in progress (race condition protection)
+    // We use a timestamp-based approach: if teams were created very recently,
+    // another draw might be in progress
+    const [existingTeams] = await sql`
+      SELECT id, created_at FROM teams
+      WHERE event_id = ${eventId}
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    // If teams were created in the last 5 seconds, another draw might be in progress
+    if (existingTeams) {
+      const teamCreatedAt = new Date(existingTeams.created_at);
+      const now = new Date();
+      const timeDiffMs = now.getTime() - teamCreatedAt.getTime();
+
+      if (timeDiffMs < 5000) {
+        return NextResponse.json(
+          { error: "Um sorteio está em andamento. Aguarde alguns segundos e tente novamente." },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Delete existing teams (only after race condition check)
+    await sql`
+      DELETE FROM team_members WHERE team_id IN (SELECT id FROM teams WHERE event_id = ${eventId})
+    `;
     await sql`
       DELETE FROM teams WHERE event_id = ${eventId}
     `;

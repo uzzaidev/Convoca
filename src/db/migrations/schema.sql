@@ -156,6 +156,7 @@ CREATE TABLE IF NOT EXISTS charges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_id UUID REFERENCES events(id) ON DELETE SET NULL,
   type VARCHAR(20) CHECK (type IN ('monthly', 'daily', 'fine', 'other')),
   amount_cents INTEGER NOT NULL,
   due_date DATE,
@@ -163,6 +164,10 @@ CREATE TABLE IF NOT EXISTS charges (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Migration: Add event_id column if table already exists
+-- Run this manually in production:
+-- ALTER TABLE charges ADD COLUMN IF NOT EXISTS event_id UUID REFERENCES events(id) ON DELETE SET NULL;
 
 -- Draw configurations (configurações de sorteio por grupo)
 CREATE TABLE IF NOT EXISTS draw_configs (
@@ -194,6 +199,7 @@ CREATE INDEX IF NOT EXISTS idx_player_ratings_event ON player_ratings(event_id);
 CREATE INDEX IF NOT EXISTS idx_player_ratings_rated ON player_ratings(rated_user_id);
 CREATE INDEX IF NOT EXISTS idx_charges_user_status ON charges(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_charges_due_date ON charges(due_date);
+CREATE INDEX IF NOT EXISTS idx_charges_event ON charges(event_id);
 
 -- Event settings (configurações de eventos por grupo)
 CREATE TABLE IF NOT EXISTS event_settings (

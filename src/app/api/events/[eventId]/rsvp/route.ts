@@ -27,6 +27,14 @@ export async function POST(
 
     const { status, role, preferredPosition, secondaryPosition } = validation.data;
 
+    // Validate that positions are different if both are provided
+    if (preferredPosition && secondaryPosition && preferredPosition === secondaryPosition) {
+      return NextResponse.json(
+        { error: "As posições preferida e secundária devem ser diferentes" },
+        { status: 400 }
+      );
+    }
+
     // Get event details
     const [event] = await sql`
       SELECT * FROM events WHERE id = ${eventId}
@@ -34,6 +42,21 @@ export async function POST(
 
     if (!event) {
       return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
+    }
+
+    // Check if event is in a valid state for RSVP
+    if (event.status === "canceled") {
+      return NextResponse.json(
+        { error: "Este evento foi cancelado" },
+        { status: 400 }
+      );
+    }
+
+    if (event.status === "finished") {
+      return NextResponse.json(
+        { error: "Este evento já foi finalizado" },
+        { status: 400 }
+      );
     }
 
     // Check if user is member of the group
@@ -109,17 +132,19 @@ export async function POST(
       RETURNING *
     `;
 
-    // If user changed to "no" or "waitlist" to "yes", check waitlist
-    if (status === "no" || (finalStatus === "yes" && event.waitlist_enabled)) {
-      // Move first person from waitlist to confirmed
-      const [firstInWaitlist] = await sql`
+    // Only promote from waitlist when a confirmed user leaves (self-removal)
+    // This ensures waitlist promotion only happens when a spot actually opens up
+    if (isSelfRemoval && event.waitlist_enabled) {
+      // Find the first person in waitlist who can fill the opened spot
+      // Prioritize by order_of_arrival, then by created_at
+      const waitlistPlayers = await sql`
         SELECT * FROM event_attendance
         WHERE event_id = ${eventId} AND status = 'waitlist'
-        ORDER BY created_at ASC
-        LIMIT 1
+        ORDER BY order_of_arrival ASC NULLS LAST, created_at ASC
       `;
 
-      if (firstInWaitlist) {
+      for (const waitlistPlayer of waitlistPlayers) {
+        // Re-check current counts to ensure we have a spot
         const [updatedCounts] = await sql`
           SELECT
             COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
@@ -132,18 +157,22 @@ export async function POST(
         const gkCount = parseInt(updatedCounts.gk_count);
 
         let canConfirm = false;
-        if (firstInWaitlist.role === "gk" && gkCount < event.max_goalkeepers) {
-          canConfirm = true;
-        } else if (totalPlayers < event.max_players) {
-          canConfirm = true;
+        if (waitlistPlayer.role === "gk") {
+          // GK can only be promoted if GK slots are available
+          canConfirm = gkCount < event.max_goalkeepers && totalPlayers < event.max_players;
+        } else {
+          // Line player can be promoted if total slots are available
+          canConfirm = totalPlayers < event.max_players;
         }
 
         if (canConfirm) {
           await sql`
             UPDATE event_attendance
             SET status = 'yes', updated_at = NOW()
-            WHERE id = ${firstInWaitlist.id}
+            WHERE id = ${waitlistPlayer.id}
           `;
+          // Only promote one player per self-removal
+          break;
         }
       }
     }

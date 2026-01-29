@@ -13,42 +13,47 @@ const adminRsvpSchema = z.object({
   secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
 });
 
-// Helper function to promote first person from waitlist
+// Helper function to promote first eligible person from waitlist
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function promoteFromWaitlist(eventId: string, event: any) {
-  const [firstInWaitlist] = await sql`
+  // Get all waitlist players ordered by arrival
+  const waitlistPlayers = await sql`
     SELECT * FROM event_attendance
     WHERE event_id = ${eventId} AND status = 'waitlist'
-    ORDER BY created_at ASC
-    LIMIT 1
+    ORDER BY order_of_arrival ASC NULLS LAST, created_at ASC
   `;
 
-  if (!firstInWaitlist) return;
-
-  const [counts] = await sql`
-    SELECT
-      COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
-      COUNT(*) FILTER (WHERE status = 'yes' AND role = 'line') as line_count
-    FROM event_attendance
-    WHERE event_id = ${eventId}
-  `;
-
-  const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
-  const gkCount = parseInt(counts.gk_count);
-
-  let canConfirm = false;
-  if (firstInWaitlist.role === "gk" && gkCount < event.max_goalkeepers) {
-    canConfirm = true;
-  } else if (totalPlayers < event.max_players) {
-    canConfirm = true;
-  }
-
-  if (canConfirm) {
-    await sql`
-      UPDATE event_attendance
-      SET status = 'yes', updated_at = NOW()
-      WHERE id = ${firstInWaitlist.id}
+  for (const waitlistPlayer of waitlistPlayers) {
+    // Re-check current counts to ensure we have a spot
+    const [counts] = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
+        COUNT(*) FILTER (WHERE status = 'yes' AND role = 'line') as line_count
+      FROM event_attendance
+      WHERE event_id = ${eventId}
     `;
+
+    const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
+    const gkCount = parseInt(counts.gk_count);
+
+    let canConfirm = false;
+    if (waitlistPlayer.role === "gk") {
+      // GK can only be promoted if GK slots AND total slots are available
+      canConfirm = gkCount < event.max_goalkeepers && totalPlayers < event.max_players;
+    } else {
+      // Line player can be promoted if total slots are available
+      canConfirm = totalPlayers < event.max_players;
+    }
+
+    if (canConfirm) {
+      await sql`
+        UPDATE event_attendance
+        SET status = 'yes', updated_at = NOW()
+        WHERE id = ${waitlistPlayer.id}
+      `;
+      // Only promote one player per removal
+      break;
+    }
   }
 }
 
@@ -92,6 +97,21 @@ export async function POST(
       return NextResponse.json(
         { error: "Você não tem permissão para gerenciar confirmações" },
         { status: 403 }
+      );
+    }
+
+    // Check if event is in a valid state for RSVP management
+    if (event.status === "canceled") {
+      return NextResponse.json(
+        { error: "Este evento foi cancelado" },
+        { status: 400 }
+      );
+    }
+
+    if (event.status === "finished") {
+      return NextResponse.json(
+        { error: "Este evento já foi finalizado" },
+        { status: 400 }
       );
     }
 
@@ -154,14 +174,28 @@ export async function POST(
 
     let finalStatus = "yes";
 
-    // Check if we need to put user in waitlist
+    // Check if we need to put user in waitlist or reject
     const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
     const gkCount = parseInt(counts.gk_count);
 
     if (role === "gk" && gkCount >= event.max_goalkeepers) {
-      finalStatus = event.waitlist_enabled ? "waitlist" : "yes";
+      if (event.waitlist_enabled) {
+        finalStatus = "waitlist";
+      } else {
+        return NextResponse.json(
+          { error: `Limite de goleiros atingido (${event.max_goalkeepers}). Não é possível adicionar mais goleiros.` },
+          { status: 400 }
+        );
+      }
     } else if (totalPlayers >= event.max_players) {
-      finalStatus = event.waitlist_enabled ? "waitlist" : "yes";
+      if (event.waitlist_enabled) {
+        finalStatus = "waitlist";
+      } else {
+        return NextResponse.json(
+          { error: `Limite de jogadores atingido (${event.max_players}). Não é possível adicionar mais jogadores.` },
+          { status: 400 }
+        );
+      }
     }
 
     // Upsert attendance

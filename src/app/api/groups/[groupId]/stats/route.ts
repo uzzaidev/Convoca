@@ -185,7 +185,6 @@ export async function GET(
       GROUP BY u.id, u.name, u.image
       HAVING COUNT(DISTINCT ea.event_id) > 0  -- Pelo menos teve alguma interação
       ORDER BY games_played DESC, frequency_percentage DESC
-      LIMIT 15
     `;
 
     return NextResponse.json({

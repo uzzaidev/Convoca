@@ -81,7 +81,7 @@ export function TeamsTab({
                 <Trophy className="h-5 w-5 text-orange-500" />
                 Times
               </CardTitle>
-              {isAdmin && eventStatus === "scheduled" && (
+              {isAdmin && eventStatus !== "finished" && eventStatus !== "canceled" && (
                 <TeamEditor eventId={eventId} teams={teams} />
               )}
             </div>

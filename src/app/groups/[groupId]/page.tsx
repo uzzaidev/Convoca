@@ -302,7 +302,6 @@ export default async function GroupPage({ params }: RouteParams) {
            OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') > 0
            OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') > 0
         ORDER BY games_played DESC, frequency_percentage DESC
-        LIMIT 15
       `;
       stats.playerFrequency = playerFrequency as typeof stats.playerFrequency;
 
@@ -504,8 +503,7 @@ export default async function GroupPage({ params }: RouteParams) {
         if (b.wins !== a.wins) return b.wins - a.wins;
         if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
         return b.goals - a.goals;
-      })
-      .slice(0, 15) as GeneralRanking[];
+      }) as GeneralRanking[];
 
     } catch (error) {
       console.error("Error calculating general ranking:", error);

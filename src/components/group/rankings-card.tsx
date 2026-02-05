@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3, MoreVertical, Maximize2, Download } from "lucide-react";
+import { Trophy, Target, Goal, Hand, ArrowUpDown, ArrowUp, ArrowDown, BarChart3, MoreVertical, Maximize2, Download, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -153,6 +154,11 @@ export function RankingsCard({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [rankingSearch, setRankingSearch] = useState('');
+  const [rankingPage, setRankingPage] = useState(0);
+  const [frequencySearch, setFrequencySearch] = useState('');
+  const [frequencyPage, setFrequencyPage] = useState(0);
+  const PAGE_SIZE = 20;
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
     // Tentar carregar do localStorage
     if (typeof window !== 'undefined') {
@@ -196,13 +202,33 @@ export function RankingsCard({
     }
   };
 
-  // Ordenar ranking geral
-  const sortedGeneralRanking = [...generalRanking].sort((a, b) => {
+  // Filtrar e ordenar ranking geral
+  const filteredGeneralRanking = generalRanking.filter(p =>
+    rankingSearch === '' || p.name.toLowerCase().includes(rankingSearch.toLowerCase())
+  );
+
+  const sortedGeneralRanking = [...filteredGeneralRanking].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
 
     return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
   });
+
+  const rankingTotalPages = Math.ceil(sortedGeneralRanking.length / PAGE_SIZE);
+  const paginatedGeneralRanking = sortedGeneralRanking.slice(
+    rankingPage * PAGE_SIZE,
+    (rankingPage + 1) * PAGE_SIZE
+  );
+
+  // Filtrar e paginar frequência
+  const filteredFrequency = playerFrequency.filter(p =>
+    frequencySearch === '' || p.name.toLowerCase().includes(frequencySearch.toLowerCase())
+  );
+  const frequencyTotalPages = Math.ceil(filteredFrequency.length / PAGE_SIZE);
+  const paginatedFrequency = filteredFrequency.slice(
+    frequencyPage * PAGE_SIZE,
+    (frequencyPage + 1) * PAGE_SIZE
+  );
 
   // Função para exportar para PDF
   const exportToPDF = async (tabName: string, data?: PlayerStat[]) => {
@@ -414,14 +440,26 @@ export function RankingsCard({
 
     const visibleColumnsList = COLUMNS.filter(col => visibleColumns[col.key]);
 
+    const displayData = rankingSearch ? sortedGeneralRanking : paginatedGeneralRanking;
+    const displayTotalPages = rankingSearch ? 1 : rankingTotalPages;
+
     return (
       <div className="space-y-2">
-        {/* Menu de seleção de colunas */}
-        <div className="flex justify-between items-center gap-2">
-          <div className="text-xs text-muted-foreground hidden md:block">
-            Dica: Arraste horizontalmente para ver mais colunas
+        {/* Busca e menu de colunas */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar jogador..."
+              value={rankingSearch}
+              onChange={(e) => {
+                setRankingSearch(e.target.value);
+                setRankingPage(0);
+              }}
+              className="pl-9 h-9"
+            />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -501,8 +539,9 @@ export function RankingsCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedGeneralRanking.map((player, index) => {
+                {displayData.map((player, index) => {
                   const isCurrentUser = player.id === currentUserId;
+                  const globalIndex = rankingSearch ? index : rankingPage * PAGE_SIZE + index;
                   return (
                     <TableRow
                       key={player.id}
@@ -511,16 +550,16 @@ export function RankingsCard({
                       <TableCell className="text-center sticky left-0 bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                         <div
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                            index === 0
+                            globalIndex === 0
                               ? "bg-yellow-500 text-yellow-950"
-                              : index === 1
+                              : globalIndex === 1
                               ? "bg-slate-300 text-slate-900"
-                              : index === 2
+                              : globalIndex === 2
                               ? "bg-orange-600 text-orange-50"
                               : "bg-muted text-muted-foreground"
                           }`}
                         >
-                          {index + 1}
+                          {globalIndex + 1}
                         </div>
                       </TableCell>
                       <TableCell className="font-medium sticky bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate max-w-[140px]" style={{ left: `${STICKY_NAME_LEFT}px` }}>
@@ -546,6 +585,38 @@ export function RankingsCard({
             </Table>
           </div>
         </div>
+
+        {/* Paginação */}
+        {displayTotalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm text-muted-foreground">
+              {rankingPage * PAGE_SIZE + 1}-{Math.min((rankingPage + 1) * PAGE_SIZE, sortedGeneralRanking.length)} de {sortedGeneralRanking.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => setRankingPage(p => p - 1)}
+                disabled={rankingPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {rankingPage + 1} / {displayTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => setRankingPage(p => p + 1)}
+                disabled={rankingPage >= displayTotalPages - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -559,86 +630,138 @@ export function RankingsCard({
       );
     }
 
-    return (
-      <div className="rounded-lg border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px] text-center">#</TableHead>
-              <TableHead>Jogador</TableHead>
-              <TableHead className="text-center">Presentes</TableHead>
-              <TableHead className="text-center">DM</TableHead>
-              <TableHead className="text-center">Ausentes</TableHead>
-              <TableHead className="text-center">Jogos Totais</TableHead>
-              <TableHead className="text-right">% Participação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {playerFrequency.map((player, index) => {
-              const isCurrentUser = player.id === currentUserId;
-              const percentage = parseFloat(player.frequency_percentage || '0');
-              const percentageColor =
-                percentage >= 80
-                  ? "text-green-600 dark:text-green-500"
-                  : percentage >= 50
-                  ? "text-yellow-600 dark:text-yellow-500"
-                  : "text-red-600 dark:text-red-500";
+    const freqDisplayData = frequencySearch ? filteredFrequency : paginatedFrequency;
+    const freqDisplayTotalPages = frequencySearch ? 1 : frequencyTotalPages;
 
-              return (
-                <TableRow
-                  key={player.id}
-                  className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
-                >
-                  <TableCell className="text-center">
-                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-bold text-sm">
-                      {index + 1}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{player.name}</TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950">
-                      {player.games_played}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    <Badge variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950">
-                      {player.games_dm}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    <Badge variant="outline" className="text-xs bg-red-50 dark:bg-red-950">
-                      {player.games_absent}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums font-semibold">
-                    {player.total_games}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="flex-1 max-w-[120px]">
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all ${
-                              percentage >= 80
-                                ? "bg-green-500"
-                                : percentage >= 50
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          />
-                        </div>
+    return (
+      <div className="space-y-2">
+        {/* Busca */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar jogador..."
+            value={frequencySearch}
+            onChange={(e) => {
+              setFrequencySearch(e.target.value);
+              setFrequencyPage(0);
+            }}
+            className="pl-9 h-9"
+          />
+        </div>
+
+        <div className="rounded-lg border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px] text-center">#</TableHead>
+                <TableHead>Jogador</TableHead>
+                <TableHead className="text-center">Presentes</TableHead>
+                <TableHead className="text-center">DM</TableHead>
+                <TableHead className="text-center">Ausentes</TableHead>
+                <TableHead className="text-center">Jogos Totais</TableHead>
+                <TableHead className="text-right">% Participação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {freqDisplayData.map((player, index) => {
+                const isCurrentUser = player.id === currentUserId;
+                const globalIndex = frequencySearch ? index : frequencyPage * PAGE_SIZE + index;
+                const percentage = parseFloat(player.frequency_percentage || '0');
+                const percentageColor =
+                  percentage >= 80
+                    ? "text-green-600 dark:text-green-500"
+                    : percentage >= 50
+                    ? "text-yellow-600 dark:text-yellow-500"
+                    : "text-red-600 dark:text-red-500";
+
+                return (
+                  <TableRow
+                    key={player.id}
+                    className={isCurrentUser ? "bg-primary/10 font-semibold" : ""}
+                  >
+                    <TableCell className="text-center">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-bold text-sm">
+                        {globalIndex + 1}
                       </div>
-                      <span className={`text-sm font-bold tabular-nums min-w-[50px] text-right ${percentageColor}`}>
-                        {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell className="font-medium">{player.name}</TableCell>
+                    <TableCell className="text-center tabular-nums">
+                      <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950">
+                        {player.games_played}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums">
+                      <Badge variant="outline" className="text-xs bg-yellow-50 dark:bg-yellow-950">
+                        {player.games_dm}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums">
+                      <Badge variant="outline" className="text-xs bg-red-50 dark:bg-red-950">
+                        {player.games_absent}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums font-semibold">
+                      {player.total_games}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="flex-1 max-w-[120px]">
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all ${
+                                percentage >= 80
+                                  ? "bg-green-500"
+                                  : percentage >= 50
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                              }`}
+                              style={{ width: `${Math.min(percentage, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className={`text-sm font-bold tabular-nums min-w-[50px] text-right ${percentageColor}`}>
+                          {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Paginação */}
+        {freqDisplayTotalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-sm text-muted-foreground">
+              {frequencyPage * PAGE_SIZE + 1}-{Math.min((frequencyPage + 1) * PAGE_SIZE, filteredFrequency.length)} de {filteredFrequency.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => setFrequencyPage(p => p - 1)}
+                disabled={frequencyPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {frequencyPage + 1} / {freqDisplayTotalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => setFrequencyPage(p => p + 1)}
+                disabled={frequencyPage >= freqDisplayTotalPages - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

@@ -235,7 +235,7 @@ export function RankingsCard({
     setIsExporting(true);
     try {
       const { default: jsPDF } = await import('jspdf');
-      await import('jspdf-autotable');
+      const { default: autoTable } = await import('jspdf-autotable');
 
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -281,7 +281,7 @@ export function RankingsCard({
         ]);
       }
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [headers],
         body: tableData,
         startY: 30,

@@ -116,8 +116,8 @@ export async function POST(
       );
     }
 
-    // Can't vote for yourself (unless you're admin for testing purposes)
-    if (ratedUserId === user.id && membership.role !== 'admin') {
+    // Can't vote for yourself
+    if (ratedUserId === user.id) {
       return NextResponse.json(
         { error: "Você não pode votar em si mesmo" },
         { status: 400 }

@@ -66,6 +66,7 @@ type EventTabsProps = {
   hasTeams: boolean;
   userAttendance: UserAttendance;
   groupMembers: GroupMember[];
+  currentUserId: string;
 };
 
 export function EventTabs({
@@ -80,6 +81,7 @@ export function EventTabs({
   hasTeams,
   userAttendance,
   groupMembers,
+  currentUserId,
 }: EventTabsProps) {
   // Determine default tab based on event status
   const getDefaultTab = () => {
@@ -171,6 +173,7 @@ export function EventTabs({
           eventId={eventId}
           teams={teams}
           isAdmin={isAdmin}
+          currentUserId={currentUserId}
         />
       </TabsContent>
     </Tabs>

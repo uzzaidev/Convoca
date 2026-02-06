@@ -275,6 +275,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
           hasTeams={hasTeams}
           userAttendance={userAttendance}
           groupMembers={groupMembers}
+          currentUserId={user.id}
         />
       </div>
     </div>

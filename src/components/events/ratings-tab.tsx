@@ -29,12 +29,14 @@ type RatingsTabProps = {
   eventId: string;
   teams: Team[];
   isAdmin: boolean;
+  currentUserId: string;
 };
 
 export function RatingsTab({
   eventId,
   teams,
   isAdmin,
+  currentUserId,
 }: RatingsTabProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -244,26 +246,39 @@ export function RatingsTab({
 
                   <div className="space-y-2">
                     {team.members?.map((player) => {
+                      const isSelf = player.userId === currentUserId;
                       const isSelected = selectedPlayerId === player.userId;
                       const isCurrentVote = currentVote === player.userId;
 
                       return (
                         <div
                           key={player.userId}
-                          className={`p-4 rounded-lg bg-muted/30 flex items-center gap-3 hover:bg-muted/50 transition-colors cursor-pointer ${
-                            isSelected ? "ring-2 ring-yellow-500 bg-yellow-500/10" : ""
+                          className={`p-4 rounded-lg flex items-center gap-3 transition-colors ${
+                            isSelf
+                              ? "bg-muted/20 opacity-50 cursor-not-allowed"
+                              : `bg-muted/30 hover:bg-muted/50 cursor-pointer ${
+                                  isSelected ? "ring-2 ring-yellow-500 bg-yellow-500/10" : ""
+                                }`
                           }`}
                         >
                           <RadioGroupItem
                             value={player.userId}
                             id={player.userId}
+                            disabled={isSelf}
                           />
                           <Label
                             htmlFor={player.userId}
-                            className="flex-1 cursor-pointer flex items-center justify-between"
+                            className={`flex-1 flex items-center justify-between ${
+                              isSelf ? "cursor-not-allowed" : "cursor-pointer"
+                            }`}
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{player.userName}</span>
+                              {isSelf && (
+                                <Badge variant="outline" className="text-xs">
+                                  Você
+                                </Badge>
+                              )}
                               {isCurrentVote && (
                                 <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-700 border-yellow-500/50">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />

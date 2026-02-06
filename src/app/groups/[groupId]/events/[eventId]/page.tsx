@@ -276,6 +276,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
           hasTeams={hasTeams}
           userAttendance={userAttendance}
           groupMembers={groupMembers}
+          currentUserId={user.id}
         />
       </div>
     </div>

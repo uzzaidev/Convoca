@@ -333,16 +333,25 @@ export default async function GroupPage({ params }: RouteParams) {
         });
 
         const winLoss = await sql`
-          SELECT t.is_winner, COUNT(*) as count
-          FROM team_members tm
-          INNER JOIN teams t ON tm.team_id = t.id
-          WHERE t.event_id = ANY(${myEventIds}) AND tm.user_id = ${user.id} AND t.is_winner IS NOT NULL
-          GROUP BY t.is_winner
+          WITH my_game_results AS (
+            SELECT
+              t_player.event_id,
+              (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal') as team_goals,
+              (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal') as opponent_goals
+            FROM team_members tm
+            INNER JOIN teams t_player ON tm.team_id = t_player.id
+            WHERE tm.user_id = ${user.id} AND t_player.event_id = ANY(${myEventIds})
+          )
+          SELECT
+            COUNT(*) FILTER (WHERE team_goals > opponent_goals) as wins,
+            COUNT(*) FILTER (WHERE team_goals < opponent_goals) as losses,
+            COUNT(*) FILTER (WHERE team_goals = opponent_goals) as draws
+          FROM my_game_results
         `;
-        (winLoss as unknown as Array<{ is_winner: boolean; count: string }>).forEach((wl) => {
-          if (wl.is_winner === true) myStats.wins = parseInt(wl.count);
-          if (wl.is_winner === false) myStats.losses = parseInt(wl.count);
-        });
+        if (winLoss.length > 0) {
+          myStats.wins = parseInt((winLoss[0] as any).wins) || 0;
+          myStats.losses = parseInt((winLoss[0] as any).losses) || 0;
+        }
 
         const tagsResult = await sql`
           SELECT UNNEST(tags) as tag, COUNT(*) as count

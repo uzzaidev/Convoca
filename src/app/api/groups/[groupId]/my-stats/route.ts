@@ -41,70 +41,44 @@ export async function GET(
         WHERE e.group_id = ${groupId}
           AND e.status = 'finished'
           AND tm.user_id = ${user.id}
+      ),
+      -- Resultado de cada jogo do usuário (baseado em gols)
+      my_game_results AS (
+        SELECT
+          t_player.event_id,
+          (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal') as team_goals,
+          (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal') as opponent_goals
+        FROM team_members tm
+        INNER JOIN teams t_player ON tm.team_id = t_player.id
+        WHERE tm.user_id = ${user.id} AND t_player.event_id IN (SELECT id FROM user_events)
       )
       SELECT
         -- Jogos jogados
-        COUNT(DISTINCT ue.id) as games_played,
+        (SELECT COUNT(*) FROM user_events)::int as games_played,
 
         -- Gols
-        COUNT(DISTINCT CASE
-          WHEN ea.action_type = 'goal' AND ea.subject_user_id = ${user.id}
-          THEN ea.id
-        END) as goals,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'goal')::int as goals,
 
         -- Assistências
-        COUNT(DISTINCT CASE
-          WHEN ea.action_type = 'assist' AND ea.subject_user_id = ${user.id}
-          THEN ea.id
-        END) as assists,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'assist')::int as assists,
 
         -- Defesas (goleiro)
-        COUNT(DISTINCT CASE
-          WHEN ea.action_type = 'save' AND ea.subject_user_id = ${user.id}
-          THEN ea.id
-        END) as saves,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'save')::int as saves,
 
         -- Cartões amarelos
-        COUNT(DISTINCT CASE
-          WHEN ea.action_type = 'yellow_card' AND ea.subject_user_id = ${user.id}
-          THEN ea.id
-        END) as yellow_cards,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'yellow_card')::int as yellow_cards,
 
         -- Cartões vermelhos
-        COUNT(DISTINCT CASE
-          WHEN ea.action_type = 'red_card' AND ea.subject_user_id = ${user.id}
-          THEN ea.id
-        END) as red_cards,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'red_card')::int as red_cards,
 
-        -- Vitórias
-        COUNT(DISTINCT CASE
-          WHEN t.is_winner = true
-          THEN t.event_id
-        END) as wins,
+        -- Vitórias (baseado em gols)
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals > opponent_goals)::int as wins,
 
-        -- Derrotas
-        COUNT(DISTINCT CASE
-          WHEN t.is_winner = false
-          THEN t.event_id
-        END) as losses,
+        -- Derrotas (baseado em gols)
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals < opponent_goals)::int as losses,
 
         -- Contagem de MVPs
-        COUNT(DISTINCT CASE
-          WHEN 'mvp' = ANY(pr.tags)
-          THEN pr.id
-        END) as mvp_count
-
-      FROM user_events ue
-
-      -- Ações do usuário
-      LEFT JOIN event_actions ea ON ea.event_id = ue.id
-
-      -- Times e vitórias/derrotas
-      LEFT JOIN team_members tm ON tm.user_id = ${user.id}
-      LEFT JOIN teams t ON tm.team_id = t.id AND t.event_id = ue.id
-
-      -- Avaliações recebidas
-      LEFT JOIN player_ratings pr ON pr.rated_user_id = ${user.id} AND pr.event_id = ue.id
+        (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
     `;
 
     if (!stats || stats.length === 0 || stats[0].games_played === '0') {

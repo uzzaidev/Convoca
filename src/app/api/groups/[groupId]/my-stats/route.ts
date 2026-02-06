@@ -32,16 +32,15 @@ export async function GET(
     // Buscar estatísticas completas do usuário
     const stats = await sql`
       WITH
-      -- Eventos finalizados do grupo onde o usuário participou (check-in feito)
+      -- Eventos finalizados do grupo onde o usuário participou (estava em um time)
       user_events AS (
         SELECT DISTINCT e.id
         FROM events e
-        INNER JOIN event_attendance ea ON e.id = ea.event_id
+        INNER JOIN teams t ON t.event_id = e.id
+        INNER JOIN team_members tm ON tm.team_id = t.id
         WHERE e.group_id = ${groupId}
           AND e.status = 'finished'
-          AND ea.user_id = ${user.id}
-          AND ea.status = 'yes'
-          AND ea.checked_in_at IS NOT NULL
+          AND tm.user_id = ${user.id}
       )
       SELECT
         -- Jogos jogados

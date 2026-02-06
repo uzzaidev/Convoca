@@ -305,12 +305,13 @@ export default async function GroupPage({ params }: RouteParams) {
       `;
       stats.playerFrequency = playerFrequency as typeof stats.playerFrequency;
 
-      // Minhas estatísticas
+      // Minhas estatísticas (jogos onde o usuário estava em um time)
       const myEvents = await sql`
-        SELECT e.id FROM events e
-        INNER JOIN event_attendance ea ON e.id = ea.event_id
+        SELECT DISTINCT e.id FROM events e
+        INNER JOIN teams t ON t.event_id = e.id
+        INNER JOIN team_members tm ON tm.team_id = t.id
         WHERE e.group_id = ${groupId} AND e.status = 'finished'
-          AND ea.user_id = ${user.id} AND ea.checked_in_at IS NOT NULL
+          AND tm.user_id = ${user.id}
       `;
       const myEventIds = (myEvents as unknown as Array<{ id: string }>).map(e => e.id);
 

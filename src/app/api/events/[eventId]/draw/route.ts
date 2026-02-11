@@ -229,8 +229,7 @@ export async function POST(
       );
     }
 
-    // Get confirmed AND checked-in players only
-    // Players must have status = 'yes' AND have checked in (checked_in_at IS NOT NULL)
+    // Get confirmed players (status = 'yes')
     const confirmedPlayersRaw = await sql`
       SELECT
         ea.user_id,
@@ -244,14 +243,13 @@ export async function POST(
       INNER JOIN group_members gm ON ea.user_id = gm.user_id AND gm.group_id = ${event.group_id}
       WHERE ea.event_id = ${eventId}
         AND ea.status = 'yes'
-        AND ea.checked_in_at IS NOT NULL
     `;
 
     const confirmedPlayers = confirmedPlayersRaw as Player[];
 
     if (confirmedPlayers.length < 4) {
       return NextResponse.json(
-        { error: "Necessário pelo menos 4 jogadores com check-in confirmado. Certifique-se de que os jogadores fizeram check-in antes do sorteio." },
+        { error: "Necessário pelo menos 4 jogadores confirmados para sortear times." },
         { status: 400 }
       );
     }

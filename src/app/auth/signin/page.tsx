@@ -100,7 +100,7 @@ export default function SignInPage() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-navy">Senha</Label>
                   <Link
-                    href="#"
+                    href="/auth/forgot-password"
                     className="text-sm text-green-600 hover:text-green-700 hover:underline"
                   >
                     Esqueceu a senha?

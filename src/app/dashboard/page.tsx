@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       WHERE gm.user_id = ${user.id}
       ORDER BY g.created_at DESC
     `;
-    groups = groupsRaw as Group[];
+    groups = groupsRaw as unknown as Group[];
   } catch (error) {
     console.error("Error fetching groups:", error);
     // Continue with empty groups array
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
       ORDER BY e.starts_at ASC
       LIMIT 10
     `;
-    upcomingEvents = upcomingEventsRaw as Event[];
+    upcomingEvents = upcomingEventsRaw as unknown as Event[];
   } catch (error) {
     console.error("Error fetching upcoming events:", error);
     // Continue with empty events array

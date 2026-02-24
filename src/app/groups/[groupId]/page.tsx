@@ -211,7 +211,7 @@ export default async function GroupPage({ params }: RouteParams) {
         GROUP BY u.id, u.name, pg.total_games
         ORDER BY goals DESC LIMIT 10
       `;
-      stats.topScorers = topScorers as Array<{ id: string; name: string; goals: string; games: string }>;
+      stats.topScorers = topScorers as unknown as Array<{ id: string; name: string; goals: string; games: string }>;
 
       // Garçons
       const topAssisters = await sql`
@@ -231,7 +231,7 @@ export default async function GroupPage({ params }: RouteParams) {
         GROUP BY u.id, u.name, pg.total_games
         ORDER BY assists DESC LIMIT 10
       `;
-      stats.topAssisters = topAssisters as Array<{ id: string; name: string; assists: string; games: string }>;
+      stats.topAssisters = topAssisters as unknown as Array<{ id: string; name: string; assists: string; games: string }>;
 
       // Goleiros
       const topGoalkeepers = await sql`
@@ -251,7 +251,7 @@ export default async function GroupPage({ params }: RouteParams) {
         GROUP BY u.id, u.name, pg.total_games
         ORDER BY saves DESC LIMIT 10
       `;
-      stats.topGoalkeepers = topGoalkeepers as Array<{ id: string; name: string; saves: string; games: string }>;
+      stats.topGoalkeepers = topGoalkeepers as unknown as Array<{ id: string; name: string; saves: string; games: string }>;
 
       // Jogos recentes
       const recentMatches = await sql`
@@ -269,7 +269,7 @@ export default async function GroupPage({ params }: RouteParams) {
         WHERE e.group_id = ${groupId} AND e.status = 'finished'
         ORDER BY e.starts_at DESC LIMIT 5
       `;
-      stats.recentMatches = recentMatches as typeof stats.recentMatches;
+      stats.recentMatches = recentMatches as unknown as typeof stats.recentMatches;
 
       // Frequência
       const playerFrequency = await sql`
@@ -303,7 +303,7 @@ export default async function GroupPage({ params }: RouteParams) {
            OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') > 0
         ORDER BY games_played DESC, frequency_percentage DESC
       `;
-      stats.playerFrequency = playerFrequency as typeof stats.playerFrequency;
+      stats.playerFrequency = playerFrequency as unknown as typeof stats.playerFrequency;
 
       // Minhas estatísticas (jogos onde o usuário estava em um time)
       const myEvents = await sql`
@@ -513,7 +513,7 @@ export default async function GroupPage({ params }: RouteParams) {
         if (b.wins !== a.wins) return b.wins - a.wins;
         if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
         return b.goals - a.goals;
-      }) as GeneralRanking[];
+      }) as unknown as GeneralRanking[];
 
     } catch (error) {
       console.error("Error calculating general ranking:", error);

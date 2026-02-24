@@ -169,7 +169,7 @@ Usuário → /auth/signin (redirect)
 1. Acesse: https://app.stack-auth.com
    └─> Login com suas credenciais
 
-2. Selecione projeto: Peladeiros
+2. Selecione projeto: Convoca
    └─> Project ID: 1bc505ea-b01d-44d6-af8d-c1fd464802d0
 
 3. Authentication > Sign-in Methods
@@ -239,7 +239,7 @@ Complexidade da página de login:
 ## 🔍 Arquivos Modificados
 
 ```
-peladeiros/
+convoca/
 ├── README.md                          [+4, -1]   ✏️  Atualizado
 ├── SOLUCAO_ERRO_LOGIN.md              [+267]     🆕 Novo
 ├── STACK_AUTH_DASHBOARD_CONFIG.md     [+194]     🆕 Novo
@@ -318,7 +318,7 @@ Depois de configurar o dashboard e fazer deploy, você terá:
 
 3. **Personalizar Email Templates**
    - Dashboard > Email > Templates
-   - Adicionar logo e cores do Peladeiros
+   - Adicionar logo e cores do Convoca
 
 4. **Configurar MFA (opcional)**
    - Dashboard > Security > Multi-Factor Authentication

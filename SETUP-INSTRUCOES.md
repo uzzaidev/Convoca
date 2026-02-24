@@ -9,7 +9,7 @@ O arquivo `neon-setup.sql` deve ser executado **APENAS no Neon Console**. IDEs t
 ### 1. Abrir o Neon Console
 1. Acesse: **https://console.neon.tech**
 2. Faça login na sua conta
-3. Selecione seu projeto do Peladeiros
+3. Selecione seu projeto do Convoca
 
 ### 2. Abrir o SQL Editor
 1. No menu lateral esquerdo, clique em **SQL Editor**

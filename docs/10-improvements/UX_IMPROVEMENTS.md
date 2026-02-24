@@ -2,7 +2,7 @@
 
 ## 📋 Resumo das Mudanças
 
-Esta atualização implementa melhorias significativas na experiência do usuário (UX) do sistema Peladeiros, com foco em:
+Esta atualização implementa melhorias significativas na experiência do usuário (UX) do sistema Convoca, com foco em:
 
 1. **Responsividade**: Design adaptável para mobile e desktop
 2. **Design Profissional**: Cards modernos com hierarquia visual clara

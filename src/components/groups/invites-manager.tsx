@@ -156,9 +156,9 @@ export function InvitesManager({ groupId, groupName, initialInvites }: InvitesMa
       // Garante que window está disponível
       if (typeof window === 'undefined') return;
       
-      const origin = window.location.origin || 'https://peladeiros.vercel.app';
+      const origin = window.location.origin || 'https://convoca.uzzai.com.br';
       const inviteUrl = `${origin}/groups/join?code=${code}`;
-      const message = `Você foi convidado para o grupo "${groupName}" no Peladeiros! Acesse: ${inviteUrl}`;
+      const message = `Você foi convidado para o grupo "${groupName}" no Convoca! Acesse: ${inviteUrl}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
       
       // Tenta abrir o WhatsApp

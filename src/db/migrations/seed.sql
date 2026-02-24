@@ -1,4 +1,4 @@
--- Peladeiros App - Seed Data para Testes
+-- Convoca App - Seed Data para Testes
 -- Este arquivo cria dados de exemplo para visualizar o funcionamento completo da aplicação
 --
 -- ATENÇÃO: Execute este script apenas em ambiente de desenvolvimento/teste!

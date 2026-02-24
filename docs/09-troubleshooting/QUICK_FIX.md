@@ -16,7 +16,7 @@ Copie o valor gerado (exemplo: `tCJjXPWTVxuSWLwmwkhPxB6cC/oV2tI1UmF1FHYbL2Y=`)
 ### Passo 2: Configurar no Vercel
 
 1. Acesse: https://vercel.com/dashboard
-2. Selecione seu projeto **peladeiros**
+2. Selecione seu projeto **convoca**
 3. Vá em: **Settings** → **Environment Variables**
 4. Adicione estas variáveis:
 

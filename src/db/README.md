@@ -1,4 +1,4 @@
-# 📁 Database - Peladeiros App# Scripts de Banco de Dados
+# 📁 Database - Convoca App# Scripts de Banco de Dados
 
 
 
@@ -64,11 +64,11 @@ cd src\db**Como executar**:
 
 Isso cria 3 arquivos na pasta `backups/`:
 
-- `peladeiros_full_TIMESTAMP.sql` (completo)# Opção 2: Via CLI do Neon
+- `convoca_full_TIMESTAMP.sql` (completo)# Opção 2: Via CLI do Neon
 
-- `peladeiros_structure_TIMESTAMP.sql` (apenas estrutura)neon sql < src/db/create-users-table.sql
+- `convoca_structure_TIMESTAMP.sql` (apenas estrutura)neon sql < src/db/create-users-table.sql
 
-- `peladeiros_data_TIMESTAMP.sql` (apenas dados)
+- `convoca_data_TIMESTAMP.sql` (apenas dados)
 
 # Opção 3: Via psql
 
@@ -451,7 +451,7 @@ Use a connection string com as credenciais corretas (`neondb_owner`).
 2. Se não usou, o banco pode estar em estado inconsistente
 3. Restaure backup:
    ```powershell
-   psql "..." -f "src\db\backups\peladeiros_full_TIMESTAMP.sql"
+   psql "..." -f "src\db\backups\convoca_full_TIMESTAMP.sql"
    ```
 
 ## 📞 Ajuda
@@ -462,4 +462,4 @@ Use a connection string com as credenciais corretas (`neondb_owner`).
 
 ---
 
-**Projeto Peladeiros App** | Database Management | Neon PostgreSQL
+**Projeto Convoca App** | Database Management | Neon PostgreSQL

@@ -1,6 +1,6 @@
-# Documentação - Peladeiros
+# Documentação - Convoca
 
-Documentação completa do projeto Peladeiros, organizada por categoria.
+Documentação completa do projeto Convoca, organizada por categoria.
 
 ## Índice Geral
 

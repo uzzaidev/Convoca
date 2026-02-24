@@ -1,4 +1,4 @@
-# ✅ Build Successful - Peladeiros App
+# ✅ Build Successful - Convoca App
 
 ## Status do Projeto
 

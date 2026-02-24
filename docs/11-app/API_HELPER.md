@@ -1,4 +1,4 @@
-# API Helper para Mobile - Peladeiros
+# API Helper para Mobile - Convoca
 
 ## Contexto Importante
 
@@ -64,7 +64,7 @@ src/lib/
  * API Client que funciona tanto para web quanto mobile
  *
  * - Web: Usa API Routes locais (/api/*)
- * - Mobile: Aponta para backend em produção (https://peladeiros.vercel.app/api/*)
+ * - Mobile: Aponta para backend em produção (https://convoca.uzzai.com.br/api/*)
  */
 
 import { Capacitor } from '@capacitor/core';
@@ -74,9 +74,9 @@ const IS_MOBILE = Capacitor.isNativePlatform();
 
 // URL base da API
 // Web: '' (vazio = URL relativa = localhost ou domínio atual)
-// Mobile: 'https://peladeiros.vercel.app' (URL absoluta = API remota)
+// Mobile: 'https://convoca.uzzai.com.br' (URL absoluta = API remota)
 const API_BASE_URL = IS_MOBILE
-  ? process.env.NEXT_PUBLIC_API_URL || 'https://peladeiros.vercel.app'
+  ? process.env.NEXT_PUBLIC_API_URL || 'https://convoca.uzzai.com.br'
   : '';
 
 export class ApiError extends Error {
@@ -98,7 +98,7 @@ interface ApiRequestOptions extends RequestInit {
  * Faz uma requisição para a API
  *
  * Web: fetch(''/api/groups) → /api/groups (API Route local)
- * Mobile: fetch('https://peladeiros.vercel.app'/api/groups) → https://peladeiros.vercel.app/api/groups (API remota)
+ * Mobile: fetch('https://convoca.uzzai.com.br'/api/groups) → https://convoca.uzzai.com.br/api/groups (API remota)
  */
 export async function apiRequest<T = any>(
   endpoint: string,
@@ -469,7 +469,7 @@ export default function DashboardPage() {
 
 **O que acontece nos bastidores:**
 - **Web**: `fetch(''/api/groups)` → `/api/groups` (API Route local)
-- **Mobile**: `fetch('https://peladeiros.vercel.app'/api/groups)` → API remota
+- **Mobile**: `fetch('https://convoca.uzzai.com.br'/api/groups)` → API remota
 
 ### Usando React Query (Recomendado)
 
@@ -511,10 +511,10 @@ AUTH_SECRET=seu-secret-local
 
 ```bash
 # API aponta para produção
-NEXT_PUBLIC_API_URL=https://peladeiros.vercel.app
+NEXT_PUBLIC_API_URL=https://convoca.uzzai.com.br
 
 # NextAuth produção
-NEXTAUTH_URL=https://peladeiros.vercel.app
+NEXTAUTH_URL=https://convoca.uzzai.com.br
 AUTH_SECRET=seu-secret-producao
 ```
 
@@ -697,7 +697,7 @@ if (process.env.NODE_ENV === 'development') {
 | Output             | `undefined` (SSR)            | `'export'` (static)                 |
 | API Routes         | ✅ Funcionam                 | ❌ Não funcionam                     |
 | Como chamar APIs   | `fetch('/api/...')` ou `api.get('/api/...')` | `api.get('/api/...')` (obrigatório) |
-| URL final          | `/api/groups` (local)        | `https://peladeiros.vercel.app/api/groups` |
+| URL final          | `/api/groups` (local)        | `https://convoca.uzzai.com.br/api/groups` |
 | SSR                | ✅ Sim                       | ❌ Não                               |
 | Server Actions     | ✅ Sim                       | ❌ Não                               |
 
@@ -709,7 +709,7 @@ if (process.env.NODE_ENV === 'development') {
 
 2. **O helper detecta automaticamente a plataforma**
    - Web: chama `/api/...` (local)
-   - Mobile: chama `https://peladeiros.vercel.app/api/...` (remota)
+   - Mobile: chama `https://convoca.uzzai.com.br/api/...` (remota)
 
 3. **API Routes continuam funcionando normalmente na web**
    - O backend Vercel permanece intacto

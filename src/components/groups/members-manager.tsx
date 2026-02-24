@@ -578,7 +578,7 @@ export function MembersManager({
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">
-                Senha (opcional - padrão: Peladeiros2024!)
+                Senha (opcional - padrão: Convoca2024!)
               </Label>
               <Input
                 id="password"

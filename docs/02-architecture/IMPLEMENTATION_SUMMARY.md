@@ -1,7 +1,7 @@
 # Implementação da Fase 1 - Resumo
 
 ## Objetivo
-Implementar todas as funcionalidades da Fase 1 do MVP do projeto Peladeiros, conforme especificado no README.md, cuidando para não causar problemas no deploy do Vercel.
+Implementar todas as funcionalidades da Fase 1 do MVP do projeto Convoca, conforme especificado no README.md, cuidando para não causar problemas no deploy do Vercel.
 
 ## Mudanças Realizadas
 

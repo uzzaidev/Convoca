@@ -45,7 +45,7 @@ export function DashboardHeader({ userName }: { userName: string }) {
               <path d="M2 12C2 12 6 16 12 16C18 16 22 12 22 12" stroke="currentColor" strokeWidth="2"/>
             </svg>
           </div>
-          <span className="text-2xl font-bold text-navy">Peladeiros</span>
+          <span className="text-2xl font-bold text-navy">Convoca</span>
         </Link>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600 hidden sm:inline">

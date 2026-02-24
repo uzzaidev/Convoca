@@ -18,13 +18,13 @@ Após fazer merge deste PR:
 - [ ] **2. Testar Rotas Principais**
   ```bash
   # Homepage
-  curl https://peladeiros.vercel.app/
+  curl https://convoca.uzzai.com.br/
   
   # API Debug
-  curl https://peladeiros.vercel.app/api/debug
+  curl https://convoca.uzzai.com.br/api/debug
   
   # Simple Test
-  curl https://peladeiros.vercel.app/simple-test
+  curl https://convoca.uzzai.com.br/simple-test
   ```
 
 - [ ] **3. Confirmar Sem 404**

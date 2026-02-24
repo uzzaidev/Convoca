@@ -153,7 +153,7 @@ vercel --prod
 
 Acesse [Vercel Dashboard](https://vercel.com/dashboard) e:
 
-1. Vá em seu projeto **peladeiros**
+1. Vá em seu projeto **convoca**
 2. Clique na última deployment
 3. Verifique em **Build Logs**:
    ```
@@ -216,10 +216,10 @@ Para a maioria dos projetos Next.js, o `vercel.json` ideal é:
       "has": [
         {
           "type": "host",
-          "value": "www.peladeiros.com"
+          "value": "www.convoca.com"
         }
       ],
-      "destination": "https://peladeiros.com/:path*",
+      "destination": "https://convoca.com/:path*",
       "permanent": true
     }
   ]

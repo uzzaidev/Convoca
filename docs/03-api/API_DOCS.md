@@ -1,6 +1,6 @@
-# API Documentation - Peladeiros App
+# API Documentation - Convoca App
 
-Documentação completa das API Routes do Peladeiros App.
+Documentação completa das API Routes do Convoca App.
 
 ## Base URL
 

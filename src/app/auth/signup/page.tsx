@@ -83,7 +83,7 @@ export default function SignUpPage() {
               <path d="M2 12C2 12 6 16 12 16C18 16 22 12 22 12" stroke="currentColor" strokeWidth="2"/>
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Peladeiros</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Convoca</h1>
           <p className="text-gray-200">Organize suas peladas de forma profissional</p>
         </div>
 

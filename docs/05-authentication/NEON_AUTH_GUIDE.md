@@ -1,6 +1,6 @@
 # Neon Auth - Guia de Autenticação
 
-Este documento descreve como funciona a autenticação no Peladeiros usando NextAuth v5 (Auth.js) com Neon Database.
+Este documento descreve como funciona a autenticação no Convoca usando NextAuth v5 (Auth.js) com Neon Database.
 
 ## Visão Geral
 
@@ -124,7 +124,7 @@ curl -X POST http://localhost:3000/api/auth/signup \
 INSERT INTO users (name, email, password_hash, email_verified)
 VALUES (
   'Admin User',
-  'admin@peladeiros.com',
+  'admin@convoca.com',
   '$2a$10$exemplo_de_hash_bcrypt_aqui',
   NOW()
 );

@@ -1,4 +1,4 @@
--- Script para criar tabela de usuários do app Peladeiros
+-- Script para criar tabela de usuários do app Convoca
 -- Este script é independente e pode ser executado separadamente
 -- 
 -- IMPORTANTE: Este é apenas para o sistema de login/senha do nosso app.
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Comentários explicativos
-COMMENT ON TABLE users IS 'Tabela de usuários do app Peladeiros (login/senha)';
+COMMENT ON TABLE users IS 'Tabela de usuários do app Convoca (login/senha)';
 COMMENT ON COLUMN users.password_hash IS 'Hash bcrypt da senha do usuário (nunca armazene senha em texto)';
 COMMENT ON COLUMN users.email IS 'Email único do usuário, usado para login';
 COMMENT ON COLUMN users.email_verified IS 'Data de verificação do email (null = não verificado)';

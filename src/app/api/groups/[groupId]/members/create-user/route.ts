@@ -60,7 +60,7 @@ export async function POST(
     }
 
     // Use provided password or default
-    const password = defaultPassword || "Peladeiros2024!";
+    const password = defaultPassword || "Convoca2024!";
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);

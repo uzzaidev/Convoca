@@ -1,8 +1,8 @@
-# Estratégia Mobile - Peladeiros App
+# Estratégia Mobile - Convoca App
 
 ## Visão Geral
 
-Este documento descreve a estratégia para criar aplicativos móveis iOS e Android para o Peladeiros, reutilizando a base de código Next.js existente.
+Este documento descreve a estratégia para criar aplicativos móveis iOS e Android para o Convoca, reutilizando a base de código Next.js existente.
 
 ## Tecnologia Recomendada: Capacitor
 
@@ -25,7 +25,7 @@ Este documento descreve a estratégia para criar aplicativos móveis iOS e Andro
 ## Arquitetura Proposta
 
 ```
-peladeiros/
+convoca/
 ├── src/                          # Código Next.js (WEB)
 │   ├── app/                      # App Router
 │   ├── components/               # Componentes React (compartilhados)
@@ -123,14 +123,14 @@ import { Capacitor } from '@capacitor/core';
 const IS_MOBILE = Capacitor.isNativePlatform();
 
 // Web: '' (vazio = URL relativa = /api/groups)
-// Mobile: 'https://peladeiros.vercel.app' (URL absoluta)
+// Mobile: 'https://convoca.uzzai.com.br' (URL absoluta)
 const API_BASE_URL = IS_MOBILE
-  ? process.env.NEXT_PUBLIC_API_URL || 'https://peladeiros.vercel.app'
+  ? process.env.NEXT_PUBLIC_API_URL || 'https://convoca.uzzai.com.br'
   : '';
 
 export async function apiRequest(endpoint: string, options?: RequestInit) {
   // Web: fetch('/api/groups') → API Route local
-  // Mobile: fetch('https://peladeiros.vercel.app/api/groups') → API remota
+  // Mobile: fetch('https://convoca.uzzai.com.br/api/groups') → API remota
   const url = `${API_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
@@ -314,7 +314,7 @@ packages/
 | Next.js output     | `undefined` (SSR)            | `'export'` (static)                 |
 | API Routes         | ✅ Funcionam localmente      | ❌ Não existem (sem Node.js)         |
 | Como chamar APIs   | `fetch('/api/...')` ou `api.get()` | `api.get()` (obrigatório)     |
-| URL de APIs        | `/api/groups` (local)        | `https://peladeiros.vercel.app/api/groups` |
+| URL de APIs        | `/api/groups` (local)        | `https://convoca.uzzai.com.br/api/groups` |
 | SSR                | ✅ Sim                       | ❌ Não                               |
 | Server Actions     | ✅ Sim                       | ❌ Não                               |
 | Deploy             | Vercel (automático)          | App Store + Google Play             |
@@ -331,7 +331,7 @@ packages/
 
 3. **O helper detecta automaticamente a plataforma**
    - Web: chama API local (`/api/...`)
-   - Mobile: chama API remota (`https://peladeiros.vercel.app/api/...`)
+   - Mobile: chama API remota (`https://convoca.uzzai.com.br/api/...`)
 
 4. **Desenvolvimento acontece 99% na web**
    - Use `pnpm dev` normalmente

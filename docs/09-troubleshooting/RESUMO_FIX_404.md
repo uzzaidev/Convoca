@@ -78,19 +78,19 @@ Após o deploy, teste:
 
 **Homepage:**
 ```
-https://peladeiros.vercel.app/
-Esperado: ✅ Landing page do Peladeiros (não 404)
+https://convoca.uzzai.com.br/
+Esperado: ✅ Landing page do Convoca (não 404)
 ```
 
 **API Debug:**
 ```
-https://peladeiros.vercel.app/api/debug
+https://convoca.uzzai.com.br/api/debug
 Esperado: ✅ JSON com informações do ambiente
 ```
 
 **Dashboard:**
 ```
-https://peladeiros.vercel.app/dashboard
+https://convoca.uzzai.com.br/dashboard
 Esperado: ✅ Redirect para /auth/signin (middleware funcionando)
 ```
 
@@ -207,17 +207,17 @@ Todos os detalhes estão documentados em:
 
 ### Antes da Correção ❌
 ```bash
-$ curl https://peladeiros.vercel.app/
+$ curl https://convoca.uzzai.com.br/
 404: NOT_FOUND
 ```
 
 ### Depois da Correção ✅
 ```bash
-$ curl https://peladeiros.vercel.app/
+$ curl https://convoca.uzzai.com.br/
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <title>Peladeiros - Gestão de Peladas</title>
+    <title>Convoca - Gestão de Peladas</title>
     ...
 ```
 

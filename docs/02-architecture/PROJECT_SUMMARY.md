@@ -1,4 +1,4 @@
-# Peladeiros App - Resumo do Projeto
+# Convoca App - Resumo do Projeto
 
 ## ✅ O que foi criado
 
@@ -18,7 +18,7 @@ Projeto completo de gestão de peladas de futebol, do zero, seguindo o plano det
 ### Estrutura do Projeto
 
 ```
-peladeiros-app/
+convoca-app/
 ├── src/
 │   ├── app/                          # Next.js App Router
 │   │   ├── api/                      # API Routes

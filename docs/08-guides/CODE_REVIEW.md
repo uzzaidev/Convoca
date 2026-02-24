@@ -1,7 +1,7 @@
 # Code Review - Análise Técnica Completa
 **Data**: 2025-01-29
 **Revisor**: Senior Dev Analysis
-**Projeto**: Peladeiros v1.0
+**Projeto**: Convoca v1.0
 
 ---
 
@@ -651,8 +651,8 @@ callbacks: {
 ```json
 // public/manifest.json
 {
-  "name": "Peladeiros",
-  "short_name": "Peladeiros",
+  "name": "Convoca",
+  "short_name": "Convoca",
   "icons": [...],
   "start_url": "/",
   "display": "standalone",

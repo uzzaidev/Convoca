@@ -1,5 +1,5 @@
 {
-  "name": "peladeiros-app",
+  "name": "convoca-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,8 @@
     "dev:doppler": "doppler run -- next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "backup": "bash src/db/backup-supabase.sh"
   },
   "packageManager": "pnpm@10.18.1",
   "engines": {

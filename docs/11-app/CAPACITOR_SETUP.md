@@ -1,4 +1,4 @@
-# Capacitor Setup - Peladeiros Mobile App
+# Capacitor Setup - Convoca Mobile App
 
 ## Pré-requisitos
 
@@ -110,8 +110,8 @@ Quando `output: 'export'` está ativo (mobile build), você NÃO pode usar:
 npx cap init
 
 # Responder às perguntas:
-# - App name: Peladeiros
-# - App ID: com.peladeiros.app
+# - App name: Convoca
+# - App ID: com.convoca.app
 # - Web dir: out
 ```
 
@@ -121,8 +121,8 @@ Isso criará `capacitor.config.ts`:
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.peladeiros.app',
-  appName: 'Peladeiros',
+  appId: 'com.convoca.app',
+  appName: 'Convoca',
   webDir: 'out',
   server: {
     // Para desenvolvimento, apontar para localhost
@@ -133,7 +133,7 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#16a34a", // Verde Peladeiros
+      backgroundColor: "#16a34a", // Verde Convoca
       showSpinner: false,
     },
     PushNotifications: {
@@ -195,10 +195,10 @@ Criar `src/lib/api-client.ts`:
 
 const IS_MOBILE = typeof window !== 'undefined' &&
   (window.navigator.userAgent.includes('Capacitor') ||
-   window.navigator.userAgent.includes('peladeiros-app'));
+   window.navigator.userAgent.includes('convoca-app'));
 
 const API_BASE_URL = IS_MOBILE
-  ? process.env.NEXT_PUBLIC_API_URL || 'https://peladeiros.vercel.app'
+  ? process.env.NEXT_PUBLIC_API_URL || 'https://convoca.uzzai.com.br'
   : '';
 
 interface ApiRequestOptions extends RequestInit {
@@ -262,10 +262,10 @@ Criar `.env.production`:
 
 ```bash
 # URL do backend em produção
-NEXT_PUBLIC_API_URL=https://peladeiros.vercel.app
+NEXT_PUBLIC_API_URL=https://convoca.uzzai.com.br
 
 # NextAuth (mesmo URL)
-NEXTAUTH_URL=https://peladeiros.vercel.app
+NEXTAUTH_URL=https://convoca.uzzai.com.br
 AUTH_SECRET=seu-secret-aqui
 
 # Neon Database

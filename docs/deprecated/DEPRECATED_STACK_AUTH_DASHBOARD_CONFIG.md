@@ -17,7 +17,7 @@ O erro ocorre porque o método de autenticação OTP (One-Time Password) / Magic
 
 1. Acesse: [https://app.stack-auth.com](https://app.stack-auth.com)
 2. Faça login na sua conta
-3. Selecione o projeto: **Peladeiros** (Project ID: `1bc505ea-b01d-44d6-af8d-c1fd464802d0`)
+3. Selecione o projeto: **Convoca** (Project ID: `1bc505ea-b01d-44d6-af8d-c1fd464802d0`)
 
 ### Passo 2: Configurar Métodos de Autenticação
 
@@ -34,7 +34,7 @@ O erro ocorre porque o método de autenticação OTP (One-Time Password) / Magic
 2. Clique no botão **"Enable"** ou toggle switch para ativar
 3. Se houver opções de configuração, use as seguintes:
    - **Email Provider**: Use o provider padrão do Stack Auth
-   - **Email From Name**: Peladeiros
+   - **Email From Name**: Convoca
    - **Email From Address**: Use o email padrão fornecido pelo Stack Auth
    - **Token Expiration**: 15 minutos (padrão)
 
@@ -54,14 +54,14 @@ O erro ocorre porque o método de autenticação OTP (One-Time Password) / Magic
 
    **Para produção (Vercel):**
    ```
-   https://peladeiros.vercel.app
-   https://peladeiros.vercel.app/handler/sign-in
-   https://peladeiros.vercel.app/handler/sign-up
-   https://peladeiros.vercel.app/handler/magic-link-callback
-   https://peladeiros.vercel.app/dashboard
+   https://convoca.uzzai.com.br
+   https://convoca.uzzai.com.br/handler/sign-in
+   https://convoca.uzzai.com.br/handler/sign-up
+   https://convoca.uzzai.com.br/handler/magic-link-callback
+   https://convoca.uzzai.com.br/dashboard
    ```
    
-   ⚠️ **Importante**: Substitua `peladeiros.vercel.app` pela sua URL real do Vercel.
+   ⚠️ **Importante**: Substitua `convoca.uzzai.com.br` pela sua URL real do Vercel.
 
 3. Salve as alterações
 

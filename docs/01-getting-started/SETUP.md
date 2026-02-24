@@ -1,4 +1,4 @@
-# Setup Guide - Peladeiros App
+# Setup Guide - Convoca App
 
 Guia completo para configurar e fazer deploy do app de peladas.
 
@@ -98,7 +98,7 @@ vercel
 
 Siga as instruções:
 - Link to existing project? **No**
-- Project name: **peladeiros-app**
+- Project name: **convoca-app**
 - Directory: **./** (deixe vazio)
 - Override settings? **No**
 
@@ -129,7 +129,7 @@ NEXTAUTH_SECRET="your-secret-key"
 Configure no dashboard da Vercel em **Settings > Environment Variables**:
 
 - `DATABASE_URL` - Configurado automaticamente pela integração Neon
-- `NEXTAUTH_URL` - URL do seu app (ex: https://peladeiros.vercel.app)
+- `NEXTAUTH_URL` - URL do seu app (ex: https://convoca.uzzai.com.br)
 - `NEXTAUTH_SECRET` - Gere com `openssl rand -base64 32`
 
 ## 8. Gerar NEXTAUTH_SECRET

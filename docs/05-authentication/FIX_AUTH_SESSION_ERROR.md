@@ -8,7 +8,7 @@
 - ✅ Mensagem: "There was a problem with the server configuration"
 - ✅ Múltiplas requisições sendo feitas repetidamente
 
-**URL afetada:** https://peladeiros.sportstraining.com.br/dashboard
+**URL afetada:** https://convoca.sportstraining.com.br/dashboard
 
 ## 🔍 Causa
 
@@ -36,7 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 #### Opção A: Via Dashboard (Recomendado)
 
 1. Acesse [Vercel Dashboard](https://vercel.com/dashboard)
-2. Selecione o projeto **peladeiros**
+2. Selecione o projeto **convoca**
 3. Vá em **Settings** → **Environment Variables**
 4. Verifique se existe `AUTH_SECRET` ou `NEXTAUTH_SECRET`
 
@@ -89,11 +89,11 @@ vercel --prod
 
 Após o redeploy completar:
 
-1. Acesse: https://peladeiros.sportstraining.com.br/api/auth/session
+1. Acesse: https://convoca.sportstraining.com.br/api/auth/session
    - **Antes:** Erro 500
    - **Depois:** `null` (JSON) ou dados da sessão se estiver logado
 
-2. Acesse: https://peladeiros.sportstraining.com.br/dashboard
+2. Acesse: https://convoca.sportstraining.com.br/dashboard
    - **Antes:** Página em branco com erros no console
    - **Depois:** Redirecionamento para /auth/signin ou dashboard carregado
 

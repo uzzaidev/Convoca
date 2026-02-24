@@ -1,4 +1,4 @@
-# Sistema de Pagamentos Interno - Peladeiros App
+# Sistema de Pagamentos Interno - Convoca App
 
 ## 📋 Visão Geral
 
@@ -260,4 +260,4 @@ Exclui cobrança.
 
 ---
 
-**Desenvolvido para Peladeiros App** | Sistema de Gestão de Peladas
+**Desenvolvido para Convoca App** | Sistema de Gestão de Peladas

@@ -122,37 +122,37 @@ O Vercel fará um novo deploy automaticamente.
 
 1. **Homepage (Pública)**
    ```
-   https://peladeiros.vercel.app/
+   https://convoca.uzzai.com.br/
    ✅ Esperado: Landing page
    ```
 
 2. **Teste Simples (Pública)**
    ```
-   https://peladeiros.vercel.app/simple-test
+   https://convoca.uzzai.com.br/simple-test
    ✅ Esperado: "Hello World"
    ```
 
 3. **Dashboard (Protegido)**
    ```
-   https://peladeiros.vercel.app/dashboard
+   https://convoca.uzzai.com.br/dashboard
    ✅ Esperado: Redirect para /auth/signin
    ```
 
 4. **Login**
    ```
-   https://peladeiros.vercel.app/auth/signin
+   https://convoca.uzzai.com.br/auth/signin
    ✅ Esperado: Página de login
    ```
 
 5. **Erro de Auth**
    ```
-   https://peladeiros.vercel.app/auth/error
+   https://convoca.uzzai.com.br/auth/error
    ✅ Esperado: Página de erro amigável
    ```
 
 6. **API Debug**
    ```
-   https://peladeiros.vercel.app/api/debug
+   https://convoca.uzzai.com.br/api/debug
    ✅ Esperado: JSON com informações do ambiente
    ```
 
@@ -167,7 +167,7 @@ O Vercel fará um novo deploy automaticamente.
 vercel --prod
 
 # Ou verificar no Dashboard do Vercel
-# https://vercel.com/[seu-usuario]/peladeiros
+# https://vercel.com/[seu-usuario]/convoca
 ```
 
 #### 2. Limpar Cache
@@ -206,7 +206,7 @@ No Vercel Dashboard > Settings > Environment Variables:
 
 **Exemplo**:
 ```
-NEXTAUTH_URL=https://peladeiros.vercel.app
+NEXTAUTH_URL=https://convoca.uzzai.com.br
 NEXTAUTH_SECRET=[seu-secret-aqui]
 ```
 
@@ -263,7 +263,7 @@ npm run build
    ```bash
    # Adicionar no Vercel Dashboard > Environment Variables
    AUTH_EMAIL_SERVER=smtp://user:pass@smtp.example.com:587
-   AUTH_EMAIL_FROM=noreply@peladeiros.com
+   AUTH_EMAIL_FROM=noreply@convoca.com
    ```
 
 3. **Remover Credentials Provider**:

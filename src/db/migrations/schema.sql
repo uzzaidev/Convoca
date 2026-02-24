@@ -1,4 +1,4 @@
--- Peladeiros App - Database Schema
+-- Convoca App - Database Schema
 -- Fase 1: MVP Schema
 
 -- Enable UUID extension

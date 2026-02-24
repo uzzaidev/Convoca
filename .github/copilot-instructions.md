@@ -1,10 +1,10 @@
-# Copilot Instructions - Peladeiros App
+# Copilot Instructions - Convoca App
 
 This repository contains a soccer match management app built with modern web technologies.
 
 ## Project Overview
 
-**Peladeiros** is a platform for managing soccer matches (peladas) in Brazil, including group creation, match organization, team draw, statistics, and rankings.
+**Convoca** is a platform for managing soccer matches (peladas) in Brazil, including group creation, match organization, team draw, statistics, and rankings.
 
 ### Tech Stack
 

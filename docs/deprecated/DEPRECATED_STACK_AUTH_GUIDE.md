@@ -1,6 +1,6 @@
-# Stack Auth Setup - Peladeiros
+# Stack Auth Setup - Convoca
 
-Este documento descreve como configurar e usar o Stack Auth (Neon Auth) no projeto Peladeiros.
+Este documento descreve como configurar e usar o Stack Auth (Neon Auth) no projeto Convoca.
 
 ## Sobre Stack Auth
 
@@ -270,7 +270,7 @@ function MyComponent() {
 
 **Solução:**
 1. Acesse o [Stack Auth Dashboard](https://app.stack-auth.com)
-2. Selecione o projeto Peladeiros
+2. Selecione o projeto Convoca
 3. Vá para **Authentication** > **Sign-in Methods**
 4. Habilite **Magic Link / OTP**
 5. Configure as URLs de redirecionamento

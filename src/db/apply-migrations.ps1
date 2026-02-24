@@ -9,7 +9,7 @@ $MIGRATIONS_DIR = "src\db\migrations"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "🔄 APLICANDO MIGRATIONS - Peladeiros App" -ForegroundColor Cyan
+Write-Host "🔄 APLICANDO MIGRATIONS - Convoca App" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

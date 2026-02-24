@@ -2,7 +2,7 @@
 
 ## Resumo da Implementação
 
-Este documento descreve a implementação completa da separação de permissões entre membros (members) e administradores (admins) nos grupos do Peladeiros.
+Este documento descreve a implementação completa da separação de permissões entre membros (members) e administradores (admins) nos grupos do Convoca.
 
 ## Estrutura de Dados
 

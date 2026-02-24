@@ -54,7 +54,7 @@ O código foi atualizado, mas você **DEVE** configurar o Stack Auth no dashboar
 
 1. **Acesse o Dashboard:**
    - URL: https://app.stack-auth.com
-   - Projeto: Peladeiros (ID: `1bc505ea-b01d-44d6-af8d-c1fd464802d0`)
+   - Projeto: Convoca (ID: `1bc505ea-b01d-44d6-af8d-c1fd464802d0`)
 
 2. **Habilite Magic Link / OTP:**
    - Navegue para: Authentication > Sign-in Methods
@@ -219,7 +219,7 @@ Após resolver o erro de login:
 
 2. **Personalizar Email Templates** (opcional)
    - No dashboard: Email > Templates
-   - Adicione logo e cores da marca Peladeiros
+   - Adicione logo e cores da marca Convoca
 
 3. **Adicionar MFA** (opcional)
    - No dashboard: Security > Multi-Factor Authentication

@@ -1,4 +1,4 @@
-# Peladeiros App
+# Convoca App
 
 App para gestão de peladas de futebol - criação de grupos, organização de partidas, sorteio de times, estatísticas e rankings.
 

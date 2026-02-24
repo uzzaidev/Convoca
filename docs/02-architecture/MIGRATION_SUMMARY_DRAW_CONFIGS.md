@@ -316,4 +316,4 @@ psql "postgresql://..." -f "backups/peladeiros_full_20251030_182424.sql"
 
 **Documentação criada em**: 1 de novembro de 2025
 **Status**: ✅ Completa e atualizada</content>
-<parameter name="filePath">c:\Users\Luisf\OneDrive\Github\Peladeiros App\docs\MIGRATION_SUMMARY_DRAW_CONFIGS.md
+<parameter name="filePath">c:\Users\Luisf\OneDrive\Github\Convoca App\docs\MIGRATION_SUMMARY_DRAW_CONFIGS.md

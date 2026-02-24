@@ -2,7 +2,7 @@
 
 ## 📋 Resumo do Problema
 
-O usuário relatou erro ao acessar o dashboard do Peladeiros, fornecendo apenas credenciais do Neon Database e Stack Auth.
+O usuário relatou erro ao acessar o dashboard do Convoca, fornecendo apenas credenciais do Neon Database e Stack Auth.
 
 ### Causa Raiz
 
@@ -73,7 +73,7 @@ Adicionado `src/components/ui/alert.tsx`:
 
 2. **Configurar no Vercel**
    - Acessar: https://vercel.com/dashboard
-   - Projeto: peladeiros
+   - Projeto: convoca
    - Settings → Environment Variables
    - Adicionar:
      * `AUTH_SECRET` = valor gerado

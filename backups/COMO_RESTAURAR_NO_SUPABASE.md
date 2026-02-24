@@ -1,6 +1,6 @@
 # Como restaurar os backups no Supabase (PostgreSQL)
 
-Este diretório contém dumps `.sql` gerados via `pg_dump` a partir do banco Neon (Peladeiros).
+Este diretório contém dumps `.sql` gerados via `pg_dump` a partir do banco Neon (Convoca).
 
 ## Arquivos gerados
 
@@ -19,7 +19,7 @@ Esses arquivos `.sql` do `pg_dump` em formato “plain” incluem comandos espec
 
 ## Sobre “auth” do app
 
-No Peladeiros, a autenticação do app (login/senha) **não usa o Supabase Auth**.
+No Convoca, a autenticação do app (login/senha) **não usa o Supabase Auth**.
 
 - O login do app é via **NextAuth (Credentials)**.
 - Os usuários ficam na tabela `public.users` (campos como `email`, `password_hash`).

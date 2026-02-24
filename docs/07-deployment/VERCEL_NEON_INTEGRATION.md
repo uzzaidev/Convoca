@@ -1,6 +1,6 @@
 # Guia: Integração Vercel + Neon
 
-Este guia explica como configurar a integração entre Vercel e Neon para o Peladeiros App.
+Este guia explica como configurar a integração entre Vercel e Neon para o Convoca App.
 
 > **⚠️ IMPORTANTE**: Este projeto agora usa `vercel.json` vazio para permitir auto-detecção do Next.js.
 > Se você está enfrentando erros 404 no Vercel, consulte [VERCEL_FIX.md](./VERCEL_FIX.md) para mais detalhes.
@@ -34,7 +34,7 @@ Responda as perguntas:
 - **Set up and deploy?** → Yes
 - **Which scope?** → Sua conta pessoal
 - **Link to existing project?** → No
-- **Project name?** → peladeiros-app (ou o nome que preferir)
+- **Project name?** → convoca-app (ou o nome que preferir)
 - **In which directory?** → ./ (deixe vazio, pressione Enter)
 - **Want to override settings?** → No
 
@@ -44,7 +44,7 @@ Aguarde o deploy. No final você receberá uma URL de preview.
 
 1. Acesse o [Dashboard da Vercel](https://vercel.com/dashboard)
 
-2. Selecione seu projeto **peladeiros-app**
+2. Selecione seu projeto **convoca-app**
 
 3. Vá em **Settings** (ícone de engrenagem)
 
@@ -56,12 +56,12 @@ Aguarde o deploy. No final você receberá uma URL de preview.
 
 7. Selecione em qual **Scope** instalar (sua conta)
 
-8. Escolha o projeto **peladeiros-app**
+8. Escolha o projeto **convoca-app**
 
 9. Configure a integração:
    - **Neon Project**: Escolha "Create new project" ou use um existente
    - **Region**: Escolha a região mais próxima (ex: US East)
-   - **Database Name**: `peladeiros_db` (ou deixe o padrão)
+   - **Database Name**: `convoca_db` (ou deixe o padrão)
 
 10. Clique em **Continue** e depois em **Add Integration**
 
@@ -77,7 +77,7 @@ Após a integração, verifique se a variável foi criada:
 
 3. A variável terá um formato como:
    ```
-   postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/peladeiros_db?sslmode=require
+   postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/convoca_db?sslmode=require
    ```
 
 ### 4. Pull das Variáveis para Desenvolvimento Local

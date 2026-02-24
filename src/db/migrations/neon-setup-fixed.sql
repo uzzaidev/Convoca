@@ -1,5 +1,5 @@
 -- ============================================================================
--- Peladeiros App - Setup Completo para Neon (VERSÃO CORRIGIDA)
+-- Convoca App - Setup Completo para Neon (VERSÃO CORRIGIDA)
 -- ============================================================================
 -- COPIE TODO ESTE ARQUIVO e COLE no Neon SQL Editor
 -- ============================================================================

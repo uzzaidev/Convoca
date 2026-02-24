@@ -1,6 +1,6 @@
 # Sistema de Rankings - Lógica e Funcionamento
 
-Este documento descreve como funciona o sistema de rankings do Peladeiros App, incluindo a lógica de cálculo de estatísticas e pontuação.
+Este documento descreve como funciona o sistema de rankings do Convoca App, incluindo a lógica de cálculo de estatísticas e pontuação.
 
 ## Visão Geral
 
@@ -325,4 +325,4 @@ Para grupos com muitos eventos/jogadores, considerar:
 ---
 
 **Última atualização**: 2025-11-02
-**Responsável**: Sistema de Rankings Peladeiros App
+**Responsável**: Sistema de Rankings Convoca App

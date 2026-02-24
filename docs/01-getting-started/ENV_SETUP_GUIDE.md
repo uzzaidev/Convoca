@@ -1,6 +1,6 @@
 # Guia de Configuração das Variáveis de Ambiente
 
-Este guia explica como configurar as variáveis de ambiente necessárias para executar o Peladeiros.
+Este guia explica como configurar as variáveis de ambiente necessárias para executar o Convoca.
 
 ## 🚨 Erro: "AUTH_SECRET não está configurado"
 
@@ -85,7 +85,7 @@ NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=...
 STACK_SECRET_SERVER_KEY=...
 ```
 
-O Peladeiros agora usa **NextAuth v5** com autenticação por email e senha.
+O Convoca agora usa **NextAuth v5** com autenticação por email e senha.
 
 ## 📝 Arquivo .env.local Completo
 

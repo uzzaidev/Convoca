@@ -1,6 +1,6 @@
-# Peladeiros - Guia de Cores
+# Convoca - Guia de Cores
 
-Este documento define a paleta de cores padrão do Peladeiros para garantir consistência visual em toda a aplicação.
+Este documento define a paleta de cores padrão do Convoca para garantir consistência visual em toda a aplicação.
 
 ## Paleta Principal
 

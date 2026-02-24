@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Peladeiros** is a soccer match management app (peladas) for Brazilian groups. Built with Next.js 15, React 19, and PostgreSQL (Neon), it enables group creation, match organization, team draws, statistics tracking, and player rankings.
+**Convoca** is a soccer match management app (peladas) for Brazilian groups. Built with Next.js 15, React 19, and PostgreSQL (Neon), it enables group creation, match organization, team draws, statistics tracking, and player rankings.
 
 ## Tech Stack
 

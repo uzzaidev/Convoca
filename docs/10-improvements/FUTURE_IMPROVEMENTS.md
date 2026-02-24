@@ -1,6 +1,6 @@
 # Melhorias Futuras para Rankings e Estatísticas
 
-Este documento detalha melhorias potenciais para futuras iterações da funcionalidade de rankings e estatísticas do Peladeiros.
+Este documento detalha melhorias potenciais para futuras iterações da funcionalidade de rankings e estatísticas do Convoca.
 
 ## ✅ Implementações Concluídas (Atual)
 
@@ -510,4 +510,4 @@ Manter consistência visual:
 
 **Última atualização**: 2025-10-28  
 **Versão**: 1.0  
-**Mantido por**: Equipe Peladeiros
+**Mantido por**: Equipe Convoca

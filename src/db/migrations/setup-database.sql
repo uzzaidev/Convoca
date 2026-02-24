@@ -1,5 +1,5 @@
 -- ============================================================================
--- Peladeiros App - Database Setup Script
+-- Convoca App - Database Setup Script
 -- ============================================================================
 -- Este script cria as tabelas E insere dados de teste
 -- Execute no Neon SQL Editor: https://console.neon.tech

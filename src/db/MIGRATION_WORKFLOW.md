@@ -1,4 +1,4 @@
-# 🔄 Workflow de Migrations - Peladeiros App
+# 🔄 Workflow de Migrations - Convoca App
 
 ## ⚠️ REGRA DE OURO
 
@@ -14,7 +14,7 @@ Nunca execute SQL direto no Neon Console para mudanças estruturais em produçã
 
 ```bash
 # Neon Project
-Project: Peladeiros App
+Project: Convoca App
 Database: neondb
 Region: South America (São Paulo) - sa-east-1
 Schema Principal: public
@@ -370,7 +370,7 @@ cd src\db
 .\backup-neon.bat
 
 # 2. Se precisar restaurar, use o psql
-psql "postgresql://neondb_owner:npg_B4CgzrE5ZqQj@ep-broad-grass-acup6c00-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require" -f ".\backups\peladeiros_full_TIMESTAMP.sql"
+psql "postgresql://neondb_owner:npg_B4CgzrE5ZqQj@ep-broad-grass-acup6c00-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require" -f ".\backups\convoca_full_TIMESTAMP.sql"
 ```
 
 ---

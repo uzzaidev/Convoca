@@ -6,7 +6,7 @@ Este arquivo contém documentação antiga sobre Stack Auth, que foi **removido*
 
 ## O que mudou?
 
-O projeto Peladeiros **não usa mais Stack Auth**. Agora utilizamos **NextAuth v5** (Auth.js) com autenticação por credenciais (email e senha).
+O projeto Convoca **não usa mais Stack Auth**. Agora utilizamos **NextAuth v5** (Auth.js) com autenticação por credenciais (email e senha).
 
 ## Nova Documentação
 

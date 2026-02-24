@@ -60,7 +60,7 @@ vercel --prod
 ### 2. Verificar no Dashboard
 
 1. Acesse [Vercel Dashboard](https://vercel.com/dashboard)
-2. Selecione o projeto **peladeiros**
+2. Selecione o projeto **convoca**
 3. Aguarde o build completar
 4. Verifique os logs:
    ```
@@ -165,23 +165,23 @@ Se ainda não configurado, adicione no Vercel Dashboard:
 
 ### Antes do Fix ❌
 ```
-Usuário acessa: https://peladeiros.vercel.app/
+Usuário acessa: https://convoca.uzzai.com.br/
 Resultado: 404 Page Not Found
 ```
 
 ### Depois do Fix ✅
 ```
-Usuário acessa: https://peladeiros.vercel.app/
-Resultado: ✅ Landing page do Peladeiros
+Usuário acessa: https://convoca.uzzai.com.br/
+Resultado: ✅ Landing page do Convoca
 ```
 
 ```
-Usuário acessa: https://peladeiros.vercel.app/api/debug
+Usuário acessa: https://convoca.uzzai.com.br/api/debug
 Resultado: ✅ JSON com informações do ambiente
 ```
 
 ```
-Usuário acessa: https://peladeiros.vercel.app/dashboard
+Usuário acessa: https://convoca.uzzai.com.br/dashboard
 Resultado: ✅ Redirecionado para /auth/signin (middleware funcionando)
 ```
 

@@ -1,6 +1,6 @@
 # Migração do Banco de Dados - Stack Auth para Neon Auth
 
-Este documento descreve como migrar o banco de dados do Peladeiros para suportar a nova autenticação com NextAuth v5.
+Este documento descreve como migrar o banco de dados do Convoca para suportar a nova autenticação com NextAuth v5.
 
 ## Mudanças no Schema
 
@@ -17,7 +17,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ### Opção 1: Via Neon Console (Recomendado)
 
 1. Acesse o [Neon Console](https://console.neon.tech/)
-2. Selecione seu projeto Peladeiros
+2. Selecione seu projeto Convoca
 3. Vá para a aba **SQL Editor**
 4. Execute o seguinte comando:
 

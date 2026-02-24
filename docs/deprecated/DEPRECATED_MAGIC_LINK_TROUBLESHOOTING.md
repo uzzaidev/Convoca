@@ -1,6 +1,6 @@
 # Troubleshooting Magic Link Authentication
 
-Este documento fornece soluções para problemas comuns com autenticação via Magic Link no Peladeiros.
+Este documento fornece soluções para problemas comuns com autenticação via Magic Link no Convoca.
 
 ## Problema: "Erro ao enviar link de login"
 
@@ -14,7 +14,7 @@ O erro mais comum é causado por ad blockers ou extensões de privacidade que bl
 - Requisições bloqueadas para `api.stack-auth.com`
 
 **Solução:**
-1. **Desabilite ad blockers** para o site Peladeiros
+1. **Desabilite ad blockers** para o site Convoca
 2. **Adicione à whitelist** os seguintes domínios:
    - `api.stack-auth.com`
    - `app.stack-auth.com`
@@ -90,7 +90,7 @@ O sistema usa as seguintes rotas para autenticação:
 - `/handler/sign-up` - Página de cadastro
 - `/handler/magic-link-callback` - Callback do magic link
 - `/handler/account-settings` - Configurações da conta
-- `/auth/signin` - Página de login customizada (Peladeiros)
+- `/auth/signin` - Página de login customizada (Convoca)
 
 ## Suporte
 

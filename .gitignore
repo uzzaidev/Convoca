@@ -32,6 +32,13 @@ yarn-error.log*
 # Vercel
 .vercel
 
+# Claude Code (local settings with sensitive paths)
+.claude/settings.local.json
+
+# Database backups (gerados localmente, não devem ir para o git)
+backups/*.sql
+src/db/backups/*.sql
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts

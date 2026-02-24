@@ -7,4 +7,7 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const sql = postgres(process.env.DATABASE_URL, { ssl: "require" });
+export const sql = postgres(process.env.DATABASE_URL, {
+  ssl: "require",
+  prepare: false, // obrigatório com Supabase PgBouncer (transaction mode)
+});

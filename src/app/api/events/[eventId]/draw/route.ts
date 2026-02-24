@@ -245,7 +245,7 @@ export async function POST(
         AND ea.status = 'yes'
     `;
 
-    const confirmedPlayers = confirmedPlayersRaw as Player[];
+    const confirmedPlayers = confirmedPlayersRaw as unknown as Player[];
 
     if (confirmedPlayers.length < 4) {
       return NextResponse.json(

@@ -113,9 +113,9 @@ export async function PATCH(
     const [updated] = await sql`
       UPDATE groups
       SET
-        name = COALESCE(${name}, name),
-        description = COALESCE(${description}, description),
-        privacy = COALESCE(${privacy}, privacy),
+        name = COALESCE(${name ?? null}, name),
+        description = COALESCE(${description ?? null}, description),
+        privacy = COALESCE(${privacy ?? null}, privacy),
         updated_at = NOW()
       WHERE id = ${groupId}
       RETURNING *

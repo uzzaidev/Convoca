@@ -146,12 +146,12 @@ export async function PATCH(
     const [updated] = await sql`
       UPDATE events
       SET
-        starts_at = COALESCE(${startsAt}, starts_at),
-        venue_id = COALESCE(${venueId}, venue_id),
-        max_players = COALESCE(${maxPlayers}, max_players),
-        max_goalkeepers = COALESCE(${maxGoalkeepers}, max_goalkeepers),
-        waitlist_enabled = COALESCE(${waitlistEnabled}, waitlist_enabled),
-        status = COALESCE(${status}, status),
+        starts_at = COALESCE(${startsAt ?? null}, starts_at),
+        venue_id = COALESCE(${venueId ?? null}, venue_id),
+        max_players = COALESCE(${maxPlayers ?? null}, max_players),
+        max_goalkeepers = COALESCE(${maxGoalkeepers ?? null}, max_goalkeepers),
+        waitlist_enabled = COALESCE(${waitlistEnabled ?? null}, waitlist_enabled),
+        status = COALESCE(${status ?? null}, status),
         updated_at = NOW()
       WHERE id = ${eventId}
       RETURNING *

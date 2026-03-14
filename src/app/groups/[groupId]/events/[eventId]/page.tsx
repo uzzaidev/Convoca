@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { Calendar, MapPin, Users, ChevronLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { EventTabs } from "@/components/events/event-tabs";
 
@@ -203,6 +203,17 @@ export default async function EventDetailPage({ params }: RouteParams) {
             <Calendar className="h-4 w-4" />
             {formatDate(event.starts_at)}
           </div>
+
+          {event.list_opens_at && (
+            <div className="flex items-center gap-2 text-gray-300 mb-3 text-sm">
+              <Clock className="h-4 w-4" />
+              {new Date(event.list_opens_at) > new Date() ? (
+                <span>Lista abre em {formatDate(event.list_opens_at)}</span>
+              ) : (
+                <span>Lista aberta desde {formatDate(event.list_opens_at)}</span>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>

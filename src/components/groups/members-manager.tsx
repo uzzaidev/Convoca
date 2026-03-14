@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { UserMinus, Shield, Loader2, UserPlus, Search } from "lucide-react";
+import { UserMinus, Shield, Loader2, UserPlus, Search, Repeat } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -48,6 +48,8 @@ type Member = {
   id: string;
   user_id: string;
   role: string;
+  is_mensalista: boolean;
+  monthly_amount_cents: number;
   joined_at: string;
   name: string;
   email: string;
@@ -128,6 +130,77 @@ export function MembersManager({
     } catch (error) {
       toast({
         title: "Erro ao atualizar role",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleToggleMensalista = async (member: Member) => {
+    const newValue = !member.is_mensalista;
+    
+    // If enabling mensalista, prompt for monthly amount
+    let amount = member.monthly_amount_cents;
+    if (newValue) {
+      const input = prompt(
+        "Valor da mensalidade em reais (ex: 50.00):",
+        (member.monthly_amount_cents / 100).toFixed(2)
+      );
+      if (input === null) return; // cancelled
+      const parsed = parseFloat(input.replace(",", "."));
+      if (isNaN(parsed) || parsed <= 0) {
+        toast({
+          title: "Valor inválido",
+          description: "Digite um valor numérico maior que zero",
+          variant: "destructive",
+        });
+        return;
+      }
+      amount = Math.round(parsed * 100);
+    }
+
+    setIsUpdating(member.user_id);
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${member.user_id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            is_mensalista: newValue, 
+            monthly_amount_cents: newValue ? amount : 0 
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao atualizar membro");
+      }
+
+      setMembers(
+        members.map((m) =>
+          m.user_id === member.user_id
+            ? { ...m, is_mensalista: newValue, monthly_amount_cents: newValue ? amount : 0 }
+            : m
+        )
+      );
+
+      toast({
+        title: newValue ? "Mensalista ativado!" : "Mensalista desativado!",
+        description: newValue
+          ? `${member.name} agora é mensalista (R$ ${(amount / 100).toFixed(2)}/mês).`
+          : `${member.name} não é mais mensalista.`,
+      });
+
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar mensalista",
         description: error instanceof Error ? error.message : "Tente novamente",
         variant: "destructive",
       });
@@ -250,6 +323,8 @@ export function MembersManager({
         id: data.member.id,
         user_id: data.member.user_id,
         role: data.member.role,
+        is_mensalista: data.member.is_mensalista ?? false,
+        monthly_amount_cents: data.member.monthly_amount_cents ?? 0,
         joined_at: data.member.joined_at,
         name: data.member.name,
         email: data.member.email,
@@ -326,6 +401,8 @@ export function MembersManager({
         id: data.member.id,
         user_id: data.member.user_id,
         role: data.member.role,
+        is_mensalista: data.member.is_mensalista ?? false,
+        monthly_amount_cents: data.member.monthly_amount_cents ?? 0,
         joined_at: data.member.joined_at,
         name: data.member.name,
         email: data.member.email,
@@ -457,6 +534,7 @@ export function MembersManager({
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Mensalista</TableHead>
                 <TableHead>Entrou em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -485,6 +563,15 @@ export function MembersManager({
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      {member.is_mensalista ? (
+                        <Badge variant="default" className="bg-green-600">
+                          R$ {(member.monthly_amount_cents / 100).toFixed(2)}/mês
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Avulso</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {format(new Date(member.joined_at), "Pp", { locale: ptBR })}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -506,6 +593,19 @@ export function MembersManager({
                         ) : (
                           <Shield className="h-4 w-4" />
                         )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleMensalista(member)}
+                        disabled={isLoading}
+                        title={
+                          member.is_mensalista
+                            ? "Remover mensalidade"
+                            : "Tornar mensalista"
+                        }
+                      >
+                        <Repeat className={`h-4 w-4 ${member.is_mensalista ? "text-green-600" : ""}`} />
                       </Button>
                       <Button
                         variant="ghost"

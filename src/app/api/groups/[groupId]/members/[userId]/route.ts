@@ -53,17 +53,34 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { role } = body;
+    const { role, is_mensalista, monthly_amount_cents } = body;
 
-    if (!role || !["admin", "member"].includes(role)) {
+    // At least one field must be provided
+    if (role === undefined && is_mensalista === undefined && monthly_amount_cents === undefined) {
+      return NextResponse.json(
+        { error: "Nenhum campo para atualizar" },
+        { status: 400 }
+      );
+    }
+
+    // Validate role if provided
+    if (role !== undefined && !["admin", "member"].includes(role)) {
       return NextResponse.json(
         { error: "Role inválido. Use 'admin' ou 'member'" },
         { status: 400 }
       );
     }
 
+    // Validate monthly_amount_cents if provided
+    if (monthly_amount_cents !== undefined && (typeof monthly_amount_cents !== "number" || monthly_amount_cents < 0)) {
+      return NextResponse.json(
+        { error: "Valor da mensalidade inválido" },
+        { status: 400 }
+      );
+    }
+
     // If trying to demote an admin to member, check if they're the last admin
-    if (targetMember.role === 'admin' && role === 'member') {
+    if (role && targetMember.role === 'admin' && role === 'member') {
       const [adminCount] = await sql`
         SELECT COUNT(*) as count
         FROM group_members
@@ -78,30 +95,37 @@ export async function PATCH(
       }
     }
 
-    // Update member role
+    // Update member
+    const effectiveRole = role ?? targetMember.role;
+    const effectiveIsMensalista = is_mensalista ?? targetMember.is_mensalista;
+    const effectiveMonthlyAmount = monthly_amount_cents ?? targetMember.monthly_amount_cents;
+
+    // Update member
     const [updated] = await sql`
       UPDATE group_members
-      SET role = ${role}
+      SET role = ${effectiveRole},
+          is_mensalista = ${effectiveIsMensalista},
+          monthly_amount_cents = ${effectiveMonthlyAmount}
       WHERE group_id = ${groupId} AND user_id = ${userId}
       RETURNING *
     `;
 
     logger.info(
-      { groupId, userId, newRole: role, updatedBy: user.id },
-      "Member role updated"
+      { groupId, userId, role: effectiveRole, is_mensalista: effectiveIsMensalista, updatedBy: user.id },
+      "Member updated"
     );
 
     return NextResponse.json({
-      message: "Role do membro atualizado com sucesso",
+      message: "Membro atualizado com sucesso",
       member: updated,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
-    logger.error(error, "Error updating member role");
+    logger.error(error, "Error updating member");
     return NextResponse.json(
-      { error: "Erro ao atualizar role do membro" },
+      { error: "Erro ao atualizar membro" },
       { status: 500 }
     );
   }

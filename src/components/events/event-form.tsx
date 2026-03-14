@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -25,8 +32,11 @@ type EventFormProps = {
     maxPlayers: number;
     maxGoalkeepers: number;
     waitlistEnabled: boolean;
+    listOpensAt?: string | null;
   };
 };
+
+const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 
 export function EventForm({ groupId, mode, eventId, initialData }: EventFormProps) {
   const router = useRouter();
@@ -50,6 +60,15 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
     maxPlayers: initialData?.maxPlayers || 10,
     maxGoalkeepers: initialData?.maxGoalkeepers || 2,
     waitlistEnabled: initialData?.waitlistEnabled ?? true,
+    listOpensAt: initialData?.listOpensAt ? formatDateTimeLocal(initialData.listOpensAt) : "",
+  });
+
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceData, setRecurrenceData] = useState({
+    frequency: "weekly" as "weekly" | "biweekly" | "monthly",
+    dayOfWeek: new Date().getDay(),
+    startTime: "18:00",
+    listOpensHoursBefore: 48,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,8 +76,43 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
     setIsLoading(true);
 
     try {
+      // If creating a recurring event, create recurrence first
+      if (mode === "create" && isRecurring) {
+        const recRes = await fetch(`/api/groups/${groupId}/recurrences`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            frequency: recurrenceData.frequency,
+            dayOfWeek: recurrenceData.dayOfWeek,
+            startTime: recurrenceData.startTime,
+            maxPlayers: formData.maxPlayers,
+            maxGoalkeepers: formData.maxGoalkeepers,
+            waitlistEnabled: formData.waitlistEnabled,
+            listOpensHoursBefore: recurrenceData.listOpensHoursBefore,
+          }),
+        });
+
+        const recData = await recRes.json();
+
+        if (!recRes.ok) {
+          throw new Error(recData.error || "Erro ao criar recorrência");
+        }
+
+        toast({
+          title: "Pelada recorrente criada!",
+          description: `Eventos serão gerados automaticamente toda ${dayNames[recurrenceData.dayOfWeek]}`,
+        });
+
+        router.push(`/groups/${groupId}`);
+        return;
+      }
+
       const url = mode === "create" ? "/api/events" : `/api/events/${eventId}`;
       const method = mode === "create" ? "POST" : "PATCH";
+
+      const listOpensAt = formData.listOpensAt
+        ? new Date(formData.listOpensAt).toISOString()
+        : undefined;
 
       const body =
         mode === "create"
@@ -68,12 +122,14 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
               maxPlayers: formData.maxPlayers,
               maxGoalkeepers: formData.maxGoalkeepers,
               waitlistEnabled: formData.waitlistEnabled,
+              listOpensAt,
             }
           : {
               startsAt: new Date(formData.startsAt).toISOString(),
               maxPlayers: formData.maxPlayers,
               maxGoalkeepers: formData.maxGoalkeepers,
               waitlistEnabled: formData.waitlistEnabled,
+              listOpensAt,
             };
 
       const response = await fetch(url, {
@@ -190,6 +246,124 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
               Habilitar lista de espera
             </Label>
           </div>
+
+          {/* List opens at (for individual events) */}
+          {!isRecurring && (
+            <div className="space-y-2">
+              <Label htmlFor="listOpensAt">Abertura da Lista (opcional)</Label>
+              <Input
+                id="listOpensAt"
+                type="datetime-local"
+                value={formData.listOpensAt}
+                onChange={(e) =>
+                  setFormData({ ...formData, listOpensAt: e.target.value })
+                }
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Deixe em branco para abrir imediatamente
+              </p>
+            </div>
+          )}
+
+          {/* Recurring event toggle (only on create) */}
+          {mode === "create" && (
+            <>
+              <div className="flex items-center space-x-2 pt-2 border-t">
+                <input
+                  id="isRecurring"
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  disabled={isLoading}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="isRecurring" className="cursor-pointer font-medium">
+                  Pelada recorrente (repete automaticamente)
+                </Label>
+              </div>
+
+              {isRecurring && (
+                <div className="space-y-4 pl-6 border-l-2 border-primary/20">
+                  <div className="space-y-2">
+                    <Label>Frequência</Label>
+                    <Select
+                      value={recurrenceData.frequency}
+                      onValueChange={(v) =>
+                        setRecurrenceData({ ...recurrenceData, frequency: v as "weekly" | "biweekly" | "monthly" })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quinzenal</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Dia da Semana</Label>
+                    <Select
+                      value={String(recurrenceData.dayOfWeek)}
+                      onValueChange={(v) =>
+                        setRecurrenceData({ ...recurrenceData, dayOfWeek: parseInt(v) })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dayNames.map((name, idx) => (
+                          <SelectItem key={idx} value={String(idx)}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="startTime">Horário</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={recurrenceData.startTime}
+                      onChange={(e) =>
+                        setRecurrenceData({ ...recurrenceData, startTime: e.target.value })
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="listOpensHoursBefore">
+                      Abertura da lista (horas antes do evento)
+                    </Label>
+                    <Input
+                      id="listOpensHoursBefore"
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={recurrenceData.listOpensHoursBefore}
+                      onChange={(e) =>
+                        setRecurrenceData({
+                          ...recurrenceData,
+                          listOpensHoursBefore: parseInt(e.target.value, 10),
+                        })
+                      }
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ex: 48 = lista abre 2 dias antes da pelada
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
         <CardFooter className="flex gap-3">
           <Button

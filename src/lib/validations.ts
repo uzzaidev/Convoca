@@ -13,6 +13,19 @@ export const createEventSchema = z.object({
   maxPlayers: z.number().int().min(4).max(30).default(10),
   maxGoalkeepers: z.number().int().min(0).max(4).default(2),
   waitlistEnabled: z.boolean().default(true),
+  listOpensAt: z.string().datetime().optional(),
+});
+
+export const createRecurrenceSchema = z.object({
+  groupId: z.string().uuid(),
+  frequency: z.enum(["weekly", "biweekly", "monthly"]),
+  dayOfWeek: z.number().int().min(0).max(6),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM"),
+  venueId: z.string().uuid().optional(),
+  maxPlayers: z.number().int().min(4).max(30).default(10),
+  maxGoalkeepers: z.number().int().min(0).max(4).default(2),
+  waitlistEnabled: z.boolean().default(true),
+  listOpensHoursBefore: z.number().int().min(0).max(168).default(48),
 });
 
 export const rsvpSchema = z.object({
@@ -50,6 +63,7 @@ export const playerRatingSchema = z.object({
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;
+export type CreateRecurrenceInput = z.infer<typeof createRecurrenceSchema>;
 export type RsvpInput = z.infer<typeof rsvpSchema>;
 export type EventActionInput = z.infer<typeof eventActionSchema>;
 export type PlayerRatingInput = z.infer<typeof playerRatingSchema>;

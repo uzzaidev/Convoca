@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS group_members (
   role VARCHAR(20) DEFAULT 'member' CHECK (role IN ('admin', 'member')),
   is_goalkeeper BOOLEAN DEFAULT FALSE,
   base_rating INTEGER DEFAULT 5 CHECK (base_rating >= 0 AND base_rating <= 10),
+  is_mensalista BOOLEAN DEFAULT FALSE,
+  monthly_amount_cents INTEGER DEFAULT 0,
   joined_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, group_id)
 );
@@ -49,6 +51,24 @@ CREATE TABLE IF NOT EXISTS venues (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Event recurrences (peladas recorrentes)
+CREATE TABLE IF NOT EXISTS event_recurrences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('weekly', 'biweekly', 'monthly')),
+  day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6), -- 0=Sunday
+  start_time TIME NOT NULL, -- e.g. 18:00
+  venue_id UUID REFERENCES venues(id) ON DELETE SET NULL,
+  max_players INTEGER DEFAULT 10,
+  max_goalkeepers INTEGER DEFAULT 2,
+  waitlist_enabled BOOLEAN DEFAULT TRUE,
+  list_opens_hours_before INTEGER DEFAULT 48, -- hours before event to open the list
+  is_active BOOLEAN DEFAULT TRUE,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Events (partidas)
 CREATE TABLE IF NOT EXISTS events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -59,6 +79,8 @@ CREATE TABLE IF NOT EXISTS events (
   max_goalkeepers INTEGER DEFAULT 2,
   status VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'finished', 'canceled')),
   waitlist_enabled BOOLEAN DEFAULT TRUE,
+  recurrence_id UUID REFERENCES event_recurrences(id) ON DELETE SET NULL,
+  list_opens_at TIMESTAMP,
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -163,6 +185,18 @@ CREATE TABLE IF NOT EXISTS charges (
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'canceled')),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Expenses (despesas do grupo)
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  category VARCHAR(30) NOT NULL CHECK (category IN ('venue_rental', 'equipment', 'referee', 'other')),
+  description TEXT,
+  amount_cents INTEGER NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Migration: Add event_id column if table already exists

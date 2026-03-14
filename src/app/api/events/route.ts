@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { groupId, startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled } = validation.data;
+    const { groupId, startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, listOpensAt } = validation.data;
 
     // Check if user is admin of the group
     const [membership] = await sql`
@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
         max_players,
         max_goalkeepers,
         waitlist_enabled,
+        list_opens_at,
         created_by
       )
       VALUES (
@@ -127,6 +128,7 @@ export async function POST(request: NextRequest) {
         ${maxPlayers},
         ${maxGoalkeepers},
         ${waitlistEnabled},
+        ${listOpensAt || null},
         ${user.id}
       )
       RETURNING *

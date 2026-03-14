@@ -59,6 +59,23 @@ export async function POST(
       );
     }
 
+    // Check if list is open
+    if (event.list_opens_at && status === "yes") {
+      const listOpensAt = new Date(event.list_opens_at);
+      if (new Date() < listOpensAt) {
+        const formatted = listOpensAt.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return NextResponse.json(
+          { error: `A lista abre em ${formatted}` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if user is member of the group
     const [membership] = await sql`
       SELECT * FROM group_members

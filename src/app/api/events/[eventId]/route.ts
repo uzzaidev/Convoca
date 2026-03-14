@@ -141,7 +141,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, status } = body;
+    const { startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, status, listOpensAt } = body;
 
     const [updated] = await sql`
       UPDATE events
@@ -152,6 +152,7 @@ export async function PATCH(
         max_goalkeepers = COALESCE(${maxGoalkeepers ?? null}, max_goalkeepers),
         waitlist_enabled = COALESCE(${waitlistEnabled ?? null}, waitlist_enabled),
         status = COALESCE(${status ?? null}, status),
+        list_opens_at = COALESCE(${listOpensAt ?? null}, list_opens_at),
         updated_at = NOW()
       WHERE id = ${eventId}
       RETURNING *

@@ -46,7 +46,31 @@ export async function GET(
       LIMIT 1
     `;
 
-    return NextResponse.json({ vote: vote || null });
+    // Get vote counts per player
+    const voteCounts = await sql`
+      SELECT
+        pr.rated_user_id as user_id,
+        u.name as user_name,
+        COUNT(*)::int as vote_count
+      FROM player_ratings pr
+      INNER JOIN users u ON pr.rated_user_id = u.id
+      WHERE pr.event_id = ${eventId} AND 'mvp' = ANY(pr.tags)
+      GROUP BY pr.rated_user_id, u.name
+      ORDER BY vote_count DESC
+    `;
+
+    // Get total number of voters
+    const [totalResult] = await sql`
+      SELECT COUNT(DISTINCT rater_user_id)::int as total
+      FROM player_ratings
+      WHERE event_id = ${eventId} AND 'mvp' = ANY(tags)
+    `;
+
+    return NextResponse.json({
+      vote: vote || null,
+      voteCounts: voteCounts || [],
+      totalVoters: totalResult?.total || 0,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Não autenticado") {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });

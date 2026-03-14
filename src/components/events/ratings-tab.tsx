@@ -25,6 +25,12 @@ type Vote = {
   player_id: string;
 };
 
+type VoteCount = {
+  user_id: string;
+  user_name: string;
+  vote_count: number;
+};
+
 type RatingsTabProps = {
   eventId: string;
   teams: Team[];
@@ -46,6 +52,8 @@ export function RatingsTab({
   const [isLoading, setIsLoading] = useState(true);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [showTiebreaker, setShowTiebreaker] = useState(false);
+  const [voteCounts, setVoteCounts] = useState<VoteCount[]>([]);
+  const [totalVoters, setTotalVoters] = useState(0);
 
   // Get all players from all teams
   const allPlayers = teams.flatMap((team) =>
@@ -58,6 +66,10 @@ export function RatingsTab({
 
   useEffect(() => {
     fetchCurrentVote();
+
+    // Poll for vote count updates every 15 seconds
+    const interval = setInterval(fetchCurrentVote, 15000);
+    return () => clearInterval(interval);
   }, [eventId]);
 
   const fetchCurrentVote = async () => {
@@ -67,8 +79,12 @@ export function RatingsTab({
         const data = await response.json();
         if (data.vote) {
           setCurrentVote(data.vote.player_id);
-          setSelectedPlayerId(data.vote.player_id);
+          if (!selectedPlayerId) {
+            setSelectedPlayerId(data.vote.player_id);
+          }
         }
+        setVoteCounts(data.voteCounts || []);
+        setTotalVoters(data.totalVoters || 0);
       }
     } catch (error) {
       console.error("Error fetching vote:", error);
@@ -111,6 +127,7 @@ export function RatingsTab({
       });
 
       setCurrentVote(selectedPlayerId);
+      fetchCurrentVote();
       router.refresh();
     } catch (error) {
       toast({
@@ -217,6 +234,25 @@ export function RatingsTab({
         </Alert>
       )}
 
+      {/* Vote summary */}
+      {totalVoters > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="py-3 px-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-yellow-800">
+              <Trophy className="h-4 w-4" />
+              <span className="font-medium">
+                {totalVoters} {totalVoters === 1 ? "voto computado" : "votos computados"}
+              </span>
+            </div>
+            {voteCounts.length > 0 && voteCounts[0].vote_count > 0 && (
+              <span className="text-sm font-semibold text-yellow-900">
+                Líder: {voteCounts[0].user_name} ({voteCounts[0].vote_count})
+              </span>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -249,6 +285,14 @@ export function RatingsTab({
                       const isSelf = player.userId === currentUserId;
                       const isSelected = selectedPlayerId === player.userId;
                       const isCurrentVote = currentVote === player.userId;
+                      const playerVotes = voteCounts.find(
+                        (vc) => vc.user_id === player.userId
+                      );
+                      const voteCount = playerVotes?.vote_count || 0;
+                      const isLeader =
+                        voteCounts.length > 0 &&
+                        voteCount > 0 &&
+                        voteCount === voteCounts[0]?.vote_count;
 
                       return (
                         <div
@@ -286,6 +330,19 @@ export function RatingsTab({
                                 </Badge>
                               )}
                             </div>
+                            {voteCount > 0 && (
+                              <Badge
+                                variant={isLeader ? "default" : "secondary"}
+                                className={`text-xs ${
+                                  isLeader
+                                    ? "bg-yellow-500 text-yellow-950 hover:bg-yellow-500"
+                                    : ""
+                                }`}
+                              >
+                                {isLeader && <Trophy className="h-3 w-3 mr-1" />}
+                                {voteCount} {voteCount === 1 ? "voto" : "votos"}
+                              </Badge>
+                            )}
                           </Label>
                         </div>
                       );

@@ -6,6 +6,7 @@ import { MembersManager } from "@/components/groups/members-manager";
 import { GroupInfoForm } from "@/components/groups/group-info-form";
 import { EventSettingsForm } from "@/components/groups/event-settings-form";
 import { ScoringConfigForm } from "@/components/groups/scoring-config-form";
+import { RecurrencesManager } from "@/components/groups/recurrences-manager";
 
 type Group = {
   id: string;
@@ -28,6 +29,8 @@ type Member = {
   id: string;
   user_id: string;
   role: string;
+  is_mensalista: boolean;
+  monthly_amount_cents: number;
   joined_at: string;
   name: string;
   email: string;
@@ -48,9 +51,10 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="info">Informações</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6">
+        <TabsTrigger value="info">Info</TabsTrigger>
         <TabsTrigger value="events">Eventos</TabsTrigger>
+        <TabsTrigger value="recurrences">Peladas</TabsTrigger>
         <TabsTrigger value="scoring">Pontuação</TabsTrigger>
         <TabsTrigger value="invites">Convites</TabsTrigger>
         <TabsTrigger value="members">Membros</TabsTrigger>
@@ -60,6 +64,9 @@ export function GroupSettingsTabs({
       </TabsContent>
       <TabsContent value="events" className="mt-6">
         <EventSettingsForm groupId={group.id} />
+      </TabsContent>
+      <TabsContent value="recurrences" className="mt-6">
+        <RecurrencesManager groupId={group.id} />
       </TabsContent>
       <TabsContent value="scoring" className="mt-6">
         <ScoringConfigForm groupId={group.id} />

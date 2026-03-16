@@ -29,6 +29,7 @@ type MatchAction = {
   action_type: string;
   subject_user_id: string | null;
   actor_name: string;
+  subject_name: string | null;
   team_id: string;
   team_name: string | null;
   minute: number | null;
@@ -93,7 +94,7 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
     const userId = action.subject_user_id;
     if (!userId) return;
 
-    const userName = action.actor_name;
+    const userName = action.subject_name || action.actor_name;
     const teamName = action.team_name || "Sem time";
 
     if (!playerStatsMap.has(userId)) {

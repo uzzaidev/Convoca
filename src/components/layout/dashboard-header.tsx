@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { DollarSign } from "lucide-react";
+import { DollarSign, UserCircle } from "lucide-react";
 
 export function DashboardHeader({ userName }: { userName: string }) {
   const [pendingCount, setPendingCount] = useState(0);
@@ -48,9 +48,13 @@ export function DashboardHeader({ userName }: { userName: string }) {
           <span className="text-2xl font-bold text-navy">Convoca</span>
         </Link>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600 hidden sm:inline">
-            Olá, {userName}
-          </span>
+          <Link
+            href="/profile"
+            className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-navy transition-colors"
+          >
+            <UserCircle className="h-4 w-4" />
+            {userName}
+          </Link>
           {pendingCount > 0 && (
             <div className="relative">
               <Button

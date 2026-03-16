@@ -41,9 +41,12 @@ export async function GET(
         ea.*,
         u.name as actor_name,
         u.image as actor_image,
+        su.name as subject_name,
+        su.image as subject_image,
         t.name as team_name
       FROM event_actions ea
       INNER JOIN users u ON ea.actor_user_id = u.id
+      LEFT JOIN users su ON ea.subject_user_id = su.id
       LEFT JOIN teams t ON ea.team_id = t.id
       WHERE ea.event_id = ${eventId}
       ORDER BY ea.created_at ASC

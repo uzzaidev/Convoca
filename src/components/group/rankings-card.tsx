@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PlayerStat = {
   id: string;
@@ -122,6 +130,10 @@ type RankingsCardProps = {
   playerFrequency: PlayerFrequency[];
   currentUserId: string;
   scoringConfig?: ScoringConfig;
+  seasons?: Array<{ id: string; name: string; status: string; starts_at: string; ends_at: string }>;
+  currentSeasonId?: string;
+  currentSeasonName?: string;
+  groupId?: string;
 };
 
 // Generate dynamic scoring description
@@ -148,7 +160,22 @@ export function RankingsCard({
   playerFrequency,
   currentUserId,
   scoringConfig = DEFAULT_SCORING,
+  seasons = [],
+  currentSeasonId,
+  currentSeasonName,
+  groupId,
 }: RankingsCardProps) {
+  const router = useRouter();
+
+  const handleSeasonChange = (value: string) => {
+    if (!groupId) return;
+    if (value === "all") {
+      router.push(`/groups/${groupId}`);
+    } else {
+      router.push(`/groups/${groupId}?seasonId=${value}`);
+    }
+  };
+
   const scoringDescription = getScoringDescription(scoringConfig);
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -769,11 +796,33 @@ export function RankingsCard({
   return (
     <Card className="col-span-full bg-card/50">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-500" />
-          Rankings
-        </CardTitle>
-        <CardDescription>Melhores jogadores do grupo</CardDescription>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Rankings
+              {currentSeasonName && (
+                <Badge variant="outline" className="ml-2 text-xs">{currentSeasonName}</Badge>
+              )}
+            </CardTitle>
+            <CardDescription>Melhores jogadores do grupo</CardDescription>
+          </div>
+          {seasons.length > 0 && groupId && (
+            <Select value={currentSeasonId || "all"} onValueChange={handleSeasonChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Temporada" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as temporadas</SelectItem>
+                {seasons.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name} {s.status === "active" ? "⚽" : s.status === "finished" ? "✅" : "📅"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="px-0 md:px-6">
         <Tabs defaultValue="geral" className="w-full">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CircleDot, Target, Square, SquareX, Trash2, Loader2, Clock } from "lucide-react";
+import { CircleDot, Target, Square, SquareX, Trash2, Loader2, Clock, CircleOff } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -114,6 +114,8 @@ export function MatchTimeline({
     switch (actionType) {
       case "goal":
         return <CircleDot className="h-5 w-5 text-green-500" />;
+      case "own_goal":
+        return <CircleOff className="h-5 w-5 text-orange-500" />;
       case "assist":
         return <Target className="h-5 w-5 text-blue-500" />;
       case "yellow_card":
@@ -128,6 +130,7 @@ export function MatchTimeline({
   const getActionLabel = (actionType: string) => {
     const labels: Record<string, string> = {
       goal: "Gol",
+      own_goal: "Gol Contra",
       assist: "Assistência",
       yellow_card: "Cartão Amarelo",
       red_card: "Cartão Vermelho",

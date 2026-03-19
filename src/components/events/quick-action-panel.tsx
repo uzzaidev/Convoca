@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CircleDot, Target, Square, SquareX, Loader2 } from "lucide-react";
+import { CircleDot, Target, Square, SquareX, Loader2, CircleOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type Team = {
@@ -31,7 +31,7 @@ type QuickActionPanelProps = {
   onActionAdded: () => void;
 };
 
-type ActionType = "goal" | "assist" | "yellow_card" | "red_card";
+type ActionType = "goal" | "assist" | "yellow_card" | "red_card" | "own_goal";
 
 export function QuickActionPanel({
   eventId,
@@ -81,6 +81,7 @@ export function QuickActionPanel({
       const actionNames: Record<ActionType, string> = {
         goal: "Gol",
         assist: "Assistência",
+        own_goal: "Gol contra",
         yellow_card: "Cartão amarelo",
         red_card: "Cartão vermelho",
       };
@@ -148,7 +149,7 @@ export function QuickActionPanel({
         )}
 
         {/* Botões de Ação */}
-        <div className="grid grid-cols-2 gap-3 pt-4">
+        <div className="grid grid-cols-3 gap-3 pt-4">
           <Button
             onClick={() => handleAction("goal")}
             disabled={!selectedPlayerId || isSubmitting}
@@ -184,10 +185,27 @@ export function QuickActionPanel({
           </Button>
 
           <Button
-            onClick={() => handleAction("yellow_card")}
+            onClick={() => handleAction("own_goal")}
             disabled={!selectedPlayerId || isSubmitting}
             size="lg"
             className="h-20 flex-col gap-2"
+            variant="outline"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <>
+                <CircleOff className="h-6 w-6 text-orange-500" />
+                <span>Gol Contra</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={() => handleAction("yellow_card")}
+            disabled={!selectedPlayerId || isSubmitting}
+            size="lg"
+            className="h-20 flex-col gap-2 col-span-1"
             variant="outline"
           >
             {isSubmitting ? (
@@ -204,7 +222,7 @@ export function QuickActionPanel({
             onClick={() => handleAction("red_card")}
             disabled={!selectedPlayerId || isSubmitting}
             size="lg"
-            className="h-20 flex-col gap-2"
+            className="h-20 flex-col gap-2 col-span-1"
             variant="outline"
           >
             {isSubmitting ? (

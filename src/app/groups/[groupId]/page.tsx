@@ -13,6 +13,7 @@ import { Settings, Plus, ChevronLeft, DollarSign } from "lucide-react";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
+  searchParams: Promise<{ seasonId?: string }>;
 };
 
 type UpcomingEvent = {
@@ -88,7 +89,7 @@ type ScoringConfig = {
   rankingMode: "standard" | "complete";
 };
 
-export default async function GroupPage({ params }: RouteParams) {
+export default async function GroupPage({ params, searchParams }: RouteParams) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -96,6 +97,7 @@ export default async function GroupPage({ params }: RouteParams) {
   }
 
   const { groupId } = await params;
+  const { seasonId } = await searchParams;
 
   // Buscar informações do grupo
   const groupResult = await sql`
@@ -132,11 +134,47 @@ export default async function GroupPage({ params }: RouteParams) {
     LIMIT 5
   ` as unknown as UpcomingEvent[];
 
-  // Buscar eventos finalizados do grupo
-  const events = await sql`
-    SELECT id FROM events
-    WHERE group_id = ${groupId} AND status = 'finished'
+  // Buscar eventos finalizados do grupo (com filtro de temporada)
+  let seasonFilter: { startsAt: string; endsAt: string; name: string; status: string } | null = null;
+
+  if (seasonId) {
+    const [s] = await sql`
+      SELECT starts_at, ends_at, name, status FROM seasons
+      WHERE id = ${seasonId} AND group_id = ${groupId}
+    `;
+    if (s) {
+      seasonFilter = { startsAt: s.starts_at, endsAt: s.ends_at, name: s.name, status: s.status };
+    }
+  } else {
+    const [s] = await sql`
+      SELECT starts_at, ends_at, name, status FROM seasons
+      WHERE group_id = ${groupId} AND status = 'active'
+      LIMIT 1
+    `;
+    if (s) {
+      seasonFilter = { startsAt: s.starts_at, endsAt: s.ends_at, name: s.name, status: s.status };
+    }
+  }
+
+  // Buscar todas as temporadas do grupo para o seletor
+  const allSeasons = await sql`
+    SELECT id, name, status, starts_at, ends_at
+    FROM seasons
+    WHERE group_id = ${groupId}
+    ORDER BY starts_at DESC
   `;
+
+  const events = seasonFilter
+    ? await sql`
+        SELECT id FROM events
+        WHERE group_id = ${groupId} AND status = 'finished'
+          AND starts_at >= ${seasonFilter.startsAt}
+          AND starts_at <= ${seasonFilter.endsAt}
+      `
+    : await sql`
+        SELECT id FROM events
+        WHERE group_id = ${groupId} AND status = 'finished'
+      `;
 
   const eventIds = (events as unknown as Array<{ id: string }>).map(e => e.id);
 
@@ -260,13 +298,14 @@ export default async function GroupPage({ params }: RouteParams) {
           (
             SELECT json_agg(json_build_object(
               'id', t.id, 'name', t.name, 'is_winner', t.is_winner,
-              'goals', (SELECT COUNT(*) FROM event_actions ea2 WHERE ea2.team_id = t.id AND ea2.action_type = 'goal')
+              'goals', (SELECT COUNT(*) FROM event_actions ea2 WHERE ea2.team_id = t.id AND ea2.action_type = 'goal' AND ea2.event_id = e.id)
+                + (SELECT COUNT(*) FROM event_actions ea3 INNER JOIN teams t_opp ON ea3.team_id = t_opp.id WHERE ea3.action_type = 'own_goal' AND t_opp.event_id = e.id AND ea3.team_id != t.id AND ea3.event_id = e.id)
             ))
             FROM teams t WHERE t.event_id = e.id
           ) as teams
         FROM events e
         LEFT JOIN venues v ON e.venue_id = v.id
-        WHERE e.group_id = ${groupId} AND e.status = 'finished'
+        WHERE e.id = ANY(${eventIds})
         ORDER BY e.starts_at DESC LIMIT 5
       `;
       stats.recentMatches = recentMatches as unknown as typeof stats.recentMatches;
@@ -276,6 +315,7 @@ export default async function GroupPage({ params }: RouteParams) {
         WITH recent_events AS (
           SELECT id FROM events
           WHERE group_id = ${groupId} AND status = 'finished'
+            AND id = ANY(${eventIds})
           ORDER BY starts_at DESC LIMIT 10
         ),
         total_count AS (
@@ -312,6 +352,7 @@ export default async function GroupPage({ params }: RouteParams) {
         INNER JOIN team_members tm ON tm.team_id = t.id
         WHERE e.group_id = ${groupId} AND e.status = 'finished'
           AND tm.user_id = ${user.id}
+          AND e.id = ANY(${eventIds})
       `;
       const myEventIds = (myEvents as unknown as Array<{ id: string }>).map(e => e.id);
 
@@ -336,8 +377,10 @@ export default async function GroupPage({ params }: RouteParams) {
           WITH my_game_results AS (
             SELECT
               t_player.event_id,
-              (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal') as team_goals,
-              (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal') as opponent_goals
+              (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal')
+              + (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t_opp ON ea.team_id = t_opp.id WHERE ea.action_type = 'own_goal' AND t_opp.event_id = t_player.event_id AND ea.team_id != t_player.id AND ea.event_id = t_player.event_id) as team_goals,
+              (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal' AND ea.event_id = t_player.event_id)
+              + (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'own_goal') as opponent_goals
             FROM team_members tm
             INNER JOIN teams t_player ON tm.team_id = t_player.id
             WHERE tm.user_id = ${user.id} AND t_player.event_id = ANY(${myEventIds})
@@ -386,27 +429,40 @@ export default async function GroupPage({ params }: RouteParams) {
           WHERE t.event_id = ANY(${eventIds})
         ),
         game_results AS (
-          -- Resultado de cada jogo para cada jogador
+          -- Resultado de cada jogo para cada jogador (com gol contra)
           SELECT
             pg.user_id,
             pg.event_id,
             t_player.id as player_team_id,
 
-            -- Gols do time do jogador neste evento
+            -- Gols do time do jogador + gols contra do adversário
             (SELECT COUNT(*)
              FROM event_actions ea
              WHERE ea.team_id = t_player.id
                AND ea.event_id = pg.event_id
                AND ea.action_type = 'goal'
+            ) + (SELECT COUNT(*)
+             FROM event_actions ea
+             INNER JOIN teams t_opp ON ea.team_id = t_opp.id
+             WHERE ea.action_type = 'own_goal'
+               AND t_opp.event_id = pg.event_id
+               AND ea.team_id != t_player.id
+               AND ea.event_id = pg.event_id
             ) as team_goals,
 
-            -- Gols de todos os outros times neste evento (assumindo 2 times por evento)
+            -- Gols do adversário + gols contra do time do jogador
             (SELECT COUNT(*)
              FROM event_actions ea
              INNER JOIN teams t ON ea.team_id = t.id
              WHERE t.event_id = pg.event_id
                AND t.id != t_player.id
                AND ea.action_type = 'goal'
+               AND ea.event_id = pg.event_id
+            ) + (SELECT COUNT(*)
+             FROM event_actions ea
+             WHERE ea.team_id = t_player.id
+               AND ea.event_id = pg.event_id
+               AND ea.action_type = 'own_goal'
             ) as opponent_goals
 
           FROM player_games pg
@@ -600,6 +656,10 @@ export default async function GroupPage({ params }: RouteParams) {
             playerFrequency={stats.playerFrequency}
             currentUserId={user.id}
             scoringConfig={scoringConfig}
+            seasons={allSeasons as unknown as Array<{ id: string; name: string; status: string; starts_at: string; ends_at: string }>}
+            currentSeasonId={seasonId}
+            currentSeasonName={seasonFilter?.name}
+            groupId={groupId}
           />
         </div>
 

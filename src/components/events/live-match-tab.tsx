@@ -72,11 +72,15 @@ export function LiveMatchTab({
     fetchActions();
   };
 
-  // Calculate scores from actions
+  // Calculate scores from actions (goals + opponent own_goals)
   const calculateScore = (teamId: string) => {
-    return actions.filter(
+    const goals = actions.filter(
       (action) => action.action_type === "goal" && action.team_id === teamId
     ).length;
+    const opponentOwnGoals = actions.filter(
+      (action) => action.action_type === "own_goal" && action.team_id !== teamId
+    ).length;
+    return goals + opponentOwnGoals;
   };
 
   if (teams.length < 2) {

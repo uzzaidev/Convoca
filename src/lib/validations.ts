@@ -49,6 +49,7 @@ export const eventActionSchema = z.object({
     "red_card",
     "period_start",
     "period_end",
+    "own_goal",
   ]),
   subjectUserId: z.string().uuid().optional(),
   teamId: z.string().uuid().optional(),
@@ -61,9 +62,23 @@ export const playerRatingSchema = z.object({
   ratedUserId: z.string().uuid(),
 });
 
+export const createSeasonSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").max(100),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+});
+
+export const updateSeasonSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório").max(100).optional(),
+  startsAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+});
+
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type CreateRecurrenceInput = z.infer<typeof createRecurrenceSchema>;
 export type RsvpInput = z.infer<typeof rsvpSchema>;
 export type EventActionInput = z.infer<typeof eventActionSchema>;
 export type PlayerRatingInput = z.infer<typeof playerRatingSchema>;
+export type CreateSeasonInput = z.infer<typeof createSeasonSchema>;
+export type UpdateSeasonInput = z.infer<typeof updateSeasonSchema>;

@@ -15,6 +15,8 @@ export async function GET(
   try {
     const user = await requireAuth();
     const { groupId } = await params;
+    const { searchParams } = new URL(request.url);
+    const seasonId = searchParams.get("seasonId");
 
     // Verificar se o usuário é membro do grupo
     const membership = await sql`
@@ -29,10 +31,69 @@ export async function GET(
       );
     }
 
+    // Determine date filter for season
+    let seasonFilter: { startsAt: string; endsAt: string } | null = null;
+
+    if (seasonId) {
+      const [season] = await sql`
+        SELECT starts_at, ends_at FROM seasons
+        WHERE id = ${seasonId} AND group_id = ${groupId}
+      `;
+      if (season) {
+        seasonFilter = { startsAt: season.starts_at, endsAt: season.ends_at };
+      }
+    } else {
+      const [active] = await sql`
+        SELECT starts_at, ends_at FROM seasons
+        WHERE group_id = ${groupId} AND status = 'active'
+        LIMIT 1
+      `;
+      if (active) {
+        seasonFilter = { startsAt: active.starts_at, endsAt: active.ends_at };
+      }
+    }
+
     // Buscar estatísticas completas do usuário
-    const stats = await sql`
+    const stats = seasonFilter
+      ? await sql`
       WITH
-      -- Eventos finalizados do grupo onde o usuário participou (estava em um time)
+      user_events AS (
+        SELECT DISTINCT e.id
+        FROM events e
+        INNER JOIN teams t ON t.event_id = e.id
+        INNER JOIN team_members tm ON tm.team_id = t.id
+        WHERE e.group_id = ${groupId}
+          AND e.status = 'finished'
+          AND tm.user_id = ${user.id}
+          AND e.starts_at >= ${seasonFilter.startsAt}
+          AND e.starts_at <= ${seasonFilter.endsAt}
+      ),
+      my_game_results AS (
+        SELECT
+          t_player.event_id,
+          (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal')
+          + (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t_opp ON ea.team_id = t_opp.id WHERE t_opp.event_id = t_player.event_id AND t_opp.id != t_player.id AND ea.action_type = 'own_goal' AND ea.event_id = t_player.event_id) as team_goals,
+          (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal' AND ea.event_id = t_player.event_id)
+          + (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'own_goal') as opponent_goals
+        FROM team_members tm
+        INNER JOIN teams t_player ON tm.team_id = t_player.id
+        WHERE tm.user_id = ${user.id} AND t_player.event_id IN (SELECT id FROM user_events)
+      )
+      SELECT
+        (SELECT COUNT(*) FROM user_events)::int as games_played,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'goal')::int as goals,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'assist')::int as assists,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'save')::int as saves,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'own_goal')::int as own_goals,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'yellow_card')::int as yellow_cards,
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'red_card')::int as red_cards,
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals > opponent_goals)::int as wins,
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals < opponent_goals)::int as losses,
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals = opponent_goals)::int as draws,
+        (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
+    `
+      : await sql`
+      WITH
       user_events AS (
         SELECT DISTINCT e.id
         FROM events e
@@ -42,42 +103,28 @@ export async function GET(
           AND e.status = 'finished'
           AND tm.user_id = ${user.id}
       ),
-      -- Resultado de cada jogo do usuário (baseado em gols)
       my_game_results AS (
         SELECT
           t_player.event_id,
-          (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal') as team_goals,
-          (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal') as opponent_goals
+          (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'goal')
+          + (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t_opp ON ea.team_id = t_opp.id WHERE t_opp.event_id = t_player.event_id AND t_opp.id != t_player.id AND ea.action_type = 'own_goal' AND ea.event_id = t_player.event_id) as team_goals,
+          (SELECT COUNT(*) FROM event_actions ea INNER JOIN teams t2 ON ea.team_id = t2.id WHERE t2.event_id = t_player.event_id AND t2.id != t_player.id AND ea.action_type = 'goal' AND ea.event_id = t_player.event_id)
+          + (SELECT COUNT(*) FROM event_actions ea WHERE ea.team_id = t_player.id AND ea.event_id = t_player.event_id AND ea.action_type = 'own_goal') as opponent_goals
         FROM team_members tm
         INNER JOIN teams t_player ON tm.team_id = t_player.id
         WHERE tm.user_id = ${user.id} AND t_player.event_id IN (SELECT id FROM user_events)
       )
       SELECT
-        -- Jogos jogados
         (SELECT COUNT(*) FROM user_events)::int as games_played,
-
-        -- Gols
         (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'goal')::int as goals,
-
-        -- Assistências
         (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'assist')::int as assists,
-
-        -- Defesas (goleiro)
         (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'save')::int as saves,
-
-        -- Cartões amarelos
+        (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'own_goal')::int as own_goals,
         (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'yellow_card')::int as yellow_cards,
-
-        -- Cartões vermelhos
         (SELECT COUNT(*) FROM event_actions WHERE subject_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND action_type = 'red_card')::int as red_cards,
-
-        -- Vitórias (baseado em gols)
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals > opponent_goals)::int as wins,
-
-        -- Derrotas (baseado em gols)
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals < opponent_goals)::int as losses,
-
-        -- Contagem de MVPs
+        (SELECT COUNT(*) FROM my_game_results WHERE team_goals = opponent_goals)::int as draws,
         (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
     `;
 
@@ -87,6 +134,7 @@ export async function GET(
         goals: 0,
         assists: 0,
         saves: 0,
+        ownGoals: 0,
         yellowCards: 0,
         redCards: 0,
         averageRating: null,
@@ -101,20 +149,34 @@ export async function GET(
     const userStats = stats[0];
 
     // Buscar tags recebidas
-    const tagsResult = await sql`
-      SELECT UNNEST(tags) as tag, COUNT(*) as count
-      FROM player_ratings pr
-      INNER JOIN events e ON pr.event_id = e.id
-      WHERE e.group_id = ${groupId}
-        AND e.status = 'finished'
-        AND pr.rated_user_id = ${user.id}
-        AND tags IS NOT NULL
-      GROUP BY tag
-      ORDER BY count DESC
-    `;
+    const tagsQuery = seasonFilter
+      ? await sql`
+        SELECT UNNEST(tags) as tag, COUNT(*) as count
+        FROM player_ratings pr
+        INNER JOIN events e ON pr.event_id = e.id
+        WHERE e.group_id = ${groupId}
+          AND e.status = 'finished'
+          AND pr.rated_user_id = ${user.id}
+          AND tags IS NOT NULL
+          AND e.starts_at >= ${seasonFilter.startsAt}
+          AND e.starts_at <= ${seasonFilter.endsAt}
+        GROUP BY tag
+        ORDER BY count DESC
+      `
+      : await sql`
+        SELECT UNNEST(tags) as tag, COUNT(*) as count
+        FROM player_ratings pr
+        INNER JOIN events e ON pr.event_id = e.id
+        WHERE e.group_id = ${groupId}
+          AND e.status = 'finished'
+          AND pr.rated_user_id = ${user.id}
+          AND tags IS NOT NULL
+        GROUP BY tag
+        ORDER BY count DESC
+      `;
 
     const tags: Record<string, number> = {};
-    (tagsResult as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
+    (tagsQuery as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
       tags[t.tag] = parseInt(t.count);
     });
 
@@ -123,12 +185,13 @@ export async function GET(
       goals: parseInt(userStats.goals) || 0,
       assists: parseInt(userStats.assists) || 0,
       saves: parseInt(userStats.saves) || 0,
+      ownGoals: parseInt(userStats.own_goals) || 0,
       yellowCards: parseInt(userStats.yellow_cards) || 0,
       redCards: parseInt(userStats.red_cards) || 0,
       averageRating: null,
       wins: parseInt(userStats.wins) || 0,
       losses: parseInt(userStats.losses) || 0,
-      draws: 0, // TODO: calcular empates quando tivermos essa lógica
+      draws: parseInt(userStats.draws) || 0,
       mvpCount: parseInt(userStats.mvp_count) || 0,
       tags,
     });

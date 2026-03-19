@@ -10,7 +10,8 @@ import {
   SquareX,
   Trophy,
   TrendingUp,
-  Activity
+  Activity,
+  CircleOff
 } from "lucide-react";
 
 type Team = {
@@ -73,14 +74,18 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
     }
   };
 
-  // Calculate team stats
+  // Calculate team stats (goals include opponent own_goals)
   const teamStats = teams.map((team) => {
     const teamActions = actions.filter((action) => action.team_id === team.id);
+    const opponentOwnGoals = actions.filter(
+      (a) => a.action_type === "own_goal" && a.team_id !== team.id
+    ).length;
     return {
       id: team.id,
       name: team.name,
-      goals: teamActions.filter((a) => a.action_type === "goal").length,
+      goals: teamActions.filter((a) => a.action_type === "goal").length + opponentOwnGoals,
       assists: teamActions.filter((a) => a.action_type === "assist").length,
+      ownGoals: teamActions.filter((a) => a.action_type === "own_goal").length,
       yellowCards: teamActions.filter((a) => a.action_type === "yellow_card").length,
       redCards: teamActions.filter((a) => a.action_type === "red_card").length,
       is_winner: team.is_winner,
@@ -115,6 +120,7 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
     if (action.action_type === "assist") stats.assists++;
     if (action.action_type === "yellow_card") stats.yellowCards++;
     if (action.action_type === "red_card") stats.redCards++;
+    // own_goal is not counted as a personal goal for the player
   });
 
   const playerStats = Array.from(playerStatsMap.values());
@@ -310,7 +316,7 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div className="text-center p-4 rounded-lg bg-blue-500/10">
               <CircleDot className="h-8 w-8 mx-auto mb-2 text-blue-500" />
               <div className="text-3xl font-bold">
@@ -325,6 +331,14 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
                 {actions.filter((a) => a.action_type === "assist").length}
               </div>
               <div className="text-sm text-muted-foreground">Assistências</div>
+            </div>
+
+            <div className="text-center p-4 rounded-lg bg-orange-500/10">
+              <CircleOff className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+              <div className="text-3xl font-bold">
+                {actions.filter((a) => a.action_type === "own_goal").length}
+              </div>
+              <div className="text-sm text-muted-foreground">Gols Contra</div>
             </div>
 
             <div className="text-center p-4 rounded-lg bg-yellow-500/10">

@@ -15,6 +15,8 @@ export async function GET(
   try {
     const user = await requireAuth();
     const { groupId } = await params;
+    const { searchParams } = new URL(request.url);
+    const seasonId = searchParams.get("seasonId");
 
     // Verificar se o usuário é membro do grupo
     const membership = await sql`
@@ -29,11 +31,40 @@ export async function GET(
       );
     }
 
-    // Buscar eventos finalizados do grupo
-    const finishedEvents = await sql`
-      SELECT id FROM events
-      WHERE group_id = ${groupId} AND status = 'finished'
-    `;
+    // Determine date filter for season
+    let seasonFilter: { startsAt: string; endsAt: string } | null = null;
+
+    if (seasonId) {
+      const [season] = await sql`
+        SELECT starts_at, ends_at FROM seasons
+        WHERE id = ${seasonId} AND group_id = ${groupId}
+      `;
+      if (season) {
+        seasonFilter = { startsAt: season.starts_at, endsAt: season.ends_at };
+      }
+    } else {
+      const [active] = await sql`
+        SELECT starts_at, ends_at FROM seasons
+        WHERE group_id = ${groupId} AND status = 'active'
+        LIMIT 1
+      `;
+      if (active) {
+        seasonFilter = { startsAt: active.starts_at, endsAt: active.ends_at };
+      }
+    }
+
+    // Buscar eventos finalizados do grupo (com filtro de temporada)
+    const finishedEvents = seasonFilter
+      ? await sql`
+          SELECT id FROM events
+          WHERE group_id = ${groupId} AND status = 'finished'
+            AND starts_at >= ${seasonFilter.startsAt}
+            AND starts_at <= ${seasonFilter.endsAt}
+        `
+      : await sql`
+          SELECT id FROM events
+          WHERE group_id = ${groupId} AND status = 'finished'
+        `;
 
     if (finishedEvents.length === 0) {
       return NextResponse.json({
@@ -56,9 +87,7 @@ export async function GET(
         COUNT(*) as goals
       FROM event_actions ea
       INNER JOIN users u ON ea.subject_user_id = u.id
-      INNER JOIN events e ON ea.event_id = e.id
-      WHERE e.group_id = ${groupId}
-        AND e.status = 'finished'
+      WHERE ea.event_id = ANY(${eventIds})
         AND ea.action_type = 'goal'
         AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
@@ -75,9 +104,7 @@ export async function GET(
         COUNT(*) as assists
       FROM event_actions ea
       INNER JOIN users u ON ea.subject_user_id = u.id
-      INNER JOIN events e ON ea.event_id = e.id
-      WHERE e.group_id = ${groupId}
-        AND e.status = 'finished'
+      WHERE ea.event_id = ANY(${eventIds})
         AND ea.action_type = 'assist'
         AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
@@ -94,9 +121,7 @@ export async function GET(
         COUNT(*) as saves
       FROM event_actions ea
       INNER JOIN users u ON ea.subject_user_id = u.id
-      INNER JOIN events e ON ea.event_id = e.id
-      WHERE e.group_id = ${groupId}
-        AND e.status = 'finished'
+      WHERE ea.event_id = ANY(${eventIds})
         AND ea.action_type = 'save'
         AND ea.subject_user_id IS NOT NULL
       GROUP BY u.id, u.name, u.image
@@ -121,6 +146,14 @@ export async function GET(
               WHERE ea2.team_id = t.id
                 AND ea2.action_type = 'goal'
                 AND ea2.event_id = e.id
+            ) + (
+              SELECT COUNT(*)
+              FROM event_actions ea3
+              INNER JOIN teams t_opp ON ea3.team_id = t_opp.id
+              WHERE ea3.action_type = 'own_goal'
+                AND t_opp.event_id = e.id
+                AND ea3.team_id != t.id
+                AND ea3.event_id = e.id
             )
           ) ORDER BY t.seed)
           FROM teams t
@@ -130,17 +163,19 @@ export async function GET(
       LEFT JOIN venues v ON e.venue_id = v.id
       WHERE e.group_id = ${groupId}
         AND e.status = 'finished'
+        AND e.id = ANY(${eventIds})
       ORDER BY e.starts_at DESC
       LIMIT 5
     `;
 
-    // Frequência de jogadores (últimos 10 jogos)
+    // Frequência de jogadores (últimos 10 jogos da temporada)
     const playerFrequency = await sql`
       WITH recent_events AS (
         SELECT id
         FROM events
         WHERE group_id = ${groupId}
           AND status = 'finished'
+          AND id = ANY(${eventIds})
         ORDER BY starts_at DESC
         LIMIT 10
       ),

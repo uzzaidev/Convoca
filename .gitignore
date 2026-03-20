@@ -50,3 +50,20 @@ next-env.d.ts
 .kiro/steering/byterover-rules.md
 .qoder/rules/byterover-rules.md
 .augment/rules/byterover-rules.md
+
+# Local caches
+.chrome-headless/
+.corepack/
+.npm-cache/
+docs/.npm-cache/
+
+# Presentation workspace temp files
+docs/presentation/workspace/node_modules/
+docs/presentation/workspace/.edge-headless-profile/
+docs/presentation/workspace/.edge-headless-profiles/
+docs/presentation/workspace/output/
+
+# Presentation render artifacts
+docs/presentation/rendered/
+docs/presentation/html/rendered/
+docs/presentation/output/convoca-qr.png

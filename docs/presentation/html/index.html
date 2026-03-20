@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Convoca | Apresentação HTML</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./deck.js" defer></script>
+  </head>
+  <body>
+    <div class="deck-shell">
+      <main class="deck">
+        <section class="slide slide-light slide-hero" id="slide-1">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="bg-orb bg-orb-blue"></div>
+          <div class="bg-grid bg-grid-top"></div>
+          <div class="content hero-layout">
+            <div class="hero-copy">
+              <div class="badge badge-blue">Apresentação comercial</div>
+              <div class="wordmark">
+                <span class="wordmark-green">CONVO</span><span class="wordmark-blue">CA</span>
+              </div>
+              <h1>A plataforma que profissionaliza a operação da sua pelada.</h1>
+              <p class="lede">
+                Organiza grupos, confirma presença, forma times, acompanha rankings e fecha o caixa do grupo
+                com padrão real de produto.
+              </p>
+              <div class="feature-row">
+                <article class="feature-card feature-card-green">
+                  <h3>Presença</h3>
+                  <p>Limite de vagas, espera automática e posição preferencial.</p>
+                </article>
+                <article class="feature-card feature-card-blue">
+                  <h3>Times</h3>
+                  <p>Menos discussão na montagem e mais clareza na escalação.</p>
+                </article>
+                <article class="feature-card feature-card-deep">
+                  <h3>Caixa</h3>
+                  <p>Pendências, cobranças e total recebido no mesmo fluxo.</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="hero-visual">
+              <div class="visual-panel"></div>
+              <div class="floating-card stat-card stat-card-green">
+                <strong>18/18</strong>
+                <span>confirmados</span>
+              </div>
+              <div class="floating-card preview-card">
+                <span class="mini-heading">Visão de grupo</span>
+                <img src="../extracted-images/obj-033-417x905.jpg" alt="Tela de rankings" />
+              </div>
+              <div class="floating-card stat-card stat-card-blue stat-card-wide">
+                <strong>R$ 1.105</strong>
+                <span>recebidos</span>
+              </div>
+              <div class="device device-xl">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-022-417x905.jpg" alt="Tela inicial do Convoca" />
+                <div class="device-home"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-2">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="bg-orb bg-orb-blue bg-orb-bottom"></div>
+          <div class="bg-grid bg-grid-center"></div>
+          <div class="content">
+            <div class="badge badge-green badge-left-top">Problema</div>
+            <header class="center-header center-header-tight">
+              <h2>A anatomia do caos</h2>
+              <p>Hoje, a maioria das peladas ainda sobrevive no improviso.</p>
+            </header>
+
+            <div class="chaos-grid">
+              <article class="issue-card">
+                <div class="issue-accent issue-accent-green"></div>
+                <h3>Bagunça no WhatsApp</h3>
+                <p>Convite, atraso, bola, PIX e escalação no mesmo lugar errado.</p>
+                <div class="chat-grid">
+                  <span class="chat-bubble chat-bubble-green">Quem joga hoje?</span>
+                  <span class="chat-bubble chat-bubble-blue">Cadê o PIX?</span>
+                  <span class="chat-bubble chat-bubble-neutral">Vou atrasar</span>
+                  <span class="chat-bubble chat-bubble-danger">Cancelou?</span>
+                </div>
+              </article>
+
+              <article class="core-card">
+                <div class="core-badge">OP</div>
+                <h3>Operação improvisada</h3>
+                <p>Sem regra única, a resenha vira retrabalho, conflito e pouca previsibilidade.</p>
+              </article>
+
+              <article class="issue-card">
+                <div class="issue-accent issue-accent-blue"></div>
+                <h3>Planilhas desatualizadas</h3>
+                <p>Status financeiro e presença dependem de alguém lembrar de atualizar.</p>
+                <div class="sheet-preview">
+                  <div class="sheet-row"></div>
+                  <div class="sheet-row"></div>
+                  <div class="sheet-row"></div>
+                  <div class="sheet-row"></div>
+                  <div class="sheet-divider sheet-divider-a"></div>
+                  <div class="sheet-divider sheet-divider-b"></div>
+                  <div class="sheet-divider sheet-divider-c"></div>
+                  <span class="sheet-mark">?</span>
+                </div>
+              </article>
+
+              <article class="issue-card">
+                <div class="issue-accent issue-accent-gold"></div>
+                <h3>Presença fora de controle</h3>
+                <p>Check-in e lotação vivem espalhados entre mensagens e listas paralelas.</p>
+                <div class="presence-grid">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span class="presence-pill presence-pill-green">18 confirmados</span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span class="presence-pill presence-pill-gold">2 em espera</span>
+                </div>
+              </article>
+
+              <article class="issue-card">
+                <div class="issue-accent issue-accent-danger"></div>
+                <h3>Caixa quebrado e calote</h3>
+                <p>O grupo descobre tarde quem pagou, quem deve e quanto entrou.</p>
+                <div class="status-stack">
+                  <div class="status-pill status-pill-danger">
+                    <span class="status-dot">!</span>
+                    <div>
+                      <strong>João S.</strong>
+                      <small>R$ 25 pendente</small>
+                    </div>
+                  </div>
+                  <div class="status-pill status-pill-gold">
+                    <span class="status-dot">?</span>
+                    <div>
+                      <strong>Pedro J.</strong>
+                      <small>PIX sem baixa</small>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div class="bottom-strap">Sem padrão de operação, a pelada perde tempo, clareza e dinheiro.</div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-3">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="bg-grid bg-grid-top"></div>
+          <div class="content split-layout">
+            <div class="split-copy">
+              <div class="badge badge-green">Produto</div>
+              <h2>Um sistema completo de gestão em um só lugar</h2>
+              <p class="lede">
+                Do grupo ao caixa, o Convoca centraliza a operação da pelada com experiência mobile-first.
+              </p>
+              <p class="section-note">O fluxo do produto acompanha a jornada inteira do grupo:</p>
+              <div class="agenda-list">
+                <div class="agenda-item"><span>01</span><strong>Entrada e gestão do grupo</strong></div>
+                <div class="agenda-item"><span>02</span><strong>Presença com posição preferencial</strong></div>
+                <div class="agenda-item"><span>03</span><strong>Histórico e resultado de jogo</strong></div>
+                <div class="agenda-item"><span>04</span><strong>Ranking e saúde financeira</strong></div>
+              </div>
+            </div>
+
+            <div class="showcase-panel">
+              <div class="device device-lg">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-022-417x905.jpg" alt="Tela home" />
+                <div class="device-home"></div>
+                <span class="device-label">Home</span>
+              </div>
+              <div class="device device-md offset-device">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-023-417x905.jpg" alt="Tela de confirmação" />
+                <div class="device-home"></div>
+                <span class="device-label">Confirmação</span>
+              </div>
+              <div class="floating-card mini-preview-card">
+                <span class="mini-heading">Histórico</span>
+                <img src="../extracted-images/obj-024-367x796.jpg" alt="Tela de histórico" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-4">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-blue"></div>
+          <div class="bg-grid bg-grid-top"></div>
+          <div class="content split-layout modules-layout">
+            <div class="split-copy">
+              <div class="badge badge-green">Módulos</div>
+              <h2>Componentes claros para uma operação completa</h2>
+              <p class="lede">
+                Cada módulo resolve um pedaço crítico da rotina e, junto, cria uma experiência de produto coesa
+                para o grupo.
+              </p>
+              <div class="module-list">
+                <article class="module-card">
+                  <span>01</span>
+                  <div>
+                    <h3>Grupos e partidas</h3>
+                    <p>Cadastro do grupo, jogo da semana, limites de vagas e configuração da operação.</p>
+                  </div>
+                </article>
+                <article class="module-card module-card-blue">
+                  <span>02</span>
+                  <div>
+                    <h3>Presença com intenção</h3>
+                    <p>Confirmação, fila de espera e posição preferencial com menos ruído operacional.</p>
+                  </div>
+                </article>
+                <article class="module-card module-card-deep">
+                  <span>03</span>
+                  <div>
+                    <h3>Histórico e rankings</h3>
+                    <p>Resultados, desempenho e memória esportiva do grupo em uma linha do tempo confiável.</p>
+                  </div>
+                </article>
+                <article class="module-card module-card-blue">
+                  <span>04</span>
+                  <div>
+                    <h3>Financeiro e cobranças</h3>
+                    <p>Controle de pendências, baixas e caixa sem depender de planilha paralela.</p>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="showcase-panel showcase-panel-wide">
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-023-417x905.jpg" alt="Tela presença" />
+                <div class="device-home"></div>
+                <span class="device-label">Presença</span>
+              </div>
+              <div class="device device-lg">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-022-417x905.jpg" alt="Visão do grupo" />
+                <div class="device-home"></div>
+                <span class="device-label">Visão do grupo</span>
+              </div>
+              <div class="device device-xs">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-030-422x913.jpg" alt="Tela financeira" />
+                <div class="device-home"></div>
+                <span class="device-label">Caixa</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-5">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="content content-centered">
+            <div class="badge badge-green">Valor</div>
+            <h2>O impacto imediato da profissionalização</h2>
+            <p class="lede lede-centered">
+              O Convoca transforma uma pelada comum em uma operação previsível, competitiva e sem atrito.
+            </p>
+            <div class="comparison-table">
+              <div class="comparison-head comparison-head-left">Pelada comum</div>
+              <div class="comparison-head comparison-head-right">Experiência Convoca</div>
+              <div class="comparison-cell comparison-cell-left">Horas perdidas no WhatsApp</div>
+              <div class="comparison-cell comparison-cell-right">Automação e gestão em segundos</div>
+              <div class="comparison-cell comparison-cell-left">Risco de calote e prejuízo</div>
+              <div class="comparison-cell comparison-cell-right">Previsibilidade de caixa e pendências</div>
+              <div class="comparison-cell comparison-cell-left">Jogos desequilibrados</div>
+              <div class="comparison-cell comparison-cell-right">Times nivelados por dados e presença</div>
+              <div class="comparison-cell comparison-cell-left">Conflitos por times e dinheiro</div>
+              <div class="comparison-cell comparison-cell-right">Foco no jogo, não no retrabalho</div>
+            </div>
+            <div class="bottom-strap bottom-strap-narrow">
+              Transforma um jogo entre amigos em uma experiência organizada e competitiva.
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-dark" id="slide-6">
+          <div class="slide-frame slide-frame-dark"></div>
+          <div class="dark-glow dark-glow-left"></div>
+          <div class="dark-glow dark-glow-right"></div>
+          <div class="content content-dark">
+            <header class="center-header center-header-dark">
+              <div class="badge badge-dark">Financeiro</div>
+              <h2>Organização financeira sem atrito</h2>
+              <p>Saiba quem pagou, quem deve e quanto o grupo já recebeu com uma visão única de caixa.</p>
+            </header>
+
+            <div class="finance-layout">
+              <article class="finance-panel">
+                <h3>Pendentes</h3>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-danger">X</span>
+                  <div><strong>João S.</strong><small>Mensalidade em aberto</small></div>
+                </div>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-danger">X</span>
+                  <div><strong>Pedro J.</strong><small>Diária pendente</small></div>
+                </div>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-gold">!</span>
+                  <div><strong>Lucas M.</strong><small>PIX sem baixa</small></div>
+                </div>
+              </article>
+
+              <article class="wallet-card">
+                <span class="wallet-caption">Carteira unificada</span>
+                <strong>R$ 1.250,00</strong>
+                <button type="button">Cobrar pendências</button>
+              </article>
+
+              <article class="finance-panel">
+                <h3>Pagos</h3>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-success">OK</span>
+                  <div><strong>Ricardo A.</strong><small>Mensalidade paga</small></div>
+                </div>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-success">OK</span>
+                  <div><strong>Mateus L.</strong><small>Diária quitada</small></div>
+                </div>
+                <div class="finance-row">
+                  <span class="finance-dot finance-dot-success">OK</span>
+                  <div><strong>Carlos R.</strong><small>Baixa confirmada</small></div>
+                </div>
+              </article>
+            </div>
+
+            <div class="footer-claim footer-claim-dark">
+              Fim das discussões. Controle absoluto de fluxo de caixa e pendências do grupo.
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-7">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="content ecosystem-content">
+            <header class="center-header">
+              <div class="badge badge-green">Expansão</div>
+              <h2>Um ecossistema para todos os níveis do jogo</h2>
+              <p>
+                A mesma base de produto atende organizadores independentes e camadas maiores de operação
+                esportiva.
+              </p>
+            </header>
+
+            <div class="ecosystem-map">
+              <div class="eco-line eco-line-top"></div>
+              <div class="eco-line eco-line-left"></div>
+              <div class="eco-line eco-line-right"></div>
+              <div class="eco-line eco-line-bottom-left"></div>
+              <div class="eco-line eco-line-bottom-right"></div>
+
+              <article class="audience-card audience-top">
+                <h3>Organizadores independentes</h3>
+                <p>O power-user clássico</p>
+              </article>
+              <article class="audience-card audience-left">
+                <h3>Arenas e quadras</h3>
+                <p>Parceiros de infraestrutura</p>
+              </article>
+              <article class="audience-card audience-right">
+                <h3>Grupos society</h3>
+                <p>Ligas amadoras</p>
+              </article>
+              <article class="audience-card audience-bottom-left">
+                <h3>Empresas e RH</h3>
+                <p>Integração corporativa</p>
+              </article>
+              <article class="audience-card audience-bottom-right">
+                <h3>Condomínios</h3>
+                <p>Gestão de áreas de lazer</p>
+              </article>
+
+              <div class="ecosystem-core">
+                <div class="ecosystem-core-inner">CONVOCA</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-8">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-blue"></div>
+          <div class="content content-centered">
+            <div class="badge badge-green">Diferenciais</div>
+            <h2>Os nossos diferenciais injustos</h2>
+            <p class="lede lede-centered">
+              Não é só uma planilha bonita. É uma camada de produto que reduz atrito, memória operacional e
+              conflito.
+            </p>
+
+            <div class="differentials-grid">
+              <article class="differential-card">
+                <span>01</span>
+                <h3>Profissionalização real</h3>
+                <p>Eleva a percepção do grupo com experiência de produto, não de improviso operacional.</p>
+              </article>
+              <article class="differential-card differential-card-blue">
+                <span>02</span>
+                <h3>Zero conflito desnecessário</h3>
+                <p>Regras visíveis para presença, times e pagamentos tiram a discussão do campo errado.</p>
+              </article>
+              <article class="differential-card differential-card-deep">
+                <span>03</span>
+                <h3>Economia máxima de tempo</h3>
+                <p>O organizador volta a focar em jogar, não em perseguir mensagens e repassar planilha.</p>
+              </article>
+              <article class="differential-card differential-card-blue">
+                <span>04</span>
+                <h3>Memória esportiva e financeira</h3>
+                <p>Tudo fica registrado: participação, desempenho, rankings, cobranças e histórico do grupo.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light" id="slide-9">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green"></div>
+          <div class="content content-centered">
+            <div class="badge badge-green">Produto em ação</div>
+            <h2>Tela inicial, presença, rankings e financeiro em uma experiência móvel consistente</h2>
+            <p class="lede lede-centered">
+              Os prints do produto entram no deck dentro de moldura nativa de dispositivo para manter leitura boa
+              também no PDF.
+            </p>
+            <div class="phones-panel">
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-022-417x905.jpg" alt="Dashboard" />
+                <div class="device-home"></div>
+                <span class="device-label">Dashboard</span>
+              </div>
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-023-417x905.jpg" alt="Presença" />
+                <div class="device-home"></div>
+                <span class="device-label">Presença</span>
+              </div>
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-033-417x905.jpg" alt="Rankings" />
+                <div class="device-home"></div>
+                <span class="device-label">Rankings</span>
+              </div>
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-030-422x913.jpg" alt="Financeiro" />
+                <div class="device-home"></div>
+                <span class="device-label">Financeiro</span>
+              </div>
+              <div class="device device-sm">
+                <div class="device-notch"></div>
+                <img src="../extracted-images/obj-034-263x571.jpg" alt="Cobranças" />
+                <div class="device-home"></div>
+                <span class="device-label">Cobranças</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide slide-light slide-close" id="slide-10">
+          <div class="slide-frame"></div>
+          <div class="bg-orb bg-orb-green bg-orb-bottom-left"></div>
+          <div class="bg-orb bg-orb-blue bg-orb-top-right"></div>
+          <div class="content close-layout">
+            <div class="close-copy">
+              <span class="site-label">www.uzzai.com.br</span>
+              <div class="wordmark wordmark-lg">
+                <span class="wordmark-green">CONVO</span><span class="wordmark-blue">CA</span>
+              </div>
+              <h2>A estrutura profissional que sua pelada merece.</h2>
+              <p class="close-cta">Vamos escalar juntos?</p>
+            </div>
+
+            <aside class="contact-card">
+              <h3>Pronto para entrar em campo?</h3>
+              <div class="contact-row"><span>WEB</span><strong>convoca.app</strong></div>
+              <div class="contact-row"><span>MAIL</span><strong>ola@convoca.app</strong></div>
+              <div class="contact-row"><span>CALL</span><strong>(11) 99999-0000</strong></div>
+              <div class="qr-row">
+                <div class="qr-box">
+                  <img src="../output/convoca-qr.png" alt="QR code Convoca" />
+                </div>
+                <p>Escaneie para testar agora</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

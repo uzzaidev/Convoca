@@ -1,0 +1,15 @@
+{
+  "name": "convoca-presentation-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract-pdf-text": "node scripts/extract-pdf-text.mjs",
+    "build-ppt": "node scripts/build-convoca-presentation.mjs",
+    "export-html": "node scripts/export-convoca-html.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.5.207",
+    "pptxgenjs": "^4.0.1",
+    "qrcode": "^1.5.4"
+  }
+}

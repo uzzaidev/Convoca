@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteParams = {
   params: Promise<{ groupId: string; seasonId: string }>;
 };
 
-// Default scoring config
 const DEFAULT_SCORING = {
   pointsWin: 3,
   pointsDraw: 1,
@@ -27,17 +28,10 @@ export async function POST(
     const user = await requireAuth();
     const { groupId, seasonId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0 || membership[0].role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem finalizar temporadas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem finalizar temporadas",
+    });
 
     const [season] = await sql`
       SELECT id, name, status, starts_at, ends_at
@@ -47,19 +41,18 @@ export async function POST(
 
     if (!season) {
       return NextResponse.json(
-        { error: "Temporada não encontrada" },
+        { error: "Temporada nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
     if (season.status === "finished") {
       return NextResponse.json(
-        { error: "Esta temporada já foi finalizada" },
+        { error: "Esta temporada jÃ¡ foi finalizada" },
         { status: 400 }
       );
     }
 
-    // Load scoring config
     const [groupData] = await sql`
       SELECT draw_config FROM groups WHERE id = ${groupId}
     `;
@@ -74,7 +67,6 @@ export async function POST(
       pointsPresence: cfg.points_presence ?? DEFAULT_SCORING.pointsPresence,
     };
 
-    // Calculate rankings for this season (same logic as rankings route)
     const rankings = await sql`
       WITH
       season_events AS (
@@ -170,12 +162,10 @@ export async function POST(
       ORDER BY points DESC, goal_difference DESC, goals DESC
     `;
 
-    // Delete existing snapshots for this season (in case of re-finish)
     await sql`DELETE FROM season_snapshots WHERE season_id = ${seasonId}`;
 
-    // Insert snapshots
     for (let i = 0; i < rankings.length; i++) {
-      const r = rankings[i];
+      const ranking = rankings[i];
       await sql`
         INSERT INTO season_snapshots (
           season_id, user_id, position, points, games_played,
@@ -183,15 +173,14 @@ export async function POST(
           mvp_count, team_goals, goals_conceded, goal_difference,
           player_name, player_image
         ) VALUES (
-          ${seasonId}, ${r.user_id}, ${i + 1}, ${r.points}, ${r.games_played},
-          ${r.wins}, ${r.draws}, ${r.losses}, ${r.goals}, ${r.assists}, ${r.own_goals},
-          ${r.mvp_count}, ${r.team_goals}, ${r.goals_conceded}, ${r.goal_difference},
-          ${r.player_name}, ${r.player_image}
+          ${seasonId}, ${ranking.user_id}, ${i + 1}, ${ranking.points}, ${ranking.games_played},
+          ${ranking.wins}, ${ranking.draws}, ${ranking.losses}, ${ranking.goals}, ${ranking.assists}, ${ranking.own_goals},
+          ${ranking.mvp_count}, ${ranking.team_goals}, ${ranking.goals_conceded}, ${ranking.goal_difference},
+          ${ranking.player_name}, ${ranking.player_image}
         )
       `;
     }
 
-    // Mark season as finished
     await sql`
       UPDATE seasons SET status = 'finished'
       WHERE id = ${seasonId} AND group_id = ${groupId}
@@ -208,13 +197,9 @@ export async function POST(
       playersCount: rankings.length,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error finishing season");
-    return NextResponse.json(
-      { error: "Erro ao finalizar temporada" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error finishing season",
+      fallbackMessage: "Erro ao finalizar temporada",
+    });
   }
 }

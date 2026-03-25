@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string; recurrenceId: string }>;
 
@@ -14,17 +16,10 @@ export async function PATCH(
     const { groupId, recurrenceId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem editar recorrências" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem editar recorrÃªncias",
+    });
 
     const [existing] = await sql`
       SELECT * FROM event_recurrences
@@ -33,7 +28,7 @@ export async function PATCH(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Recorrência não encontrada" },
+        { error: "RecorrÃªncia nÃ£o encontrada" },
         { status: 404 }
       );
     }
@@ -72,14 +67,10 @@ export async function PATCH(
 
     return NextResponse.json({ recurrence: updated });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error updating recurrence");
-    return NextResponse.json(
-      { error: "Erro ao atualizar recorrência" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error updating recurrence",
+      fallbackMessage: "Erro ao atualizar recorrÃªncia",
+    });
   }
 }
 
@@ -92,17 +83,10 @@ export async function DELETE(
     const { groupId, recurrenceId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem excluir recorrências" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem excluir recorrÃªncias",
+    });
 
     const [existing] = await sql`
       SELECT * FROM event_recurrences
@@ -111,12 +95,11 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Recorrência não encontrada" },
+        { error: "RecorrÃªncia nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
-    // Deactivate instead of hard delete to preserve history  
     await sql`
       UPDATE event_recurrences
       SET is_active = false, updated_at = NOW()
@@ -125,15 +108,11 @@ export async function DELETE(
 
     logger.info({ recurrenceId, groupId }, "Recurrence deactivated");
 
-    return NextResponse.json({ message: "Recorrência desativada com sucesso" });
+    return NextResponse.json({ message: "RecorrÃªncia desativada com sucesso" });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error deleting recurrence");
-    return NextResponse.json(
-      { error: "Erro ao excluir recorrência" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting recurrence",
+      fallbackMessage: "Erro ao excluir recorrÃªncia",
+    });
   }
 }

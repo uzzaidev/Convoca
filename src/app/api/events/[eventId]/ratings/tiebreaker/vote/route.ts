@@ -3,6 +3,8 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteContext = {
   params: Promise<{ eventId: string }>;
@@ -22,14 +24,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const validation = voteSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.issues },
+        { error: "Dados invÃ¡lidos", details: validation.error.issues },
         { status: 400 }
       );
     }
 
     const { tiebreakerId, votedUserId } = validation.data;
 
-    // Verificar se usuário participou do evento
+    await requireEventAccess(eventId, user, {
+      allowSystemAdmin: false,
+    });
+
     const [attendance] = await sql`
       SELECT status
       FROM event_attendance
@@ -43,7 +48,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Buscar tiebreaker e validar
     const [tiebreaker] = await sql`
       SELECT * FROM mvp_tiebreakers
       WHERE id = ${tiebreakerId} AND event_id = ${eventId}
@@ -51,20 +55,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!tiebreaker) {
       return NextResponse.json(
-        { error: "Desempate não encontrado" },
+        { error: "Desempate nÃ£o encontrado" },
         { status: 404 }
       );
     }
 
     if (tiebreaker.status === "completed" || tiebreaker.status === "admin_decided") {
       return NextResponse.json(
-        { error: "Este desempate já foi finalizado" },
+        { error: "Este desempate jÃ¡ foi finalizado" },
         { status: 400 }
       );
     }
 
     if (tiebreaker.status === "pending") {
-      // Atualizar status para "voting" quando primeiro voto for registrado
       await sql`
         UPDATE mvp_tiebreakers
         SET status = 'voting'
@@ -72,16 +75,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       `;
     }
 
-    // Validar que o voto é para um dos jogadores empatados
     const tiedUserIds = tiebreaker.tied_user_ids as string[];
     if (!tiedUserIds.includes(votedUserId)) {
       return NextResponse.json(
-        { error: "Você deve votar em um dos jogadores empatados" },
+        { error: "VocÃª deve votar em um dos jogadores empatados" },
         { status: 400 }
       );
     }
 
-    // Registrar ou atualizar voto
     await sql`
       INSERT INTO mvp_tiebreaker_votes (
         tiebreaker_id,
@@ -98,7 +99,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
         created_at = NOW()
     `;
 
-    // Contar total de participantes e votos
     const [participantCount] = await sql`
       SELECT COUNT(DISTINCT user_id) as count
       FROM event_attendance
@@ -114,7 +114,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const totalParticipants = parseInt(participantCount.count as string);
     const totalVotes = parseInt(voteCount.count as string);
 
-    // Se todos votaram, verificar se ainda há empate
     if (totalVotes === totalParticipants) {
       const voteCounts = await sql`
         SELECT
@@ -128,11 +127,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       const maxVotes = parseInt(voteCounts[0].vote_count as string);
       const stillTied = voteCounts.filter(
-        (vc) => parseInt(vc.vote_count as string) === maxVotes
+        (vote) => parseInt(vote.vote_count as string) === maxVotes
       );
 
       if (stillTied.length === 1) {
-        // Desempate resolvido!
         await sql`
           UPDATE mvp_tiebreakers
           SET
@@ -147,7 +145,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
           "Tiebreaker resolved"
         );
       } else {
-        // Ainda empatado - admin precisa decidir
         logger.info(
           { tiebreakerId, stillTiedCount: stillTied.length },
           "Tiebreaker still tied - admin decision required"
@@ -162,13 +159,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       totalParticipants,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error recording tiebreaker vote");
-    return NextResponse.json(
-      { error: "Erro ao registrar voto" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error recording tiebreaker vote",
+      fallbackMessage: "Erro ao registrar voto",
+    });
   }
 }

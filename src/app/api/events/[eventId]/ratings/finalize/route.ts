@@ -2,6 +2,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteContext = {
   params: Promise<{ eventId: string }>;
@@ -12,22 +14,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const user = await requireAuth();
     const { eventId } = await context.params;
 
-    // Verificar se usuário é admin do grupo do evento
-    const [membership] = await sql`
-      SELECT gm.role
-      FROM events e
-      INNER JOIN group_members gm ON e.group_id = gm.group_id
-      WHERE e.id = ${eventId} AND gm.user_id = ${user.id}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem finalizar votaÃ§Ã£o",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem finalizar votação" },
-        { status: 403 }
-      );
-    }
-
-    // Contar votos de cada jogador
     const voteCounts = await sql`
       SELECT
         rated_user_id,
@@ -47,13 +38,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Identificar jogadores com o máximo de votos
     const maxVotes = parseInt(voteCounts[0].vote_count as string);
     const tiedPlayers = voteCounts.filter(
-      (v) => parseInt(v.vote_count as string) === maxVotes
+      (vote) => parseInt(vote.vote_count as string) === maxVotes
     );
 
-    // Se apenas 1 jogador tem o máximo, não há empate
     if (tiedPlayers.length === 1) {
       return NextResponse.json({
         success: true,
@@ -66,25 +55,26 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    // Há empate! Criar registro de tiebreaker
-    const tiedUserIds = tiedPlayers.map((p) => p.rated_user_id);
+    const tiedUserIds = tiedPlayers.map((player) => player.rated_user_id);
 
-    // Verificar se já existe tiebreaker para este evento
     const [existingTiebreaker] = await sql`
-      SELECT id, status FROM mvp_tiebreakers
+      SELECT id, status, round FROM mvp_tiebreakers
       WHERE event_id = ${eventId}
       ORDER BY round DESC
       LIMIT 1
     `;
 
-    if (existingTiebreaker && existingTiebreaker.status !== "completed" && existingTiebreaker.status !== "admin_decided") {
+    if (
+      existingTiebreaker &&
+      existingTiebreaker.status !== "completed" &&
+      existingTiebreaker.status !== "admin_decided"
+    ) {
       return NextResponse.json(
-        { error: "Já existe um desempate em andamento para este evento" },
+        { error: "JÃ¡ existe um desempate em andamento para este evento" },
         { status: 400 }
       );
     }
 
-    // Criar novo tiebreaker
     const round = existingTiebreaker ? (existingTiebreaker.round as number) + 1 : 1;
 
     const [tiebreaker] = await sql`
@@ -114,21 +104,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
         id: tiebreaker.id,
         round,
         status: tiebreaker.status,
-        tiedPlayers: tiedPlayers.map((p) => ({
-          userId: p.rated_user_id,
-          userName: p.user_name,
+        tiedPlayers: tiedPlayers.map((player) => ({
+          userId: player.rated_user_id,
+          userName: player.user_name,
           voteCount: maxVotes,
         })),
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error finalizing MVP voting");
-    return NextResponse.json(
-      { error: "Erro ao finalizar votação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error finalizing MVP voting",
+      fallbackMessage: "Erro ao finalizar votaÃ§Ã£o",
+    });
   }
 }

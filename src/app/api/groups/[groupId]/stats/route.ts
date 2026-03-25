@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
 };
 
-// GET /api/groups/[groupId]/stats - Estatísticas e rankings do grupo
+// GET /api/groups/[groupId]/stats - EstatÃ­sticas e rankings do grupo
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -18,20 +20,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const seasonId = searchParams.get("seasonId");
 
-    // Verificar se o usuário é membro do grupo
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (membership.length === 0) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // Determine date filter for season
     let seasonFilter: { startsAt: string; endsAt: string } | null = null;
 
     if (seasonId) {
@@ -53,7 +43,6 @@ export async function GET(
       }
     }
 
-    // Buscar eventos finalizados do grupo (com filtro de temporada)
     const finishedEvents = seasonFilter
       ? await sql`
           SELECT id FROM events
@@ -76,9 +65,8 @@ export async function GET(
       });
     }
 
-    const eventIds = (finishedEvents as unknown as Array<{ id: string }>).map(e => e.id);
+    const eventIds = (finishedEvents as unknown as Array<{ id: string }>).map((event) => event.id);
 
-    // Artilheiros (top 10)
     const topScorers = await sql`
       SELECT
         u.id,
@@ -95,7 +83,6 @@ export async function GET(
       LIMIT 10
     `;
 
-    // Garçons - assistências (top 10)
     const topAssisters = await sql`
       SELECT
         u.id,
@@ -112,7 +99,6 @@ export async function GET(
       LIMIT 10
     `;
 
-    // Goleiros - defesas (top 10)
     const topGoalkeepers = await sql`
       SELECT
         u.id,
@@ -129,7 +115,6 @@ export async function GET(
       LIMIT 10
     `;
 
-    // Jogos recentes (últimos 5)
     const recentMatches = await sql`
       SELECT
         e.id,
@@ -168,7 +153,6 @@ export async function GET(
       LIMIT 5
     `;
 
-    // Frequência de jogadores (últimos 10 jogos da temporada)
     const playerFrequency = await sql`
       WITH recent_events AS (
         SELECT id
@@ -186,24 +170,19 @@ export async function GET(
         u.id,
         u.name,
         u.image,
-        -- Jogos que jogou (confirmado + check-in)
         COUNT(DISTINCT CASE
           WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
           THEN ea.event_id
         END) as games_played,
-        -- Jogos que deu DM
         COUNT(DISTINCT CASE
           WHEN ea.status = 'dm'
           THEN ea.event_id
         END) as games_dm,
-        -- Jogos que não foi
         COUNT(DISTINCT CASE
           WHEN ea.status = 'no'
           THEN ea.event_id
         END) as games_absent,
-        -- Total de jogos no período
         (SELECT total FROM total_count) as total_games,
-        -- Frequência percentual (jogos jogados / total de jogos - DMs)
         CASE
           WHEN (SELECT total FROM total_count) > 0
           THEN ROUND(
@@ -218,7 +197,7 @@ export async function GET(
       LEFT JOIN event_attendance ea ON ea.user_id = u.id
         AND ea.event_id IN (SELECT id FROM recent_events)
       GROUP BY u.id, u.name, u.image
-      HAVING COUNT(DISTINCT ea.event_id) > 0  -- Pelo menos teve alguma interação
+      HAVING COUNT(DISTINCT ea.event_id) > 0
       ORDER BY games_played DESC, frequency_percentage DESC
     `;
 
@@ -230,13 +209,9 @@ export async function GET(
       playerFrequency,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching group stats");
-    return NextResponse.json(
-      { error: "Erro ao buscar estatísticas" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching group stats",
+      fallbackMessage: "Erro ao buscar estatÃ­sticas",
+    });
   }
 }

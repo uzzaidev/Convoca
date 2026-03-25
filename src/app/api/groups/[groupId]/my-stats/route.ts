@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
 };
 
-// GET /api/groups/[groupId]/my-stats - Estatísticas pessoais do usuário no grupo
+// GET /api/groups/[groupId]/my-stats - EstatÃ­sticas pessoais do usuÃ¡rio no grupo
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -18,20 +20,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const seasonId = searchParams.get("seasonId");
 
-    // Verificar se o usuário é membro do grupo
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (membership.length === 0) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // Determine date filter for season
     let seasonFilter: { startsAt: string; endsAt: string } | null = null;
 
     if (seasonId) {
@@ -53,7 +43,6 @@ export async function GET(
       }
     }
 
-    // Buscar estatísticas completas do usuário
     const stats = seasonFilter
       ? await sql`
       WITH
@@ -128,7 +117,7 @@ export async function GET(
         (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
     `;
 
-    if (!stats || stats.length === 0 || stats[0].games_played === '0') {
+    if (!stats || stats.length === 0 || stats[0].games_played === "0") {
       return NextResponse.json({
         gamesPlayed: 0,
         goals: 0,
@@ -148,7 +137,6 @@ export async function GET(
 
     const userStats = stats[0];
 
-    // Buscar tags recebidas
     const tagsQuery = seasonFilter
       ? await sql`
         SELECT UNNEST(tags) as tag, COUNT(*) as count
@@ -176,8 +164,8 @@ export async function GET(
       `;
 
     const tags: Record<string, number> = {};
-    (tagsQuery as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
-      tags[t.tag] = parseInt(t.count);
+    (tagsQuery as unknown as Array<{ tag: string; count: string }>).forEach((tag) => {
+      tags[tag.tag] = parseInt(tag.count);
     });
 
     return NextResponse.json({
@@ -196,13 +184,9 @@ export async function GET(
       tags,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching user stats");
-    return NextResponse.json(
-      { error: "Erro ao buscar suas estatísticas" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching user stats",
+      fallbackMessage: "Erro ao buscar suas estatÃ­sticas",
+    });
   }
 }

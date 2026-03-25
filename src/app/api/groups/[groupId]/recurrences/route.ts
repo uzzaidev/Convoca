@@ -3,10 +3,12 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { createRecurrenceSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
-const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const dayNames = ["Domingo", "Segunda", "TerÃ§a", "Quarta", "Quinta", "Sexta", "SÃ¡bado"];
 
 // GET /api/groups/:groupId/recurrences - List recurrences
 export async function GET(
@@ -17,17 +19,7 @@ export async function GET(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user);
 
     const recurrences = await sql`
       SELECT
@@ -41,14 +33,10 @@ export async function GET(
 
     return NextResponse.json({ recurrences });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching recurrences");
-    return NextResponse.json(
-      { error: "Erro ao buscar recorrências" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching recurrences",
+      fallbackMessage: "Erro ao buscar recorrÃªncias",
+    });
   }
 }
 
@@ -61,24 +49,17 @@ export async function POST(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem criar recorrências" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem criar recorrÃªncias",
+    });
 
     const body = await request.json();
     const validation = createRecurrenceSchema.safeParse({ ...body, groupId });
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: validation.error.flatten() },
         { status: 400 }
       );
     }
@@ -115,13 +96,9 @@ export async function POST(
 
     return NextResponse.json({ recurrence }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error creating recurrence");
-    return NextResponse.json(
-      { error: "Erro ao criar recorrência" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error creating recurrence",
+      fallbackMessage: "Erro ao criar recorrÃªncia",
+    });
   }
 }

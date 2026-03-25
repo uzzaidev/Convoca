@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { z } from "zod";
 import logger from "@/lib/logger";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -13,10 +15,7 @@ const adminRsvpSchema = z.object({
   secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
 });
 
-// Helper function to promote first eligible person from waitlist
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function promoteFromWaitlist(eventId: string, event: any) {
-  // Get all waitlist players ordered by arrival
+async function promoteFromWaitlist(eventId: string, event: { max_goalkeepers: number; max_players: number }) {
   const waitlistPlayers = await sql`
     SELECT * FROM event_attendance
     WHERE event_id = ${eventId} AND status = 'waitlist'
@@ -24,7 +23,6 @@ async function promoteFromWaitlist(eventId: string, event: any) {
   `;
 
   for (const waitlistPlayer of waitlistPlayers) {
-    // Re-check current counts to ensure we have a spot
     const [counts] = await sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
@@ -38,10 +36,8 @@ async function promoteFromWaitlist(eventId: string, event: any) {
 
     let canConfirm = false;
     if (waitlistPlayer.role === "gk") {
-      // GK can only be promoted if GK slots AND total slots are available
       canConfirm = gkCount < event.max_goalkeepers && totalPlayers < event.max_players;
     } else {
-      // Line player can be promoted if total slots are available
       canConfirm = totalPlayers < event.max_players;
     }
 
@@ -51,7 +47,6 @@ async function promoteFromWaitlist(eventId: string, event: any) {
         SET status = 'yes', updated_at = NOW()
         WHERE id = ${waitlistPlayer.id}
       `;
-      // Only promote one player per removal
       break;
     }
   }
@@ -71,36 +66,18 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: validation.error.flatten() },
         { status: 400 }
       );
     }
 
     const { userId, status, preferredPosition, secondaryPosition } = validation.data;
 
-    // Get event details
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    const { event } = await requireEventAccess(eventId, admin, {
+      minRole: "admin",
+      adminErrorMessage: "VocÃª nÃ£o tem permissÃ£o para gerenciar confirmaÃ§Ãµes",
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if admin is member of the group with admin role
-    const [adminMembership] = await sql`
-      SELECT * FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${admin.id}
-    `;
-
-    if (!adminMembership || adminMembership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Você não tem permissão para gerenciar confirmações" },
-        { status: 403 }
-      );
-    }
-
-    // Check if event is in a valid state for RSVP management
     if (event.status === "canceled") {
       return NextResponse.json(
         { error: "Este evento foi cancelado" },
@@ -110,12 +87,11 @@ export async function POST(
 
     if (event.status === "finished") {
       return NextResponse.json(
-        { error: "Este evento já foi finalizado" },
+        { error: "Este evento jÃ¡ foi finalizado" },
         { status: 400 }
       );
     }
 
-    // Check if user to be confirmed is member of the group
     const [userMembership] = await sql`
       SELECT * FROM group_members
       WHERE group_id = ${event.group_id} AND user_id = ${userId}
@@ -123,19 +99,17 @@ export async function POST(
 
     if (!userMembership) {
       return NextResponse.json(
-        { error: "Usuário não é membro deste grupo" },
+        { error: "UsuÃ¡rio nÃ£o Ã© membro deste grupo" },
         { status: 403 }
       );
     }
 
     if (status === "no") {
-      // Remove attendance
       await sql`
         DELETE FROM event_attendance
         WHERE event_id = ${eventId} AND user_id = ${userId}
       `;
 
-      // Check waitlist and promote if needed
       await promoteFromWaitlist(eventId, event);
 
       logger.info(
@@ -146,24 +120,22 @@ export async function POST(
       return NextResponse.json({ success: true });
     }
 
-    // Confirming player
     if (!preferredPosition) {
       return NextResponse.json(
-        { error: "Posição preferencial é obrigatória" },
+        { error: "PosiÃ§Ã£o preferencial Ã© obrigatÃ³ria" },
         { status: 400 }
       );
     }
 
     if (preferredPosition === secondaryPosition && secondaryPosition !== undefined) {
       return NextResponse.json(
-        { error: "Posições devem ser diferentes" },
+        { error: "PosiÃ§Ãµes devem ser diferentes" },
         { status: 400 }
       );
     }
 
     const role = preferredPosition === "gk" ? "gk" : "line";
 
-    // Count current confirmations (excluding the user being confirmed to avoid double-counting)
     const [counts] = await sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
@@ -174,7 +146,6 @@ export async function POST(
 
     let finalStatus = "yes";
 
-    // Check if we need to put user in waitlist or reject
     const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
     const gkCount = parseInt(counts.gk_count);
 
@@ -183,7 +154,7 @@ export async function POST(
         finalStatus = "waitlist";
       } else {
         return NextResponse.json(
-          { error: `Limite de goleiros atingido (${event.max_goalkeepers}). Não é possível adicionar mais goleiros.` },
+          { error: `Limite de goleiros atingido (${event.max_goalkeepers}). NÃ£o Ã© possÃ­vel adicionar mais goleiros.` },
           { status: 400 }
         );
       }
@@ -192,13 +163,12 @@ export async function POST(
         finalStatus = "waitlist";
       } else {
         return NextResponse.json(
-          { error: `Limite de jogadores atingido (${event.max_players}). Não é possível adicionar mais jogadores.` },
+          { error: `Limite de jogadores atingido (${event.max_players}). NÃ£o Ã© possÃ­vel adicionar mais jogadores.` },
           { status: 400 }
         );
       }
     }
 
-    // Upsert attendance
     const [attendance] = await sql`
       INSERT INTO event_attendance (event_id, user_id, role, status, preferred_position, secondary_position)
       VALUES (${eventId}, ${userId}, ${role}, ${finalStatus}, ${preferredPosition}, ${secondaryPosition || null})
@@ -219,13 +189,9 @@ export async function POST(
 
     return NextResponse.json({ attendance });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error in admin RSVP");
-    return NextResponse.json(
-      { error: "Erro ao processar confirmação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error in admin RSVP",
+      fallbackMessage: "Erro ao processar confirmaÃ§Ã£o",
+    });
   }
 }

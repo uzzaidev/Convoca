@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { updateSeasonSchema } from "@/lib/validations";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteParams = {
   params: Promise<{ groupId: string; seasonId: string }>;
@@ -17,17 +19,7 @@ export async function GET(
     const user = await requireAuth();
     const { groupId, seasonId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user);
 
     const [season] = await sql`
       SELECT
@@ -53,21 +45,17 @@ export async function GET(
 
     if (!season) {
       return NextResponse.json(
-        { error: "Temporada não encontrada" },
+        { error: "Temporada nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ season });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching season");
-    return NextResponse.json(
-      { error: "Erro ao buscar temporada" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching season",
+      fallbackMessage: "Erro ao buscar temporada",
+    });
   }
 }
 
@@ -80,17 +68,10 @@ export async function PATCH(
     const user = await requireAuth();
     const { groupId, seasonId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0 || membership[0].role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem editar temporadas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem editar temporadas",
+    });
 
     const [existing] = await sql`
       SELECT id, status, starts_at, ends_at FROM seasons
@@ -99,19 +80,18 @@ export async function PATCH(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Temporada não encontrada" },
+        { error: "Temporada nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
     if (existing.status === "finished") {
       return NextResponse.json(
-        { error: "Não é possível editar uma temporada finalizada" },
+        { error: "NÃ£o Ã© possÃ­vel editar uma temporada finalizada" },
         { status: 400 }
       );
     }
 
-    // Guardar datas originais para rollback de overlap
     const originalStartsAt = existing.starts_at;
     const originalEndsAt = existing.ends_at;
 
@@ -120,7 +100,7 @@ export async function PATCH(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: parsed.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -135,7 +115,6 @@ export async function PATCH(
       );
     }
 
-    // Build update - use individual conditional updates since tagged templates can't be dynamic
     const [updated] = await sql`
       UPDATE seasons
       SET
@@ -146,7 +125,6 @@ export async function PATCH(
       RETURNING id, name, starts_at, ends_at, status, created_at
     `;
 
-    // Check overlap after update
     if (updates.startsAt || updates.endsAt) {
       const overlap = await sql`
         SELECT id, name FROM seasons
@@ -158,7 +136,6 @@ export async function PATCH(
       `;
 
       if (overlap.length > 0) {
-        // Rollback by restoring original values
         await sql`
           UPDATE seasons
           SET starts_at = ${originalStartsAt}, ends_at = ${originalEndsAt}
@@ -175,14 +152,10 @@ export async function PATCH(
 
     return NextResponse.json({ season: updated });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error updating season");
-    return NextResponse.json(
-      { error: "Erro ao atualizar temporada" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error updating season",
+      fallbackMessage: "Erro ao atualizar temporada",
+    });
   }
 }
 
@@ -195,17 +168,10 @@ export async function DELETE(
     const user = await requireAuth();
     const { groupId, seasonId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0 || membership[0].role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem excluir temporadas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem excluir temporadas",
+    });
 
     const [existing] = await sql`
       SELECT id, status FROM seasons
@@ -214,12 +180,11 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Temporada não encontrada" },
+        { error: "Temporada nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
-    // Delete snapshots first, then season
     await sql`DELETE FROM season_snapshots WHERE season_id = ${seasonId}`;
     await sql`DELETE FROM seasons WHERE id = ${seasonId} AND group_id = ${groupId}`;
 
@@ -227,13 +192,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error deleting season");
-    return NextResponse.json(
-      { error: "Erro ao excluir temporada" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting season",
+      fallbackMessage: "Erro ao excluir temporada",
+    });
   }
 }

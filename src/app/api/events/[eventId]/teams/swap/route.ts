@@ -3,10 +3,11 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { z } from "zod";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
-// Schema for swapping players
 const swapPlayersSchema = z.object({
   player1: z.object({
     userId: z.string().uuid(),
@@ -30,29 +31,11 @@ export async function POST(
     const body = await request.json();
     const validatedData = swapPlayersSchema.parse(body);
 
-    // Get event
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem trocar jogadores",
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem trocar jogadores" },
-        { status: 403 }
-      );
-    }
-
-    // Verify both teams belong to this event
     const teamsCheck = await sql`
       SELECT t.id
       FROM teams t
@@ -62,19 +45,17 @@ export async function POST(
 
     if (teamsCheck.length !== 2) {
       return NextResponse.json(
-        { error: "Um ou ambos os times não pertencem a este evento" },
+        { error: "Um ou ambos os times nÃ£o pertencem a este evento" },
         { status: 400 }
       );
     }
 
-    // Get player 1 info
     const [player1Info] = await sql`
       SELECT position FROM team_members
       WHERE team_id = ${validatedData.player1.currentTeamId}
         AND user_id = ${validatedData.player1.userId}
     `;
 
-    // Get player 2 info
     const [player2Info] = await sql`
       SELECT position FROM team_members
       WHERE team_id = ${validatedData.player2.currentTeamId}
@@ -83,12 +64,11 @@ export async function POST(
 
     if (!player1Info || !player2Info) {
       return NextResponse.json(
-        { error: "Um ou ambos os jogadores não foram encontrados" },
+        { error: "Um ou ambos os jogadores nÃ£o foram encontrados" },
         { status: 400 }
       );
     }
 
-    // Perform the swap atomically using a single UPDATE with CASE
     await sql`
       UPDATE team_members
       SET team_id = CASE
@@ -102,8 +82,8 @@ export async function POST(
     `;
 
     logger.info(
-      { 
-        eventId, 
+      {
+        eventId,
         userId: user.id,
         player1: validatedData.player1.userId,
         player2: validatedData.player2.userId,
@@ -111,24 +91,21 @@ export async function POST(
       "Players swapped between teams"
     );
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: "Jogadores trocados com sucesso" 
+      message: "Jogadores trocados com sucesso",
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: error.errors },
+        { error: "Dados invÃ¡lidos", details: error.errors },
         { status: 400 }
       );
     }
-    logger.error(error, "Error swapping players");
-    return NextResponse.json(
-      { error: "Erro ao trocar jogadores" },
-      { status: 500 }
-    );
+
+    return handleRouteError(error, {
+      logMessage: "Error swapping players",
+      fallbackMessage: "Erro ao trocar jogadores",
+    });
   }
 }

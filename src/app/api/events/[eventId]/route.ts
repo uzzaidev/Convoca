@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -13,6 +15,7 @@ export async function GET(
   try {
     const { eventId } = await params;
     const user = await requireAuth();
+    const { groupAccess } = await requireEventAccess(eventId, user);
 
     const [event] = await sql`
       SELECT
@@ -27,23 +30,9 @@ export async function GET(
     `;
 
     if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Evento nao encontrado" }, { status: 404 });
     }
 
-    // Check if user is member of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // Get attendance list
     const attendance = await sql`
       SELECT
         ea.id,
@@ -66,7 +55,6 @@ export async function GET(
         ea.created_at ASC
     `;
 
-    // Get teams if draw has been made
     const teams = await sql`
       SELECT
         t.id,
@@ -93,20 +81,17 @@ export async function GET(
     return NextResponse.json({
       event: {
         ...event,
-        userRole: membership.role,
+        userRole: groupAccess.userRole,
+        isSystemAdmin: groupAccess.isSystemAdmin,
         attendance,
         teams: teams.length > 0 ? teams : null,
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching event details");
-    return NextResponse.json(
-      { error: "Erro ao buscar detalhes do evento" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching event details",
+      fallbackMessage: "Erro ao buscar detalhes do evento",
+    });
   }
 }
 
@@ -119,26 +104,10 @@ export async function PATCH(
     const { eventId } = await params;
     const user = await requireAuth();
 
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
-
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem editar eventos" },
-        { status: 403 }
-      );
-    }
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem editar eventos",
+    });
 
     const body = await request.json();
     const { startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, status, listOpensAt } = body;
@@ -162,14 +131,10 @@ export async function PATCH(
 
     return NextResponse.json({ event: updated });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error updating event");
-    return NextResponse.json(
-      { error: "Erro ao atualizar evento" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error updating event",
+      fallbackMessage: "Erro ao atualizar evento",
+    });
   }
 }
 
@@ -182,28 +147,11 @@ export async function DELETE(
     const { eventId } = await params;
     const user = await requireAuth();
 
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem deletar eventos",
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem deletar eventos" },
-        { status: 403 }
-      );
-    }
-
-    // Instead of hard delete, we'll mark as canceled
     await sql`
       UPDATE events
       SET status = 'canceled', updated_at = NOW()
@@ -216,13 +164,9 @@ export async function DELETE(
       message: "Evento cancelado com sucesso",
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error canceling event");
-    return NextResponse.json(
-      { error: "Erro ao cancelar evento" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error canceling event",
+      fallbackMessage: "Erro ao cancelar evento",
+    });
   }
 }

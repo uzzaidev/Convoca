@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string; inviteId: string }>;
 
@@ -14,20 +16,11 @@ export async function DELETE(
     const { groupId, inviteId } = await params;
     const user = await requireAuth();
 
-    // Check if user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem deletar convites",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem deletar convites" },
-        { status: 403 }
-      );
-    }
-
-    // Check if invite exists and belongs to group
     const [invite] = await sql`
       SELECT * FROM invites
       WHERE id = ${inviteId} AND group_id = ${groupId}
@@ -35,7 +28,7 @@ export async function DELETE(
 
     if (!invite) {
       return NextResponse.json(
-        { error: "Convite não encontrado" },
+        { error: "Convite nÃ£o encontrado" },
         { status: 404 }
       );
     }
@@ -49,13 +42,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Convite deletado com sucesso" });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error deleting invite");
-    return NextResponse.json(
-      { error: "Erro ao deletar convite" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting invite",
+      fallbackMessage: "Erro ao deletar convite",
+    });
   }
 }

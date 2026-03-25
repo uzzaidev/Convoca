@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
-// Default scoring config (standard football: V=3, E=1, D=0)
 const DEFAULT_SCORING = {
   pointsWin: 3,
   pointsDraw: 1,
@@ -28,20 +29,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const seasonId = searchParams.get("seasonId");
 
-    // Check if user is member
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // If seasonId provided and season is finished, return snapshot
     if (seasonId) {
       const [season] = await sql`
         SELECT id, name, status, starts_at, ends_at
@@ -51,7 +40,7 @@ export async function GET(
 
       if (!season) {
         return NextResponse.json(
-          { error: "Temporada não encontrada" },
+          { error: "Temporada nÃ£o encontrada" },
           { status: 404 }
         );
       }
@@ -80,7 +69,6 @@ export async function GET(
           ORDER BY position ASC
         `;
 
-        // Get scoring config for response
         const [scoringConfig] = await sql`
           SELECT
             points_win as "pointsWin",
@@ -96,24 +84,24 @@ export async function GET(
         `;
 
         return NextResponse.json({
-          rankings: snapshots.map((s: Record<string, unknown>) => ({
-            user_id: s.user_id,
-            player_name: s.player_name,
-            player_image: s.player_image,
-            games_played: s.games_played,
-            wins: s.wins,
-            draws: s.draws,
-            losses: s.losses,
-            goals: s.goals,
-            assists: s.assists,
-            own_goals: s.own_goals,
-            mvp_count: s.mvp_count,
-            team_goals: s.team_goals,
-            goals_conceded: s.goals_conceded,
-            goal_difference: s.goal_difference,
-            points: s.points,
-            win_rate: Number(s.games_played) > 0
-              ? ((Number(s.wins) / Number(s.games_played)) * 100).toFixed(2)
+          rankings: snapshots.map((snapshot: Record<string, unknown>) => ({
+            user_id: snapshot.user_id,
+            player_name: snapshot.player_name,
+            player_image: snapshot.player_image,
+            games_played: snapshot.games_played,
+            wins: snapshot.wins,
+            draws: snapshot.draws,
+            losses: snapshot.losses,
+            goals: snapshot.goals,
+            assists: snapshot.assists,
+            own_goals: snapshot.own_goals,
+            mvp_count: snapshot.mvp_count,
+            team_goals: snapshot.team_goals,
+            goals_conceded: snapshot.goals_conceded,
+            goal_difference: snapshot.goal_difference,
+            points: snapshot.points,
+            win_rate: Number(snapshot.games_played) > 0
+              ? ((Number(snapshot.wins) / Number(snapshot.games_played)) * 100).toFixed(2)
               : "0",
           })),
           scoringConfig: scoringConfig || DEFAULT_SCORING,
@@ -122,12 +110,10 @@ export async function GET(
       }
     }
 
-    // Determine date filter for season
     let seasonFilter: { startsAt: string; endsAt: string } | null = null;
     let activeSeason: { id: string; name: string; status: string } | null = null;
 
     if (seasonId) {
-      // Specific season requested (active or upcoming)
       const [season] = await sql`
         SELECT id, name, status, starts_at, ends_at
         FROM seasons
@@ -138,7 +124,6 @@ export async function GET(
         activeSeason = { id: season.id, name: season.name, status: season.status };
       }
     } else {
-      // No season specified - check for active season
       const [active] = await sql`
         SELECT id, name, status, starts_at, ends_at
         FROM seasons
@@ -151,7 +136,6 @@ export async function GET(
       }
     }
 
-    // Get scoring configuration for this group
     const [scoringConfig] = await sql`
       SELECT
         points_win as "pointsWin",
@@ -168,8 +152,6 @@ export async function GET(
 
     const config = scoringConfig || DEFAULT_SCORING;
 
-    // Get player statistics and rankings with dynamic scoring
-    // own_goal: counts as a goal for the OPPONENT team, NOT as a goal for the player
     const rankings = seasonFilter
       ? await sql`
       WITH
@@ -446,13 +428,9 @@ export async function GET(
       ...(activeSeason && { season: activeSeason }),
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching rankings");
-    return NextResponse.json(
-      { error: "Erro ao buscar rankings" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching rankings",
+      fallbackMessage: "Erro ao buscar rankings",
+    });
   }
 }

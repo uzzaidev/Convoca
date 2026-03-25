@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
-import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { sql } from "@/db/client";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
@@ -20,17 +22,8 @@ export async function GET(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    // Check if user is member of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (!membership) {
-      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-    }
-
-    // Get event settings
     const [settings] = await sql`
       SELECT
         min_players as "minPlayers",
@@ -48,25 +41,20 @@ export async function GET(
           maxWaitlist: settings.maxWaitlist,
         },
       });
-    } else {
-      // Return default settings
-      return NextResponse.json({
-        settings: {
-          minPlayers: 4,
-          maxPlayers: 22,
-          maxWaitlist: 10,
-        },
-      });
     }
+
+    return NextResponse.json({
+      settings: {
+        minPlayers: 4,
+        maxPlayers: 22,
+        maxWaitlist: 10,
+      },
+    });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error getting event settings");
-    return NextResponse.json(
-      { error: "Erro ao buscar configurações" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error getting event settings",
+      fallbackMessage: "Erro ao buscar configuraÃ§Ãµes",
+    });
   }
 }
 
@@ -82,25 +70,15 @@ export async function POST(
     const body = await request.json();
     const { settings }: { settings: EventSettings } = body;
 
-    // Validate settings
     if (!settings || typeof settings !== "object") {
-      return NextResponse.json({ error: "Configurações inválidas" }, { status: 400 });
+      return NextResponse.json({ error: "ConfiguraÃ§Ãµes invÃ¡lidas" }, { status: 400 });
     }
 
-    // Check if user is admin of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem alterar configuraÃ§Ãµes",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem alterar configurações" },
-        { status: 403 }
-      );
-    }
-
-    // Upsert event settings
     await sql`
       INSERT INTO event_settings (
         group_id,
@@ -129,13 +107,9 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error saving event settings");
-    return NextResponse.json(
-      { error: "Erro ao salvar configurações" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error saving event settings",
+      fallbackMessage: "Erro ao salvar configuraÃ§Ãµes",
+    });
   }
 }

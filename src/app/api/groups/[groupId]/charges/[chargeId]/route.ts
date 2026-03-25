@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { updateChargeStatusSchema } from "@/lib/validations-charges";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string; chargeId: string }>;
 
@@ -15,20 +17,11 @@ export async function PATCH(
     const { groupId, chargeId } = await params;
     const user = await requireAuth();
 
-    // Check if current user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem atualizar cobranÃ§as",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem atualizar cobranças" },
-        { status: 403 }
-      );
-    }
-
-    // Check if charge exists and belongs to the group
     const [existingCharge] = await sql`
       SELECT * FROM charges
       WHERE id = ${chargeId} AND group_id = ${groupId}
@@ -36,25 +29,23 @@ export async function PATCH(
 
     if (!existingCharge) {
       return NextResponse.json(
-        { error: "Cobrança não encontrada" },
+        { error: "CobranÃ§a nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
-    // Parse and validate request body
     const body = await request.json();
     const validation = updateChargeStatusSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.errors },
+        { error: "Dados invÃ¡lidos", details: validation.error.errors },
         { status: 400 }
       );
     }
 
     const { status } = validation.data;
 
-    // Update charge status
     const [updatedCharge] = await sql`
       UPDATE charges
       SET status = ${status}, updated_at = NOW()
@@ -67,7 +58,6 @@ export async function PATCH(
       "Charge status updated"
     );
 
-    // Get user info
     const [userInfo] = await sql`
       SELECT id, name, image FROM users WHERE id = ${updatedCharge.user_id}
     `;
@@ -82,11 +72,10 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    logger.error({ error }, "Error updating charge status");
-    return NextResponse.json(
-      { error: "Erro ao atualizar cobrança" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error updating charge status",
+      fallbackMessage: "Erro ao atualizar cobranÃ§a",
+    });
   }
 }
 
@@ -99,20 +88,11 @@ export async function DELETE(
     const { groupId, chargeId } = await params;
     const user = await requireAuth();
 
-    // Check if current user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem excluir cobranÃ§as",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem excluir cobranças" },
-        { status: 403 }
-      );
-    }
-
-    // Check if charge exists and belongs to the group
     const [existingCharge] = await sql`
       SELECT * FROM charges
       WHERE id = ${chargeId} AND group_id = ${groupId}
@@ -120,12 +100,11 @@ export async function DELETE(
 
     if (!existingCharge) {
       return NextResponse.json(
-        { error: "Cobrança não encontrada" },
+        { error: "CobranÃ§a nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
-    // Delete charge
     await sql`
       DELETE FROM charges WHERE id = ${chargeId}
     `;
@@ -136,13 +115,12 @@ export async function DELETE(
     );
 
     return NextResponse.json({
-      message: "Cobrança excluída com sucesso",
+      message: "CobranÃ§a excluÃ­da com sucesso",
     });
   } catch (error) {
-    logger.error({ error }, "Error deleting charge");
-    return NextResponse.json(
-      { error: "Erro ao excluir cobrança" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting charge",
+      fallbackMessage: "Erro ao excluir cobranÃ§a",
+    });
   }
 }

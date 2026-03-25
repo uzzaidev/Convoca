@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string; expenseId: string }>;
 
@@ -14,17 +16,10 @@ export async function DELETE(
     const { groupId, expenseId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem excluir despesas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem excluir despesas",
+    });
 
     const [expense] = await sql`
       DELETE FROM expenses
@@ -34,12 +29,11 @@ export async function DELETE(
 
     if (!expense) {
       return NextResponse.json(
-        { error: "Despesa não encontrada" },
+        { error: "Despesa nÃ£o encontrada" },
         { status: 404 }
       );
     }
 
-    // Credit group wallet back
     await sql`
       UPDATE wallets
       SET balance_cents = balance_cents + ${expense.amount_cents}, updated_at = NOW()
@@ -51,15 +45,11 @@ export async function DELETE(
       "Expense deleted"
     );
 
-    return NextResponse.json({ message: "Despesa excluída com sucesso" });
+    return NextResponse.json({ message: "Despesa excluÃ­da com sucesso" });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error deleting expense");
-    return NextResponse.json(
-      { error: "Erro ao excluir despesa" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting expense",
+      fallbackMessage: "Erro ao excluir despesa",
+    });
   }
 }

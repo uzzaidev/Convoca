@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { createSeasonSchema } from "@/lib/validations";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -17,17 +19,7 @@ export async function GET(
     const user = await requireAuth();
     const { groupId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user);
 
     const seasons = await sql`
       SELECT
@@ -54,14 +46,10 @@ export async function GET(
 
     return NextResponse.json({ seasons });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error listing seasons");
-    return NextResponse.json(
-      { error: "Erro ao listar temporadas" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error listing seasons",
+      fallbackMessage: "Erro ao listar temporadas",
+    });
   }
 }
 
@@ -74,31 +62,23 @@ export async function POST(
     const user = await requireAuth();
     const { groupId } = await params;
 
-    const membership = await sql`
-      SELECT role FROM group_members
-      WHERE user_id = ${user.id} AND group_id = ${groupId}
-    `;
-
-    if (membership.length === 0 || membership[0].role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem criar temporadas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem criar temporadas",
+    });
 
     const body = await request.json();
     const parsed = createSeasonSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: parsed.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
     const { name, startsAt, endsAt } = parsed.data;
 
-    // Check for overlapping seasons
     const overlap = await sql`
       SELECT id, name FROM seasons
       WHERE group_id = ${groupId}
@@ -114,7 +94,6 @@ export async function POST(
       );
     }
 
-    // Determine status based on current date
     const now = new Date().toISOString();
     let status: "active" | "upcoming" | "finished" = "upcoming";
     if (startsAt <= now && endsAt >= now) {
@@ -123,7 +102,6 @@ export async function POST(
       status = "finished";
     }
 
-    // Only one active season allowed
     if (status === "active") {
       const existingActive = await sql`
         SELECT id FROM seasons
@@ -131,7 +109,7 @@ export async function POST(
       `;
       if (existingActive.length > 0) {
         return NextResponse.json(
-          { error: "Já existe uma temporada ativa neste grupo" },
+          { error: "JÃ¡ existe uma temporada ativa neste grupo" },
           { status: 400 }
         );
       }
@@ -147,13 +125,9 @@ export async function POST(
 
     return NextResponse.json({ season }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error creating season");
-    return NextResponse.json(
-      { error: "Erro ao criar temporada" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error creating season",
+      fallbackMessage: "Erro ao criar temporada",
+    });
   }
 }

@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { z } from "zod";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
@@ -22,17 +24,7 @@ export async function GET(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user);
 
     const expenses = await sql`
       SELECT
@@ -51,14 +43,10 @@ export async function GET(
 
     return NextResponse.json({ expenses });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching expenses");
-    return NextResponse.json(
-      { error: "Erro ao buscar despesas" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching expenses",
+      fallbackMessage: "Erro ao buscar despesas",
+    });
   }
 }
 
@@ -71,24 +59,17 @@ export async function POST(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem criar despesas" },
-        { status: 403 }
-      );
-    }
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem criar despesas",
+    });
 
     const body = await request.json();
     const validation = createExpenseSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.errors },
+        { error: "Dados invÃ¡lidos", details: validation.error.errors },
         { status: 400 }
       );
     }
@@ -101,7 +82,6 @@ export async function POST(
       RETURNING *
     `;
 
-    // Debit group wallet
     await sql`
       UPDATE wallets
       SET balance_cents = balance_cents - ${amountCents}, updated_at = NOW()
@@ -115,13 +95,9 @@ export async function POST(
 
     return NextResponse.json({ expense }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error creating expense");
-    return NextResponse.json(
-      { error: "Erro ao criar despesa" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error creating expense",
+      fallbackMessage: "Erro ao criar despesa",
+    });
   }
 }

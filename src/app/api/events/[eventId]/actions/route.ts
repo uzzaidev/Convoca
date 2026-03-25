@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { eventActionSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -15,26 +17,7 @@ export async function GET(
     const { eventId } = await params;
     const user = await requireAuth();
 
-    const [event] = await sql`
-      SELECT group_id FROM events WHERE id = ${eventId}
-    `;
-
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is member
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
+    await requireEventAccess(eventId, user);
 
     const actions = await sql`
       SELECT
@@ -54,14 +37,10 @@ export async function GET(
 
     return NextResponse.json({ actions });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching event actions");
-    return NextResponse.json(
-      { error: "Erro ao buscar ações do evento" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching event actions",
+      fallbackMessage: "Erro ao buscar aÃ§Ãµes do evento",
+    });
   }
 }
 
@@ -75,45 +54,27 @@ export async function POST(
     const user = await requireAuth();
 
     const body = await request.json();
-
-    // Use current user as actor
     const actionData = {
       ...body,
       eventId,
-      actorUserId: user.id, // Always use logged-in user as actor
+      actorUserId: user.id,
     };
 
     const validation = eventActionSchema.safeParse(actionData);
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: validation.error.flatten() },
         { status: 400 }
       );
     }
 
     const { actorUserId, actionType, subjectUserId, teamId, minute, metadata } = validation.data;
 
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
-
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem registrar ações" },
-        { status: 403 }
-      );
-    }
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem registrar aÃ§Ãµes",
+    });
 
     const [action] = await sql`
       INSERT INTO event_actions (
@@ -144,14 +105,10 @@ export async function POST(
 
     return NextResponse.json({ action }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error creating event action");
-    return NextResponse.json(
-      { error: "Erro ao criar ação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error creating event action",
+      fallbackMessage: "Erro ao criar aÃ§Ã£o",
+    });
   }
 }
 
@@ -169,33 +126,16 @@ export async function DELETE(
 
     if (!actionId) {
       return NextResponse.json(
-        { error: "actionId é obrigatório" },
+        { error: "actionId Ã© obrigatÃ³rio" },
         { status: 400 }
       );
     }
 
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem deletar aÃ§Ãµes",
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem deletar ações" },
-        { status: 403 }
-      );
-    }
-
-    // Delete the action
     const result = await sql`
       DELETE FROM event_actions
       WHERE id = ${actionId} AND event_id = ${eventId}
@@ -204,7 +144,7 @@ export async function DELETE(
 
     if (result.length === 0) {
       return NextResponse.json(
-        { error: "Ação não encontrada" },
+        { error: "AÃ§Ã£o nÃ£o encontrada" },
         { status: 404 }
       );
     }
@@ -214,15 +154,11 @@ export async function DELETE(
       "Event action deleted"
     );
 
-    return NextResponse.json({ message: "Ação deletada com sucesso" });
+    return NextResponse.json({ message: "AÃ§Ã£o deletada com sucesso" });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error deleting event action");
-    return NextResponse.json(
-      { error: "Erro ao deletar ação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error deleting event action",
+      fallbackMessage: "Erro ao deletar aÃ§Ã£o",
+    });
   }
 }

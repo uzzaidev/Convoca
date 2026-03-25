@@ -3,6 +3,8 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type RouteContext = {
   params: Promise<{ eventId: string }>;
@@ -22,29 +24,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const validation = decisionSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.issues },
+        { error: "Dados invÃ¡lidos", details: validation.error.issues },
         { status: 400 }
       );
     }
 
     const { tiebreakerId, winnerUserId } = validation.data;
 
-    // Verificar se usuário é admin do grupo
-    const [membership] = await sql`
-      SELECT gm.role
-      FROM events e
-      INNER JOIN group_members gm ON e.group_id = gm.group_id
-      WHERE e.id = ${eventId} AND gm.user_id = ${user.id}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas administradores podem decidir o vencedor",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas administradores podem decidir o vencedor" },
-        { status: 403 }
-      );
-    }
-
-    // Buscar tiebreaker e validar
     const [tiebreaker] = await sql`
       SELECT * FROM mvp_tiebreakers
       WHERE id = ${tiebreakerId} AND event_id = ${eventId}
@@ -52,19 +43,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!tiebreaker) {
       return NextResponse.json(
-        { error: "Desempate não encontrado" },
+        { error: "Desempate nÃ£o encontrado" },
         { status: 404 }
       );
     }
 
     if (tiebreaker.status === "completed" || tiebreaker.status === "admin_decided") {
       return NextResponse.json(
-        { error: "Este desempate já foi finalizado" },
+        { error: "Este desempate jÃ¡ foi finalizado" },
         { status: 400 }
       );
     }
 
-    // Validar que o vencedor é um dos jogadores empatados
     const tiedUserIds = tiebreaker.tied_user_ids as string[];
     if (!tiedUserIds.includes(winnerUserId)) {
       return NextResponse.json(
@@ -73,7 +63,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Atualizar tiebreaker com decisão do admin
     await sql`
       UPDATE mvp_tiebreakers
       SET
@@ -100,13 +89,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       winnerId: winnerUserId,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error recording admin decision");
-    return NextResponse.json(
-      { error: "Erro ao registrar decisão" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error recording admin decision",
+      fallbackMessage: "Erro ao registrar decisÃ£o",
+    });
   }
 }

@@ -3,14 +3,15 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { z } from "zod";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
-// Schema for manual team creation
 const manualTeamsSchema = z.object({
   teams: z.array(
     z.object({
-      name: z.string().min(1, "Nome do time é obrigatório"),
+      name: z.string().min(1, "Nome do time Ã© obrigatÃ³rio"),
       members: z.array(
         z.object({
           userId: z.string().uuid(),
@@ -18,7 +19,7 @@ const manualTeamsSchema = z.object({
         })
       ),
     })
-  ).min(2, "Pelo menos 2 times são necessários"),
+  ).min(2, "Pelo menos 2 times sÃ£o necessÃ¡rios"),
 });
 
 // POST /api/events/:eventId/teams - Create teams manually
@@ -33,46 +34,26 @@ export async function POST(
     const body = await request.json();
     const validatedData = manualTeamsSchema.parse(body);
 
-    // Get event
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    await requireEventAccess(eventId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem criar times",
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is admin of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem criar times" },
-        { status: 403 }
-      );
-    }
-
-    // Delete existing teams
     await sql`
       DELETE FROM teams WHERE event_id = ${eventId}
     `;
 
-    // Create teams
     const createdTeams = [];
 
     for (let i = 0; i < validatedData.teams.length; i++) {
       const teamData = validatedData.teams[i];
-      
+
       const [team] = await sql`
         INSERT INTO teams (event_id, name, seed)
         VALUES (${eventId}, ${teamData.name}, ${i})
         RETURNING *
       `;
 
-      // Add team members
       for (const member of teamData.members) {
         await sql`
           INSERT INTO team_members (team_id, user_id, position, starter)
@@ -90,20 +71,17 @@ export async function POST(
 
     return NextResponse.json({ teams: createdTeams });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: error.errors },
+        { error: "Dados invÃ¡lidos", details: error.errors },
         { status: 400 }
       );
     }
-    logger.error(error, "Error creating manual teams");
-    return NextResponse.json(
-      { error: "Erro ao criar times" },
-      { status: 500 }
-    );
+
+    return handleRouteError(error, {
+      logMessage: "Error creating manual teams",
+      fallbackMessage: "Erro ao criar times",
+    });
   }
 }
 
@@ -116,29 +94,8 @@ export async function GET(
     const { eventId } = await params;
     const user = await requireAuth();
 
-    // Get event to check group membership
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    await requireEventAccess(eventId, user);
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if user is a member of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // Get teams with members
     const teams = await sql`
       SELECT
         t.id,
@@ -164,13 +121,9 @@ export async function GET(
 
     return NextResponse.json({ teams });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error fetching teams");
-    return NextResponse.json(
-      { error: "Erro ao buscar times" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error fetching teams",
+      fallbackMessage: "Erro ao buscar times",
+    });
   }
 }

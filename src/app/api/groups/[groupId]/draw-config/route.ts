@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
@@ -25,17 +27,8 @@ export async function GET(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    // Check if user is member of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (!membership) {
-      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-    }
-
-    // Get draw config
     const [config] = await sql`
       SELECT
         players_per_team as "playersPerTeam",
@@ -61,30 +54,25 @@ export async function GET(
           },
         },
       });
-    } else {
-      // Return default config
-      return NextResponse.json({
-        config: {
-          playersPerTeam: 7,
-          reservesPerTeam: 2,
-          positions: {
-            gk: 1,
-            defender: 2,
-            midfielder: 2,
-            forward: 2,
-          },
+    }
+
+    return NextResponse.json({
+      config: {
+        playersPerTeam: 7,
+        reservesPerTeam: 2,
+        positions: {
+          gk: 1,
+          defender: 2,
+          midfielder: 2,
+          forward: 2,
         },
-      });
-    }
+      },
+    });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error getting draw config");
-    return NextResponse.json(
-      { error: "Erro ao buscar configuração" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error getting draw config",
+      fallbackMessage: "Erro ao buscar configuraÃ§Ã£o",
+    });
   }
 }
 
@@ -100,25 +88,15 @@ export async function POST(
     const body = await request.json();
     const { config }: { config: DrawConfig } = body;
 
-    // Validate config
     if (!config || typeof config !== "object") {
-      return NextResponse.json({ error: "Configuração inválida" }, { status: 400 });
+      return NextResponse.json({ error: "ConfiguraÃ§Ã£o invÃ¡lida" }, { status: 400 });
     }
 
-    // Check if user is admin of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem alterar configuraÃ§Ãµes",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem alterar configurações" },
-        { status: 403 }
-      );
-    }
-
-    // Upsert draw config
     await sql`
       INSERT INTO draw_configs (
         group_id,
@@ -156,13 +134,9 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error saving draw config");
-    return NextResponse.json(
-      { error: "Erro ao salvar configuração" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error saving draw config",
+      fallbackMessage: "Erro ao salvar configuraÃ§Ã£o",
+    });
   }
 }

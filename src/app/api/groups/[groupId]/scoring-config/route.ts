@@ -3,10 +3,11 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { z } from "zod";
+import { requireGroupAccess } from "@/lib/group-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
-// Default scoring configuration (standard football: V=3, E=1, D=0)
 const DEFAULT_CONFIG = {
   pointsWin: 3,
   pointsDraw: 1,
@@ -18,7 +19,6 @@ const DEFAULT_CONFIG = {
   rankingMode: "standard" as const,
 };
 
-// Validation schema
 const scoringConfigSchema = z.object({
   pointsWin: z.number().min(0).max(10),
   pointsDraw: z.number().min(0).max(10),
@@ -41,17 +41,8 @@ export async function GET(
     const { groupId } = await params;
     const user = await requireAuth();
 
-    // Check if user is member of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user);
 
-    if (!membership) {
-      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-    }
-
-    // Get scoring config
     const [config] = await sql`
       SELECT
         points_win as "pointsWin",
@@ -66,21 +57,12 @@ export async function GET(
       WHERE group_id = ${groupId}
     `;
 
-    if (config) {
-      return NextResponse.json({ config });
-    } else {
-      // Return default config (standard football scoring)
-      return NextResponse.json({ config: DEFAULT_CONFIG });
-    }
+    return NextResponse.json({ config: config || DEFAULT_CONFIG });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error getting scoring config");
-    return NextResponse.json(
-      { error: "Erro ao buscar configuração de pontuação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error getting scoring config",
+      fallbackMessage: "Erro ao buscar configuraÃ§Ã£o de pontuaÃ§Ã£o",
+    });
   }
 }
 
@@ -94,32 +76,21 @@ export async function PATCH(
     const user = await requireAuth();
 
     const body = await request.json();
-
-    // Validate config
     const validation = scoringConfigSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Configuração inválida", details: validation.error.flatten() },
+        { error: "ConfiguraÃ§Ã£o invÃ¡lida", details: validation.error.flatten() },
         { status: 400 }
       );
     }
 
     const config = validation.data;
 
-    // Check if user is admin of the group
-    const [membership] = await sql`
-      SELECT role FROM group_members
-      WHERE group_id = ${groupId} AND user_id = ${user.id}
-    `;
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem alterar configuraÃ§Ãµes de pontuaÃ§Ã£o",
+    });
 
-    if (!membership || membership.role !== "admin") {
-      return NextResponse.json(
-        { error: "Apenas admins podem alterar configurações de pontuação" },
-        { status: 403 }
-      );
-    }
-
-    // Upsert scoring config
     await sql`
       INSERT INTO scoring_configs (
         group_id,
@@ -163,13 +134,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, config });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error saving scoring config");
-    return NextResponse.json(
-      { error: "Erro ao salvar configuração de pontuação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error saving scoring config",
+      fallbackMessage: "Erro ao salvar configuraÃ§Ã£o de pontuaÃ§Ã£o",
+    });
   }
 }

@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import { rsvpSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
+import { requireEventAccess } from "@/lib/event-access";
+import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -20,31 +22,24 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.flatten() },
+        { error: "Dados invÃ¡lidos", details: validation.error.flatten() },
         { status: 400 }
       );
     }
 
     const { status, role, preferredPosition, secondaryPosition } = validation.data;
 
-    // Validate that positions are different if both are provided
     if (preferredPosition && secondaryPosition && preferredPosition === secondaryPosition) {
       return NextResponse.json(
-        { error: "As posições preferida e secundária devem ser diferentes" },
+        { error: "As posiÃ§Ãµes preferida e secundÃ¡ria devem ser diferentes" },
         { status: 400 }
       );
     }
 
-    // Get event details
-    const [event] = await sql`
-      SELECT * FROM events WHERE id = ${eventId}
-    `;
+    const { event } = await requireEventAccess(eventId, user, {
+      allowSystemAdmin: false,
+    });
 
-    if (!event) {
-      return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
-    }
-
-    // Check if event is in a valid state for RSVP
     if (event.status === "canceled") {
       return NextResponse.json(
         { error: "Este evento foi cancelado" },
@@ -54,12 +49,11 @@ export async function POST(
 
     if (event.status === "finished") {
       return NextResponse.json(
-        { error: "Este evento já foi finalizado" },
+        { error: "Este evento jÃ¡ foi finalizado" },
         { status: 400 }
       );
     }
 
-    // Check if list is open
     if (event.list_opens_at && status === "yes") {
       const listOpensAt = new Date(event.list_opens_at);
       if (new Date() < listOpensAt) {
@@ -76,20 +70,6 @@ export async function POST(
       }
     }
 
-    // Check if user is member of the group
-    const [membership] = await sql`
-      SELECT * FROM group_members
-      WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-    `;
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Você não é membro deste grupo" },
-        { status: 403 }
-      );
-    }
-
-    // Count current confirmations (excluding the current user to avoid double-counting)
     const [counts] = await sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
@@ -100,7 +80,6 @@ export async function POST(
 
     let finalStatus = status;
 
-    // Check if we need to put user in waitlist
     if (status === "yes") {
       const totalPlayers = parseInt(counts.gk_count) + parseInt(counts.line_count);
       const gkCount = parseInt(counts.gk_count);
@@ -112,17 +91,14 @@ export async function POST(
       }
     }
 
-    // Get current attendance status to track self-removal
     const [currentAttendance] = await sql`
       SELECT status FROM event_attendance
       WHERE event_id = ${eventId} AND user_id = ${user.id}
     `;
 
-    // Determine if this is a self-removal (yes → no) or re-confirmation (no → yes)
-    const isSelfRemoval = currentAttendance?.status === 'yes' && status === 'no';
-    const isReconfirmation = currentAttendance?.status === 'no' && status === 'yes';
+    const isSelfRemoval = currentAttendance?.status === "yes" && status === "no";
+    const isReconfirmation = currentAttendance?.status === "no" && status === "yes";
 
-    // Upsert attendance
     const [attendance] = await sql`
       INSERT INTO event_attendance (event_id, user_id, role, status, preferred_position, secondary_position, removed_by_self_at)
       VALUES (
@@ -149,11 +125,7 @@ export async function POST(
       RETURNING *
     `;
 
-    // Only promote from waitlist when a confirmed user leaves (self-removal)
-    // This ensures waitlist promotion only happens when a spot actually opens up
     if (isSelfRemoval && event.waitlist_enabled) {
-      // Find the first person in waitlist who can fill the opened spot
-      // Prioritize by order_of_arrival, then by created_at
       const waitlistPlayers = await sql`
         SELECT * FROM event_attendance
         WHERE event_id = ${eventId} AND status = 'waitlist'
@@ -161,7 +133,6 @@ export async function POST(
       `;
 
       for (const waitlistPlayer of waitlistPlayers) {
-        // Re-check current counts to ensure we have a spot
         const [updatedCounts] = await sql`
           SELECT
             COUNT(*) FILTER (WHERE status = 'yes' AND role = 'gk') as gk_count,
@@ -175,10 +146,8 @@ export async function POST(
 
         let canConfirm = false;
         if (waitlistPlayer.role === "gk") {
-          // GK can only be promoted if GK slots are available
           canConfirm = gkCount < event.max_goalkeepers && totalPlayers < event.max_players;
         } else {
-          // Line player can be promoted if total slots are available
           canConfirm = totalPlayers < event.max_players;
         }
 
@@ -188,7 +157,6 @@ export async function POST(
             SET status = 'yes', updated_at = NOW()
             WHERE id = ${waitlistPlayer.id}
           `;
-          // Only promote one player per self-removal
           break;
         }
       }
@@ -201,13 +169,9 @@ export async function POST(
 
     return NextResponse.json({ attendance });
   } catch (error) {
-    if (error instanceof Error && error.message === "Não autenticado") {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
-    logger.error(error, "Error updating RSVP");
-    return NextResponse.json(
-      { error: "Erro ao atualizar confirmação" },
-      { status: 500 }
-    );
+    return handleRouteError(error, {
+      logMessage: "Error updating RSVP",
+      fallbackMessage: "Erro ao atualizar confirmaÃ§Ã£o",
+    });
   }
 }

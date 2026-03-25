@@ -12,14 +12,11 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userName={user.name || "Usuário"} />
+      <DashboardHeader userName={user.name || "Usuario"} systemRole={user.systemRole} />
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-2xl font-bold text-navy mb-6">Meu Perfil</h1>
-        <ProfileForm
-          initialName={user.name || ""}
-          email={user.email || ""}
-        />
+      <main className="container mx-auto max-w-2xl px-4 py-8">
+        <h1 className="mb-6 text-2xl font-bold text-navy">Meu Perfil</h1>
+        <ProfileForm initialName={user.name || ""} email={user.email || ""} />
       </main>
     </div>
   );

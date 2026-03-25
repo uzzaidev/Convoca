@@ -12,7 +12,7 @@ export default async function NewGroupPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userName={user.name || user.email} />
+      <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">

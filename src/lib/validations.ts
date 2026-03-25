@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { groupStatusValues } from "@/lib/group-status";
 
 export const createGroupSchema = z.object({
-  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+  name: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
   description: z.string().optional(),
   privacy: z.enum(["private", "public"]).default("private"),
 });
@@ -63,15 +64,26 @@ export const playerRatingSchema = z.object({
 });
 
 export const createSeasonSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").max(100),
+  name: z.string().min(1, "Nome e obrigatorio").max(100),
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
 });
 
 export const updateSeasonSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").max(100).optional(),
+  name: z.string().min(1, "Nome e obrigatorio").max(100).optional(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
+});
+
+export const updateGroupStatusSchema = z.object({
+  status: z.enum([groupStatusValues[1], groupStatusValues[2], groupStatusValues[3]], {
+    errorMap: () => ({ message: "Status invalido" }),
+  }),
+  reason: z
+    .string()
+    .trim()
+    .max(500, "Motivo deve ter no maximo 500 caracteres")
+    .optional(),
 });
 
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
@@ -82,3 +94,4 @@ export type EventActionInput = z.infer<typeof eventActionSchema>;
 export type PlayerRatingInput = z.infer<typeof playerRatingSchema>;
 export type CreateSeasonInput = z.infer<typeof createSeasonSchema>;
 export type UpdateSeasonInput = z.infer<typeof updateSeasonSchema>;
+export type UpdateGroupStatusInput = z.infer<typeof updateGroupStatusSchema>;

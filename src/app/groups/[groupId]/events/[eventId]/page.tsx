@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils";
 import { Calendar, Clock, MapPin, Users, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { EventTabs } from "@/components/events/event-tabs";
+import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 
 type RouteParams = {
   params: Promise<{ groupId: string; eventId: string }>;
@@ -91,17 +92,18 @@ export default async function EventDetailPage({ params }: RouteParams) {
   const event = eventResult[0];
 
   // Verificar se o usuário é membro do grupo
-  const membershipResult = await sql`
-    SELECT role FROM group_members
-    WHERE group_id = ${groupId} AND user_id = ${user.id}
-  `;
+  let isAdmin = false;
 
-  if (membershipResult.length === 0) {
-    redirect("/dashboard");
+  try {
+    const groupAccess = await requireGroupAccess(groupId, user);
+    isAdmin = groupAccess.isSystemAdmin || groupAccess.userRole === "admin";
+  } catch (error) {
+    if (error instanceof GroupAccessError) {
+      redirect(`/groups/${groupId}`);
+    }
+
+    throw error;
   }
-
-  const membership = membershipResult[0];
-  const isAdmin = membership.role === "admin";
 
   // Buscar times e jogadores
   const teams = await sql`
@@ -185,7 +187,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userName={user.name || user.email} />
+      <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">

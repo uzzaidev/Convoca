@@ -10,6 +10,9 @@ import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
 import { Settings, Plus, ChevronLeft, DollarSign } from "lucide-react";
+import { getGroupAccessContext } from "@/lib/group-access";
+import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import { GroupStatusNotice } from "@/components/groups/group-status-notice";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -100,23 +103,54 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
   const { seasonId } = await searchParams;
 
   // Buscar informações do grupo
-  const groupResult = await sql`
-    SELECT
-      g.id,
-      g.name,
-      g.description,
-      g.photo_url,
-      gm.role as user_role
-    FROM groups g
-    INNER JOIN group_members gm ON g.id = gm.group_id
-    WHERE g.id = ${groupId} AND gm.user_id = ${user.id}
-  `;
+  const group = await getGroupAccessContext(groupId, user);
 
-  if (groupResult.length === 0) {
+  if (!group || (!group.userRole && !group.isSystemAdmin)) {
     redirect("/dashboard");
   }
 
-  const group = groupResult[0];
+  if (group.status !== "active" && !group.isSystemAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
+
+        <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+          <div className="container mx-auto max-w-7xl px-4 py-8">
+            <div className="mb-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Voltar para o dashboard
+                </Button>
+              </Link>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
+                <h1 className="mb-2 text-4xl font-bold">{group.name}</h1>
+                {group.description && <p className="text-lg text-gray-200">{group.description}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <GroupStatusBadge status={group.status} className="border-white/20 bg-white/10 text-white" />
+                {group.userRole && (
+                  <Badge
+                    variant={group.userRole === "admin" ? "default" : "secondary"}
+                    className="border-white/30 bg-white/20 text-white"
+                  >
+                    {group.userRole === "admin" ? "Admin" : "Membro"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto max-w-4xl px-4 py-8">
+          <GroupStatusNotice status={group.status} reason={group.statusReason} />
+        </div>
+      </div>
+    );
+  }
 
   // Buscar próximos eventos do grupo
   const upcomingEvents = await sql`
@@ -578,7 +612,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userName={user.name || user.email} />
+      <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
@@ -600,10 +634,14 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={group.user_role === "admin" ? "default" : "secondary"} className="bg-white/20 border-white/30 text-white">
-                {group.user_role === "admin" ? "Admin" : "Membro"}
+              <GroupStatusBadge status={group.status} className="border-white/20 bg-white/10 text-white" />
+              <Badge
+                variant={group.userRole === "admin" || group.isSystemAdmin ? "default" : "secondary"}
+                className="bg-white/20 border-white/30 text-white"
+              >
+                {group.isSystemAdmin ? "Admin Sistema" : group.userRole === "admin" ? "Admin" : "Membro"}
               </Badge>
-              {group.user_role === "admin" && (
+              {(group.userRole === "admin" || group.isSystemAdmin) && (
                 <>
                   <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white">
                     <Link href={`/groups/${groupId}/events/new`}>
@@ -637,7 +675,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           <UpcomingEventsCard
             events={upcomingEvents}
             groupId={groupId}
-            userRole={group.user_role}
+            userRole={group.isSystemAdmin ? "admin" : group.userRole || "member"}
           />
         </div>
 

@@ -1,8 +1,8 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { EventForm } from "@/components/events/event-form";
+import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -17,46 +17,33 @@ export default async function NewEventPage({ params }: RouteParams) {
 
   const { groupId } = await params;
 
-  // Check if user is admin of the group
-  const groupResult = await sql`
-    SELECT
-      g.id,
-      g.name,
-      gm.role as user_role
-    FROM groups g
-    INNER JOIN group_members gm ON g.id = gm.group_id
-    WHERE g.id = ${groupId} AND gm.user_id = ${user.id}
-  `;
+  try {
+    const group = await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem criar eventos",
+    });
 
-  if (groupResult.length === 0) {
-    redirect("/dashboard");
-  }
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
 
-  const group = groupResult[0] as {
-    id: string;
-    name: string;
-    user_role: string;
-  };
+        <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
+          <div className="container mx-auto max-w-2xl px-4 py-12">
+            <h1 className="mb-2 text-4xl font-bold">Criar Novo Evento</h1>
+            <p className="text-lg text-gray-200">{group.name}</p>
+          </div>
+        </div>
 
-  if (group.user_role !== "admin") {
-    redirect(`/groups/${groupId}`);
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userName={user.name || user.email} />
-
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
-        <div className="container mx-auto px-4 py-12 max-w-2xl">
-          <h1 className="text-4xl font-bold mb-2">Criar Novo Evento</h1>
-          <p className="text-gray-200 text-lg">{group.name}</p>
+        <div className="container mx-auto max-w-2xl px-4 py-8">
+          <EventForm groupId={groupId} mode="create" />
         </div>
       </div>
+    );
+  } catch (error) {
+    if (error instanceof GroupAccessError) {
+      redirect(`/groups/${groupId}`);
+    }
 
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <EventForm groupId={groupId} mode="create" />
-      </div>
-    </div>
-  );
+    throw error;
+  }
 }

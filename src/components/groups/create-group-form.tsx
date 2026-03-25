@@ -54,11 +54,10 @@ export function CreateGroupForm() {
       }
 
       toast({
-        title: "Grupo criado com sucesso!",
-        description: `Código de convite: ${data.group.inviteCode}`,
+        title: "Grupo enviado para aprovacao",
+        description: `Codigo de convite: ${data.group.inviteCode}`,
       });
 
-      // Redirect to the new group page
       router.push(`/groups/${data.group.id}`);
     } catch (error) {
       toast({
@@ -75,10 +74,8 @@ export function CreateGroupForm() {
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle>Informações do Grupo</CardTitle>
-          <CardDescription>
-            Preencha os dados do seu novo grupo de futebol
-          </CardDescription>
+          <CardTitle>Informacoes do Grupo</CardTitle>
+          <CardDescription>Preencha os dados do seu novo grupo de futebol</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -87,23 +84,19 @@ export function CreateGroupForm() {
               id="name"
               placeholder="Ex: Pelada do Fim de Semana"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               disabled={isLoading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description">Descricao</Label>
             <Textarea
               id="description"
               placeholder="Descreva seu grupo de futebol..."
               value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               disabled={isLoading}
               rows={4}
             />
@@ -113,9 +106,7 @@ export function CreateGroupForm() {
             <Label htmlFor="privacy">Privacidade</Label>
             <Select
               value={formData.privacy}
-              onValueChange={(value) =>
-                setFormData({ ...formData, privacy: value })
-              }
+              onValueChange={(value) => setFormData({ ...formData, privacy: value })}
               disabled={isLoading}
             >
               <SelectTrigger id="privacy">
@@ -123,18 +114,13 @@ export function CreateGroupForm() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="private">Privado (somente com convite)</SelectItem>
-                <SelectItem value="public">Público</SelectItem>
+                <SelectItem value="public">Publico</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
         <CardFooter className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isLoading}>

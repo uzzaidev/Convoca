@@ -35,6 +35,7 @@ CREATE TABLE users (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   email_verified TIMESTAMP,
+  system_role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (system_role IN ('user', 'system_admin')),
   password_hash TEXT,
   image TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
@@ -48,6 +49,11 @@ CREATE TABLE groups (
   privacy VARCHAR(20) DEFAULT 'private' CHECK (privacy IN ('private', 'public')),
   photo_url TEXT,
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive', 'rejected')),
+  status_reason TEXT,
+  status_updated_at TIMESTAMP DEFAULT NOW(),
+  status_updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMP DEFAULT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

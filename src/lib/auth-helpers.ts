@@ -1,21 +1,29 @@
 import { auth } from "./auth";
 import { sql } from "@/db/client";
+import { type SystemRole } from "@/lib/group-status";
+
+export type AuthenticatedUser = {
+  id: string;
+  email: string;
+  name: string;
+  image: string | null;
+  systemRole: SystemRole;
+};
 
 /**
- * Helper para obter o usuário autenticado nas rotas da API
- * Retorna o usuário com informações do banco de dados
+ * Helper para obter o usuario autenticado nas rotas da API
+ * Retorna o usuario com informacoes do banco de dados
  */
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
   const session = await auth();
-  
+
   if (!session || !session.user) {
     return null;
   }
 
-  // Buscar informações adicionais do usuário no banco
   try {
     const dbUser = await sql`
-      SELECT id, name, email, image, created_at, updated_at
+      SELECT id, name, email, image, system_role, created_at, updated_at
       FROM users
       WHERE id = ${session.user.id}
     `;
@@ -26,27 +34,37 @@ export async function getCurrentUser() {
         email: dbUser[0].email,
         name: dbUser[0].name,
         image: dbUser[0].image,
+        systemRole: (dbUser[0].system_role as SystemRole | null) ?? "user",
       };
     }
 
-    // Se o usuário não existe no banco (não deveria acontecer), retornar null
     return null;
   } catch (error) {
-    console.error("Erro ao buscar usuário no banco:", error);
+    console.error("Erro ao buscar usuario no banco:", error);
     return null;
   }
 }
 
 /**
- * Helper para verificar se há um usuário autenticado
- * Lança erro 401 se não houver usuário autenticado
+ * Helper para verificar se ha um usuario autenticado
+ * Lanca erro 401 se nao houver usuario autenticado
  */
 export async function requireAuth() {
   const user = await getCurrentUser();
-  
+
   if (!user) {
-    throw new Error("Não autenticado");
+    throw new Error("NÃ£o autenticado");
   }
-  
+
+  return user;
+}
+
+export async function requireSystemAdmin() {
+  const user = await requireAuth();
+
+  if (user.systemRole !== "system_admin") {
+    throw new Error("Sem permissao de administrador do sistema");
+  }
+
   return user;
 }

@@ -39,6 +39,10 @@ export function PendingPaymentsCard({ userId }: { userId: string }) {
           const allCharges: PendingCharge[] = [];
 
           for (const group of groupsData.groups || []) {
+            if (group.status && group.status !== "active") {
+              continue;
+            }
+
             const chargesRes = await fetch(
               `/api/groups/${group.id}/charges?status=pending&userId=${userId}`
             );

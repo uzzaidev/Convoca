@@ -11,6 +11,7 @@ import { EventRsvpForm } from "@/components/events/event-rsvp-form";
 import { EventTabs } from "@/components/events/event-tabs";
 import { AdminPlayerManager } from "@/components/events/admin-player-manager";
 import Link from "next/link";
+import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 
 type RouteParams = {
   params: Promise<{ eventId: string }>;
@@ -94,17 +95,18 @@ export default async function EventRsvpPage({ params }: RouteParams) {
   const event = eventResult[0];
 
   // Verificar se o usuário é membro do grupo
-  const membershipResult = await sql`
-    SELECT role FROM group_members
-    WHERE group_id = ${event.group_id} AND user_id = ${user.id}
-  `;
+  let isAdmin = false;
 
-  if (membershipResult.length === 0) {
-    redirect("/dashboard");
+  try {
+    const groupAccess = await requireGroupAccess(event.group_id, user);
+    isAdmin = groupAccess.isSystemAdmin || groupAccess.userRole === "admin";
+  } catch (error) {
+    if (error instanceof GroupAccessError) {
+      redirect(`/groups/${event.group_id}`);
+    }
+
+    throw error;
   }
-
-  const membership = membershipResult[0];
-  const isAdmin = membership.role === "admin";
 
   // Buscar times e jogadores
   const teams = await sql`
@@ -188,7 +190,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-background to-green-50/30 dark:from-green-950/20 dark:via-background dark:to-green-950/10">
-      <DashboardHeader userName={user.name || user.email} />
+      <DashboardHeader userName={user.name || user.email} systemRole={user.systemRole} />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Botão voltar */}
         <div className="mb-6">

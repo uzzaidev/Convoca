@@ -18,7 +18,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 const MODELS_ENDPOINT = 'https://models.github.ai/inference/chat/completions';
 const MODEL = 'openai/gpt-4.1-nano';
-const MAX_DIFF_CHARS = 60_000;
+const MAX_DIFF_CHARS = 16_000; // ~4k tokens — mantém total do prompt abaixo de 8k tokens
 
 async function main() {
   const token = process.env.GH_MODELS_TOKEN;

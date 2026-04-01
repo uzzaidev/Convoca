@@ -113,16 +113,19 @@ export async function syncSubscriptionStatus(
   `;
 
   // Se cancelou ou falhou, inativar o grupo
-  if (["canceled", "unpaid", "incomplete_expired"].includes(status)) {
+  if (["canceled", "unpaid", "incomplete_expired", "past_due"].includes(status)) {
     const [sub] = await sql`
       SELECT group_id FROM group_subscriptions
       WHERE stripe_subscription_id = ${stripeSubscriptionId}
     `;
     if (sub) {
+      const reason = status === "past_due"
+        ? "Pagamento pendente — atualize seu método de pagamento"
+        : "Assinatura cancelada ou pagamento não realizado";
       await sql`
         UPDATE groups
         SET status = 'inactive',
-            status_reason = 'Assinatura cancelada ou pagamento não realizado',
+            status_reason = ${reason},
             status_updated_at = NOW()
         WHERE id = ${sub.group_id}
       `;

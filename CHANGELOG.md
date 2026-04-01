@@ -5,6 +5,13 @@ Gerado automaticamente por IA a cada push no `main`.
 ## 2026-04-01
 
 ### feat
+- Implementada gestão de cupons e promotion codes no sistema, incluindo criação, listagem e ativação/desativação via API Stripe.
+  - Arquivos: `src/app/api/admin/coupons/route.ts`, `src/app/api/admin/coupons/[couponId]/route.ts`, `src/components/admin/admin-coupons-tab.tsx`
+  - Confiança: alta
+
+## 2026-04-01
+
+### feat
 - Implementada gestão de assinaturas Stripe para grupos, incluindo criação de sessões de checkout, portal de pagamento e sincronização de status
   - Arquivos: `src/app/api/stripe/checkout/route.ts`, `src/app/api/stripe/portal/route.ts`, `src/app/api/stripe/subscription/[groupId]/route.ts`, `src/app/api/stripe/webhook/route.ts`
   - Confiança: alta

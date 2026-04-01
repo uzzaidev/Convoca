@@ -4,6 +4,13 @@ Gerado automaticamente por IA a cada push no `main`.
 
 ## 2026-04-01
 
+### feat
+- Implementada gestão de assinaturas e cobranças para grupos, incluindo visualização de planos, assinatura, faturas e cobrança.  
+  - Arquivos: `src/app/api/groups/[groupId]/billing/route.ts`, `src/app/api/admin/plans/route.ts`, `src/app/api/admin/plans/[planId]/route.ts`, `src/app/api/admin/groups/require-payment/route.ts`, `src/app/admin/page.tsx`  
+  - Confiança: alta
+
+## 2026-04-01
+
 ### fix
 - Atualizado URLs de sucesso e cancelamento na sessão de checkout do Stripe para apontar para `/groups/` ao invés de `/dashboard/groups/`.
   - Arquivos: `src/app/api/groups/route.ts`, `src/app/api/stripe/checkout/route.ts`

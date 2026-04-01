@@ -23,11 +23,13 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { PlanSelector } from "@/components/groups/plan-selector";
 
 export function CreateGroupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -44,7 +46,10 @@ export function CreateGroupForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          planId: selectedPlanId || undefined,
+        }),
       });
 
       const data = await response.json();
@@ -128,6 +133,12 @@ export function CreateGroupForm() {
               </SelectContent>
             </Select>
           </div>
+
+          <PlanSelector
+            onSelect={setSelectedPlanId}
+            selectedPlanId={selectedPlanId}
+            loading={isLoading}
+          />
         </CardContent>
         <CardFooter className="flex gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>

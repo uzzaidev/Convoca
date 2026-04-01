@@ -99,10 +99,27 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
     const item = subscription.items.data[0];
 
+    // Resolver plan_id a partir dos metadados ou do stripe_price_id
+    const metadataPlanId = session.metadata?.plan_id || subscription.metadata?.plan_id;
+    const stripePriceId = item?.price?.id || null;
+
+    let planId: string | null = null;
+    if (metadataPlanId) {
+      planId = metadataPlanId;
+    } else if (stripePriceId) {
+      const [matchedPlan] = await sql`
+        SELECT id FROM subscription_plans
+        WHERE stripe_price_id = ${stripePriceId}
+        LIMIT 1
+      `;
+      if (matchedPlan) planId = matchedPlan.id;
+    }
+
     await sql`
       INSERT INTO group_subscriptions (
         group_id, user_id, stripe_subscription_id, stripe_customer_id,
-        status, current_period_start, current_period_end, trial_end
+        status, current_period_start, current_period_end, trial_end,
+        plan_id, stripe_price_id
       ) VALUES (
         ${groupId},
         ${userId},
@@ -111,7 +128,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         ${subscription.status},
         ${item ? new Date(item.current_period_start * 1000).toISOString() : null}::timestamp,
         ${item ? new Date(item.current_period_end * 1000).toISOString() : null}::timestamp,
-        ${subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null}::timestamp
+        ${subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null}::timestamp,
+        ${planId},
+        ${stripePriceId}
       )
     `;
   }

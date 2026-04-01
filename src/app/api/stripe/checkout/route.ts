@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
     const session = await getStripe().checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
+      allow_promotion_codes: true,
       line_items: [
         {
           price: STRIPE_PRICE_ID,

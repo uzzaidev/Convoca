@@ -4,6 +4,8 @@ import { sql } from "@/db/client";
 import { createGroupSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
 import { generateInviteCode } from "@/lib/utils";
+import { getStripe, STRIPE_PRICE_ID, TRIAL_PERIOD_DAYS } from "@/lib/stripe";
+import { getOrCreateStripeCustomer } from "@/lib/subscription";
 
 export async function GET() {
   try {
@@ -54,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     const { name, description, privacy } = validation.data;
 
+    // Criar grupo com status pending_payment
     const [group] = await sql`
       INSERT INTO groups (
         name,
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
         ${description || null},
         ${privacy},
         ${user.id},
-        'pending',
+        'pending_payment',
         NOW(),
         ${user.id}
       )
@@ -92,11 +95,41 @@ export async function POST(request: NextRequest) {
       VALUES (${group.id}, ${inviteCode}, ${user.id})
     `;
 
-    logger.info({ groupId: group.id, userId: user.id }, "Group created");
+    // Criar Stripe Checkout Session para pagamento do grupo
+    const customerId = await getOrCreateStripeCustomer(user.id);
+    const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+    const checkoutSession = await getStripe().checkout.sessions.create({
+      customer: customerId,
+      mode: "subscription",
+      line_items: [
+        {
+          price: STRIPE_PRICE_ID,
+          quantity: 1,
+        },
+      ],
+      subscription_data: {
+        trial_period_days: TRIAL_PERIOD_DAYS,
+        metadata: {
+          group_id: group.id,
+          user_id: user.id,
+        },
+      },
+      metadata: {
+        group_id: group.id,
+        user_id: user.id,
+      },
+      success_url: `${appUrl}/dashboard/groups/${group.id}?payment=success`,
+      cancel_url: `${appUrl}/dashboard/groups/${group.id}?payment=canceled`,
+      locale: "pt-BR",
+    });
+
+    logger.info({ groupId: group.id, userId: user.id }, "Group created with checkout session");
 
     return NextResponse.json(
       {
         group: { ...group, inviteCode },
+        checkoutUrl: checkoutSession.url,
       },
       { status: 201 }
     );

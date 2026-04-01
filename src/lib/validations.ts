@@ -76,7 +76,7 @@ export const updateSeasonSchema = z.object({
 });
 
 export const updateGroupStatusSchema = z.object({
-  status: z.enum([groupStatusValues[1], groupStatusValues[2], groupStatusValues[3]], {
+  status: z.enum(["pending_payment", "active", "inactive", "rejected"], {
     errorMap: () => ({ message: "Status invalido" }),
   }),
   reason: z

@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "brv": {
+      "command": "brv",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

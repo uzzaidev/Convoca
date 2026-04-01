@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
+import { AdminCouponsTab } from "@/components/admin/admin-coupons-tab";
 import { formatDate } from "@/lib/utils";
 import { type GroupStatus } from "@/lib/group-status";
 
@@ -140,9 +141,10 @@ export function AdminDashboard({
       </div>
 
       <Tabs defaultValue="groups" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="groups">Grupos</TabsTrigger>
           <TabsTrigger value="users">Contas</TabsTrigger>
+          <TabsTrigger value="coupons">Cupons</TabsTrigger>
         </TabsList>
 
         <TabsContent value="groups" className="mt-6">
@@ -277,6 +279,10 @@ export function AdminDashboard({
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="coupons" className="mt-6">
+          <AdminCouponsTab />
         </TabsContent>
       </Tabs>
     </div>

@@ -53,8 +53,18 @@ export function CreateGroupForm() {
         throw new Error(data.error || "Erro ao criar grupo");
       }
 
+      // Redirecionar para o Stripe Checkout se tiver URL de pagamento
+      if (data.checkoutUrl) {
+        toast({
+          title: "Grupo criado com sucesso!",
+          description: "Redirecionando para o pagamento...",
+        });
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
       toast({
-        title: "Grupo enviado para aprovacao",
+        title: "Grupo criado com sucesso!",
         description: `Codigo de convite: ${data.group.inviteCode}`,
       });
 

@@ -4,6 +4,14 @@ Gerado automaticamente por IA a cada push no `main`.
 
 ## 2026-04-01
 
+### fix
+- Atualizado URLs de sucesso e cancelamento na sessão de checkout do Stripe para apontar para `/groups/` ao invés de `/dashboard/groups/`.
+  - Arquivos: `src/app/api/groups/route.ts`, `src/app/api/stripe/checkout/route.ts`
+  - Evidência: alteração nas linhas de `success_url` e `cancel_url`
+  - Confiança: alta
+
+## 2026-04-01
+
 ### feat
 - Implementado painel financeiro no dashboard de administração, incluindo métricas de saldo, receita mensal, assinaturas, cupons e clientes vinculados.  
   - Arquivos: `src/components/admin/admin-finance-tab.tsx`, `src/components/admin/admin-dashboard.tsx`  

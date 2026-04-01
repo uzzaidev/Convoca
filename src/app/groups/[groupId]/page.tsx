@@ -13,6 +13,7 @@ import { Settings, Plus, ChevronLeft, DollarSign } from "lucide-react";
 import { getGroupAccessContext } from "@/lib/group-access";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
+import { PaymentButton } from "@/components/groups/payment-button";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -147,6 +148,14 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
 
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <GroupStatusNotice status={group.status} reason={group.statusReason} />
+          {group.status === "pending_payment" && group.userRole === "admin" && (
+            <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                Para ativar o grupo, realize o pagamento da assinatura.
+              </p>
+              <PaymentButton groupId={group.id} />
+            </div>
+          )}
         </div>
       </div>
     );

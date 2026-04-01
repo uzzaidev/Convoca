@@ -49,6 +49,10 @@ export default async function AdminPage() {
         creator.name as creator_name,
         creator.email as creator_email,
         COUNT(member_user.id)::int as member_count,
+        EXISTS(
+          SELECT 1 FROM group_subscriptions gs
+          WHERE gs.group_id = g.id AND gs.status IN ('active', 'trialing')
+        ) as has_subscription,
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -110,6 +114,7 @@ export default async function AdminPage() {
       creatorName: group.creator_name as string | null,
       creatorEmail: group.creator_email as string | null,
       memberCount: group.member_count as number,
+      hasSubscription: group.has_subscription as boolean,
       members: (group.members as GroupMemberAudit[]) || [],
     }));
 

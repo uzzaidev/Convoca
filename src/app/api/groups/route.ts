@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description, privacy } = validation.data;
+    const { name, description, privacy, planId } = validation.data;
 
     // Criar grupo com status pending_payment
     const [group] = await sql`
@@ -99,26 +99,46 @@ export async function POST(request: NextRequest) {
     const customerId = await getOrCreateStripeCustomer(user.id);
     const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
+    // Resolver plano: por planId ou fallback para STRIPE_PRICE_ID
+    let priceId = STRIPE_PRICE_ID;
+    let trialDays = TRIAL_PERIOD_DAYS;
+    let resolvedPlanId: string | null = null;
+
+    if (planId) {
+      const [plan] = await sql`
+        SELECT id, stripe_price_id, trial_days
+        FROM subscription_plans
+        WHERE id = ${planId} AND is_active = true
+      `;
+      if (plan) {
+        priceId = plan.stripe_price_id;
+        trialDays = plan.trial_days ?? TRIAL_PERIOD_DAYS;
+        resolvedPlanId = plan.id;
+      }
+    }
+
     const checkoutSession = await getStripe().checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
       allow_promotion_codes: true,
       line_items: [
         {
-          price: STRIPE_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
       subscription_data: {
-        trial_period_days: TRIAL_PERIOD_DAYS,
+        trial_period_days: trialDays,
         metadata: {
           group_id: group.id,
           user_id: user.id,
+          plan_id: resolvedPlanId || "",
         },
       },
       metadata: {
         group_id: group.id,
         user_id: user.id,
+        plan_id: resolvedPlanId || "",
       },
       success_url: `${appUrl}/groups/${group.id}?payment=success`,
       cancel_url: `${appUrl}/groups/${group.id}?payment=canceled`,

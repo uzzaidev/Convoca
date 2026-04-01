@@ -8,6 +8,7 @@ import { EventSettingsForm } from "@/components/groups/event-settings-form";
 import { ScoringConfigForm } from "@/components/groups/scoring-config-form";
 import { RecurrencesManager } from "@/components/groups/recurrences-manager";
 import { SeasonManager } from "@/components/seasons/season-manager";
+import { GroupBillingTab } from "@/components/groups/group-billing-tab";
 
 type Group = {
   id: string;
@@ -52,7 +53,7 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full grid-cols-7">
+      <TabsList className="grid w-full grid-cols-8">
         <TabsTrigger value="info">Info</TabsTrigger>
         <TabsTrigger value="events">Eventos</TabsTrigger>
         <TabsTrigger value="recurrences">Peladas</TabsTrigger>
@@ -60,6 +61,7 @@ export function GroupSettingsTabs({
         <TabsTrigger value="seasons">Temporadas</TabsTrigger>
         <TabsTrigger value="invites">Convites</TabsTrigger>
         <TabsTrigger value="members">Membros</TabsTrigger>
+        <TabsTrigger value="billing">Assinatura</TabsTrigger>
       </TabsList>
       <TabsContent value="info" className="mt-6">
         <GroupInfoForm group={group} />
@@ -85,6 +87,9 @@ export function GroupSettingsTabs({
           initialMembers={members}
           currentUserId={currentUserId}
         />
+      </TabsContent>
+      <TabsContent value="billing" className="mt-6">
+        <GroupBillingTab groupId={group.id} />
       </TabsContent>
     </Tabs>
   );

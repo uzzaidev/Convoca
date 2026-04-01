@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { AdminCouponsTab } from "@/components/admin/admin-coupons-tab";
 import { AdminFinanceTab } from "@/components/admin/admin-finance-tab";
+import { AdminPlansTab } from "@/components/admin/admin-plans-tab";
 import { formatDate } from "@/lib/utils";
 import { type GroupStatus } from "@/lib/group-status";
 
@@ -30,6 +31,7 @@ type AdminGroup = {
   creatorName: string | null;
   creatorEmail: string | null;
   memberCount: number;
+  hasSubscription: boolean;
   members: Array<{
     id: string;
     name: string;
@@ -130,6 +132,43 @@ export function AdminDashboard({
     }
   }
 
+  async function requirePayment(groupId: string) {
+    if (!window.confirm("Tem certeza que deseja cobrar pagamento deste grupo? O grupo ficará inativo até o administrador do grupo realizar o pagamento.")) {
+      return;
+    }
+
+    try {
+      setLoadingGroupId(groupId);
+
+      const response = await fetch("/api/admin/groups/require-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ groupId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao cobrar pagamento");
+      }
+
+      toast({
+        title: "Pagamento solicitado",
+        description: "O grupo foi alterado para 'Aguardando Pagamento'. O admin do grupo precisará realizar o pagamento.",
+      });
+
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao cobrar pagamento",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingGroupId(null);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
@@ -142,9 +181,10 @@ export function AdminDashboard({
       </div>
 
       <Tabs defaultValue="groups" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="groups">Grupos</TabsTrigger>
           <TabsTrigger value="users">Contas</TabsTrigger>
+          <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="coupons">Cupons</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
         </TabsList>
@@ -193,6 +233,12 @@ export function AdminDashboard({
                       </TableCell>
                       <TableCell>
                         <GroupStatusBadge status={group.status} />
+                        {group.status === "active" && group.hasSubscription && (
+                          <Badge className="ml-1 bg-green-100 text-green-800 border-green-200" variant="outline">Stripe</Badge>
+                        )}
+                        {group.status === "active" && !group.hasSubscription && (
+                          <Badge className="ml-1 bg-amber-100 text-amber-800 border-amber-200" variant="outline">Sem assinatura</Badge>
+                        )}
                       </TableCell>
                       <TableCell>{group.memberCount}</TableCell>
                       <TableCell>{formatDate(group.createdAt)}</TableCell>
@@ -225,6 +271,16 @@ export function AdminDashboard({
                               disabled={loadingGroupId === group.id}
                             >
                               Reprovar
+                            </Button>
+                          )}
+                          {group.status === "active" && !group.hasSubscription && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => requirePayment(group.id)}
+                              disabled={loadingGroupId === group.id}
+                            >
+                              Cobrar Pagamento
                             </Button>
                           )}
                         </div>
@@ -281,6 +337,10 @@ export function AdminDashboard({
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="plans" className="mt-6">
+          <AdminPlansTab />
         </TabsContent>
 
         <TabsContent value="coupons" className="mt-6">

@@ -5,6 +5,7 @@ export const createGroupSchema = z.object({
   name: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
   description: z.string().optional(),
   privacy: z.enum(["private", "public"]).default("private"),
+  planId: z.string().uuid().optional(),
 });
 
 export const createEventSchema = z.object({
@@ -33,8 +34,8 @@ export const rsvpSchema = z.object({
   eventId: z.string().uuid(),
   status: z.enum(["yes", "no", "waitlist"]),
   role: z.enum(["gk", "line"]).default("line"),
-  preferredPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
-  secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
+  preferredPosition: z.enum(["gk", "defender", "midfielder", "forward"]).nullish(),
+  secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).nullish(),
 });
 
 export const eventActionSchema = z.object({

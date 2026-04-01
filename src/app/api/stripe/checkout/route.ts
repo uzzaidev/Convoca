@@ -8,12 +8,12 @@ import logger from "@/lib/logger";
 /**
  * POST /api/stripe/checkout
  * Cria uma Checkout Session do Stripe para assinar um grupo
- * Body: { groupId: string }
+ * Body: { groupId: string, planId?: string }
  */
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const { groupId } = await request.json();
+    const { groupId, planId } = await request.json();
 
     if (!groupId) {
       return NextResponse.json(
@@ -58,6 +58,24 @@ export async function POST(request: NextRequest) {
     // Buscar ou criar customer no Stripe
     const customerId = await getOrCreateStripeCustomer(user.id);
 
+    // Resolver plano: por planId ou fallback para STRIPE_PRICE_ID
+    let priceId = STRIPE_PRICE_ID;
+    let trialDays = TRIAL_PERIOD_DAYS;
+    let resolvedPlanId: string | null = null;
+
+    if (planId) {
+      const [plan] = await sql`
+        SELECT id, stripe_price_id, trial_days
+        FROM subscription_plans
+        WHERE id = ${planId} AND is_active = true
+      `;
+      if (plan) {
+        priceId = plan.stripe_price_id;
+        trialDays = plan.trial_days ?? TRIAL_PERIOD_DAYS;
+        resolvedPlanId = plan.id;
+      }
+    }
+
     // Criar Checkout Session
     const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
     const session = await getStripe().checkout.sessions.create({
@@ -66,20 +84,22 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
       line_items: [
         {
-          price: STRIPE_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
       subscription_data: {
-        trial_period_days: TRIAL_PERIOD_DAYS,
+        trial_period_days: trialDays,
         metadata: {
           group_id: groupId,
           user_id: user.id,
+          plan_id: resolvedPlanId || "",
         },
       },
       metadata: {
         group_id: groupId,
         user_id: user.id,
+        plan_id: resolvedPlanId || "",
       },
       success_url: `${appUrl}/groups/${groupId}?payment=success`,
       cancel_url: `${appUrl}/groups/${groupId}?payment=canceled`,

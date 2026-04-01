@@ -109,7 +109,7 @@ export async function GET(
       next_payment_attempt: number | null;
     } | null = null;
     try {
-      const upcoming = await stripe.invoices.retrieveUpcoming({
+      const upcoming = await stripe.invoices.createPreview({
         customer: subscription.stripe_customer_id,
         subscription: subscription.stripe_subscription_id,
       });

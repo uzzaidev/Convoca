@@ -4,6 +4,14 @@ Gerado automaticamente por IA a cada push no `main`.
 
 ## 2026-04-01
 
+### fix
+- Atualizada a recuperação de faturas próximas para usar o método `createPreview` do Stripe
+  - Arquivos: `src/app/api/groups/[groupId]/billing/route.ts`
+  - Evidência: alteração na chamada de `stripe.invoices.retrieveUpcoming` para `stripe.invoices.createPreview`
+  - Confiança: alta
+
+## 2026-04-01
+
 ### feat
 - Implementada gestão de assinaturas e cobranças para grupos, incluindo visualização de planos, assinatura, faturas e cobrança.  
   - Arquivos: `src/app/api/groups/[groupId]/billing/route.ts`, `src/app/api/admin/plans/route.ts`, `src/app/api/admin/plans/[planId]/route.ts`, `src/app/api/admin/groups/require-payment/route.ts`, `src/app/admin/page.tsx`  

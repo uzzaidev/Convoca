@@ -5,6 +5,24 @@ Gerado automaticamente por IA a cada push no `main`.
 ## 2026-04-01
 
 ### feat
+- Implementado painel financeiro no dashboard de administração, incluindo métricas de saldo, receita mensal, assinaturas, cupons e clientes vinculados.  
+  - Arquivos: `src/components/admin/admin-finance-tab.tsx`, `src/components/admin/admin-dashboard.tsx`  
+  - Confiança: alta
+
+### feat
+- Adicionado botão de pagamento na página do grupo para ativar assinatura pendente, visível para administradores.  
+  - Arquivos: `src/app/groups/[groupId]/page.tsx`  
+  - Confiança: alta
+
+### feat
+- Criada rota API para dashboard financeiro, agregando dados do Stripe e do banco, incluindo assinaturas, próximas renovações, clientes, faturas, saldo, cupons e receita mensal.  
+  - Arquivos: `src/app/api/admin/stripe-dashboard/route.ts`  
+  - Evidência: implementação completa da rota com múltiplas consultas e chamadas Stripe  
+  - Confiança: alta
+
+## 2026-04-01
+
+### feat
 - Implementada gestão de cupons e promotion codes no sistema, incluindo criação, listagem e ativação/desativação via API Stripe.
   - Arquivos: `src/app/api/admin/coupons/route.ts`, `src/app/api/admin/coupons/[couponId]/route.ts`, `src/components/admin/admin-coupons-tab.tsx`
   - Confiança: alta

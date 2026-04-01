@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
         group_id: group.id,
         user_id: user.id,
       },
-      success_url: `${appUrl}/dashboard/groups/${group.id}?payment=success`,
-      cancel_url: `${appUrl}/dashboard/groups/${group.id}?payment=canceled`,
+      success_url: `${appUrl}/groups/${group.id}?payment=success`,
+      cancel_url: `${appUrl}/groups/${group.id}?payment=canceled`,
       locale: "pt-BR",
     });
 

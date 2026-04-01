@@ -4,6 +4,14 @@ Gerado automaticamente por IA a cada push no `main`.
 
 ## 2026-04-01
 
+### refactor
+- Reestruturou a documentação de arquitetura, incluindo tópicos de infraestrutura, faturamento, banco de dados, fatos do projeto e segurança.
+  - Arquivos: `.brv/context-tree/_index.md`
+  - Evidência: alteração significativa na estrutura e conteúdo de documentação
+  - Confiança: alta
+
+## 2026-04-01
+
 ### fix
 - Atualizada a recuperação de faturas próximas para usar o método `createPreview` do Stripe
   - Arquivos: `src/app/api/groups/[groupId]/billing/route.ts`

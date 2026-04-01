@@ -3,14 +3,26 @@
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 1233,
+      "tokens": 1421,
       "type": "summary"
     },
     {
-      "order": 1,
-      "path": "security/operations/_index.md",
-      "tokens": 600,
-      "type": "summary"
+      "importance": 50,
+      "path": "architecture/billing/context.md",
+      "tokens": 149,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/billing/multi_plan_subscription_system.md",
+      "tokens": 1257,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/billing/stripe_v21_api_migration.md",
+      "tokens": 940,
+      "type": "context"
     },
     {
       "importance": 50,
@@ -41,39 +53,15 @@
       "path": "facts/project/context.md",
       "tokens": 120,
       "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "facts/project/peladeiros_infrastructure_facts_2026_03_31.md",
-      "tokens": 718,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "security/context.md",
-      "tokens": 131,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "security/operations/backup_credential_exposure.md",
-      "tokens": 511,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "security/operations/context.md",
-      "tokens": 90,
-      "type": "context"
     }
   ],
-  "generated_at": "2026-03-31T15:48:41.784Z",
+  "generated_at": "2026-04-01T14:42:17.863Z",
   "lane_tokens": {
-    "contexts": 3049,
+    "contexts": 3945,
     "stubs": 0,
-    "summaries": 1833
+    "summaries": 1421
   },
-  "source_fingerprint": "9cb7ee59f5679ec68bdde18e78b5235b2e7ee4dc2b2bdec8f28a5dc2f72fd627",
-  "total_tokens": 4882,
+  "source_fingerprint": "a2abc8efa923bce0ef87be6aecc5910523dabffce42d2d0ba97a4157e1bfabcc",
+  "total_tokens": 5366,
   "version": 1
 }

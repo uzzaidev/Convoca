@@ -5,6 +5,13 @@ Gerado automaticamente por IA a cada push no `main`.
 ## 2026-04-01
 
 ### feat
+- Atualizada a função de sincronização de status de assinatura para tratar o status 'past_due' e definir uma mensagem de motivo adequada.
+  - Arquivos: `src/lib/subscription.ts`
+  - Confiança: alta
+
+## 2026-04-01
+
+### feat
 - Adicionadas convenções e diretrizes para rotas Stripe, incluindo assinatura de webhooks, uso de singleton `getStripe()`, SQL parametrizado, tratamento de erros e compatibilidade com Stripe v21
   - Arquivos: `.github/instructions/stripe-routes.instructions.md`
   - Confiança: alta

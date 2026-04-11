@@ -2,6 +2,13 @@
 
 Gerado automaticamente por IA a cada push no `main`.
 
+## 2026-04-11
+
+### feat
+- Adicionada documentação de checkpoint completo do projeto UzzOPS para reverse engineering.
+  - Arquivos: `docs/PROMPT_CHECKPOINT_UZZOPS.md`
+  - Confiança: alta
+
 ## 2026-04-01
 
 ### feat

@@ -2,6 +2,21 @@
 
 Gerado automaticamente por IA a cada push no `main`.
 
+## 2026-04-13
+
+### fix
+- Corrigida a função handleMonthlyChargesCron para remover comentários desnecessários e ajustar a verificação de autorização na rota de geração de cobranças mensais. Arquivos: `src/app/api/cron/generate-monthly-charges/route.ts`
+- Corrigida a mensagem de retorno ao verificar cobranças existentes, ajustando para português correto. Arquivos: `src/app/api/cron/generate-monthly-charges/route.ts`
+- Corrigida a duplicidade na exportação das funções POST na rota de cobranças mensais, consolidando para evitar conflito. Arquivos: `src/app/api/cron/generate-monthly-charges/route.ts`
+
+### feat
+- Implementada a função `generateUpcomingEventsForRecurrence` no arquivo `src/lib/recurrences.ts` para gerar eventos futuros com base em recorrências, considerando diferentes frequências e dias da semana. Arquivos: `src/lib/recurrences.ts`
+- Melhorada a manipulação de datas na geração de eventos recorrentes, usando fuso horário de São Paulo e funções de formatação específicas. Arquivos: `src/lib/recurrences.ts`
+
+### refactor
+- Refatorada a lógica de cálculo de próximas ocorrências na geração de eventos recorrentes, separando funções de formatação e cálculo de datas para maior clareza e manutenção. Arquivos: `src/lib/recurrences.ts`
+- Alterada a estrutura de importação e uso de funções auxiliares para manipulação de datas, garantindo consistência com o fuso horário local. Arquivos: `src/lib/recurrences.ts`
+
 ## 2026-04-11
 
 ### feat

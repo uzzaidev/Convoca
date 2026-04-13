@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
+import {
+  generateUpcomingEventsForRecurrence,
+  type EventRecurrenceRecord,
+} from "@/lib/recurrences";
 import { createRecurrenceSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
 import { requireGroupAccess } from "@/lib/group-access";
@@ -8,7 +12,7 @@ import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
-const dayNames = ["Domingo", "Segunda", "TerÃ§a", "Quarta", "Quinta", "Sexta", "SÃ¡bado"];
+const dayNames = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
 
 // GET /api/groups/:groupId/recurrences - List recurrences
 export async function GET(
@@ -35,7 +39,7 @@ export async function GET(
   } catch (error) {
     return handleRouteError(error, {
       logMessage: "Error fetching recurrences",
-      fallbackMessage: "Erro ao buscar recorrÃªncias",
+      fallbackMessage: "Erro ao buscar recorrencias",
     });
   }
 }
@@ -51,7 +55,7 @@ export async function POST(
 
     await requireGroupAccess(groupId, user, {
       minRole: "admin",
-      adminErrorMessage: "Apenas admins podem criar recorrÃªncias",
+      adminErrorMessage: "Apenas admins podem criar recorrencias",
     });
 
     const body = await request.json();
@@ -59,7 +63,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Dados invÃ¡lidos", details: validation.error.flatten() },
+        { error: "Dados invalidos", details: validation.error.flatten() },
         { status: 400 }
       );
     }
@@ -89,16 +93,26 @@ export async function POST(
       RETURNING *
     `;
 
+    const generated = await generateUpcomingEventsForRecurrence(
+      recurrence as EventRecurrenceRecord
+    );
+
     logger.info(
-      { recurrenceId: recurrence.id, groupId, frequency, dayOfWeek: dayNames[dayOfWeek] },
+      {
+        recurrenceId: recurrence.id,
+        groupId,
+        frequency,
+        dayOfWeek: dayNames[dayOfWeek],
+        generated,
+      },
       "Recurrence created"
     );
 
-    return NextResponse.json({ recurrence }, { status: 201 });
+    return NextResponse.json({ recurrence, generated }, { status: 201 });
   } catch (error) {
     return handleRouteError(error, {
       logMessage: "Error creating recurrence",
-      fallbackMessage: "Erro ao criar recorrÃªncia",
+      fallbackMessage: "Erro ao criar recorrencia",
     });
   }
 }

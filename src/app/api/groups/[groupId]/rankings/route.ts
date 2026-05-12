@@ -29,7 +29,14 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const seasonId = searchParams.get("seasonId");
 
-    await requireGroupAccess(groupId, user);
+    const group = await requireGroupAccess(groupId, user);
+
+    if (group.appMode === "control") {
+      return NextResponse.json(
+        { error: "Rankings desativados para este grupo" },
+        { status: 403 }
+      );
+    }
 
     if (seasonId) {
       const [season] = await sql`

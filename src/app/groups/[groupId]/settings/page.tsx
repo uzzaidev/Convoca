@@ -92,6 +92,7 @@ export default async function GroupSettingsPage({ params }: RouteParams) {
               name: group.name,
               description: group.description,
               privacy: group.privacy,
+              appMode: group.appMode,
             }}
             invites={invites}
             members={members}

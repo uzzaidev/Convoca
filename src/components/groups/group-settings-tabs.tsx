@@ -15,6 +15,7 @@ type Group = {
   name: string;
   description: string | null;
   privacy: string;
+  appMode: "ranking" | "control";
 };
 
 type Invite = {
@@ -53,11 +54,13 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className="grid w-full grid-cols-8">
+      <TabsList className={`grid w-full ${group.appMode === "ranking" ? "grid-cols-8" : "grid-cols-7"}`}>
         <TabsTrigger value="info">Info</TabsTrigger>
         <TabsTrigger value="events">Eventos</TabsTrigger>
         <TabsTrigger value="recurrences">Peladas</TabsTrigger>
-        <TabsTrigger value="scoring">Pontuação</TabsTrigger>
+        {group.appMode === "ranking" && (
+          <TabsTrigger value="scoring">Pontuacao</TabsTrigger>
+        )}
         <TabsTrigger value="seasons">Temporadas</TabsTrigger>
         <TabsTrigger value="invites">Convites</TabsTrigger>
         <TabsTrigger value="members">Membros</TabsTrigger>
@@ -72,9 +75,11 @@ export function GroupSettingsTabs({
       <TabsContent value="recurrences" className="mt-6">
         <RecurrencesManager groupId={group.id} />
       </TabsContent>
-      <TabsContent value="scoring" className="mt-6">
-        <ScoringConfigForm groupId={group.id} />
-      </TabsContent>
+      {group.appMode === "ranking" && (
+        <TabsContent value="scoring" className="mt-6">
+          <ScoringConfigForm groupId={group.id} />
+        </TabsContent>
+      )}
       <TabsContent value="seasons" className="mt-6">
         <SeasonManager groupId={group.id} />
       </TabsContent>

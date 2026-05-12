@@ -5,6 +5,7 @@ export const createGroupSchema = z.object({
   name: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
   description: z.string().optional(),
   privacy: z.enum(["private", "public"]).default("private"),
+  appMode: z.enum(["ranking", "control"]).default("ranking"),
   planId: z.string().uuid().optional(),
 });
 

@@ -43,15 +43,22 @@ Isso vai criar um arquivo `.env.local` com as variáveis do Vercel.
 
 ### 4. Rodar migrations
 
-Execute o arquivo SQL de migrations no Neon Console ou via CLI:
+As migrations ficam em `src/db/migrations/` e devem ser aplicadas pelo runner do
+projeto, que registra o historico em `public.schema_migrations`.
 
 ```bash
-# Opção 1: Copie o conteúdo de src/db/schema.sql e execute no Neon Console
-# Opção 2: Use o Neon CLI
-neon sql < src/db/schema.sql
+pnpm db:status
+pnpm db:migrate -- --only 20260512_add_group_app_mode.sql
 ```
 
-**Importante:** Se você está migrando de uma versão anterior com Stack Auth, veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md).
+Use `--only <arquivo>.sql` para aplicar uma migration nova especifica. Nao use
+`--all` sem preparar um baseline, porque o projeto tem migrations antigas que
+foram criadas antes da tabela de historico.
+
+O runner le `.env.local` e usa `POSTGRES_URL_NON_POOLING` quando disponivel,
+com fallback para `POSTGRES_URL` ou `DATABASE_URL`.
+
+**Importante:** Se voce esta migrando de uma versao anterior com Stack Auth, veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md).
 
 ### 5. Configurar NextAuth
 

@@ -67,6 +67,7 @@ type EventTabsProps = {
   userAttendance: UserAttendance;
   groupMembers: GroupMember[];
   currentUserId: string;
+  appMode: "ranking" | "control";
 };
 
 export function EventTabs({
@@ -82,18 +83,21 @@ export function EventTabs({
   userAttendance,
   groupMembers,
   currentUserId,
+  appMode,
 }: EventTabsProps) {
+  const isRankingMode = appMode === "ranking";
+
   // Determine default tab based on event status
   const getDefaultTab = () => {
     if (eventStatus === "live") return "match";
-    if (eventStatus === "finished") return "ratings";
+    if (eventStatus === "finished" && isRankingMode) return "ratings";
     if (hasTeams) return "teams";
     return "confirmation";
   };
 
   return (
     <Tabs defaultValue={getDefaultTab()} className="w-full">
-      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-5">
+      <TabsList className={`grid w-full ${isRankingMode ? "grid-cols-4 lg:grid-cols-5" : "grid-cols-3 lg:grid-cols-4"}`}>
         <TabsTrigger value="confirmation" className="gap-2">
           <Users className="h-4 w-4" />
           <span className="hidden sm:inline">Confirmação</span>
@@ -118,14 +122,16 @@ export function EventTabs({
           <BarChart3 className="h-4 w-4" />
           <span className="hidden sm:inline">Estatísticas</span>
         </TabsTrigger>
-        <TabsTrigger
-          value="ratings"
-          className="gap-2"
-          disabled={eventStatus !== "finished"}
-        >
-          <Star className="h-4 w-4" />
-          <span className="hidden sm:inline">Avaliações</span>
-        </TabsTrigger>
+        {isRankingMode && (
+          <TabsTrigger
+            value="ratings"
+            className="gap-2"
+            disabled={eventStatus !== "finished"}
+          >
+            <Star className="h-4 w-4" />
+            <span className="hidden sm:inline">Avaliacoes</span>
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="confirmation" className="mt-6">
@@ -168,14 +174,16 @@ export function EventTabs({
         <StatsTab eventId={eventId} teams={teams} />
       </TabsContent>
 
-      <TabsContent value="ratings" className="mt-6">
-        <RatingsTab
-          eventId={eventId}
-          teams={teams}
-          isAdmin={isAdmin}
-          currentUserId={currentUserId}
-        />
-      </TabsContent>
+      {isRankingMode && (
+        <TabsContent value="ratings" className="mt-6">
+          <RatingsTab
+            eventId={eventId}
+            teams={teams}
+            isAdmin={isAdmin}
+            currentUserId={currentUserId}
+          />
+        </TabsContent>
+      )}
     </Tabs>
   );
 }

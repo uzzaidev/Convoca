@@ -16,6 +16,7 @@ type GroupAccessRow = {
   name: string;
   description: string | null;
   privacy: string;
+  app_mode: "ranking" | "control";
   photo_url: string | null;
   created_by: string | null;
   created_at: string;
@@ -32,6 +33,7 @@ export type GroupAccessContext = {
   name: string;
   description: string | null;
   privacy: string;
+  appMode: "ranking" | "control";
   photoUrl: string | null;
   createdBy: string | null;
   createdAt: string;
@@ -85,6 +87,7 @@ export async function getGroupAccessContext(
       g.name,
       g.description,
       g.privacy,
+      g.app_mode,
       g.photo_url,
       g.created_by,
       g.created_at,
@@ -113,6 +116,7 @@ export async function getGroupAccessContext(
     name: group.name,
     description: group.description,
     privacy: group.privacy,
+    appMode: group.app_mode || "ranking",
     photoUrl: group.photo_url,
     createdBy: group.created_by,
     createdAt: group.created_at,

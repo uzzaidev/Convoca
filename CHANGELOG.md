@@ -4,6 +4,24 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-12
 
+### feat
+- Adicionadas páginas de pagamentos, configurações, participação e nova página de grupo
+  - Arquivos: `app/groups/[groupId]/payments/page.tsx`, `app/groups/[groupId]/settings/page.tsx`, `app/groups/join/page.tsx`, `app/groups/[groupId]/page.tsx`
+  - Confiança: alta
+
+### chore
+- Incluído o pacote `@radix-ui/react-tooltip` na dependência do projeto
+  - Arquivos: `package.json`, `pnpm-lock.yaml`
+  - Evidência: adição explícita na configuração de dependências
+  - Confiança: alta
+
+### refactor
+- Removidas referências ao componente `DashboardHeader` de várias páginas, incluindo admin, dashboard, eventos, grupos e chat
+  - Arquivos: múltiplos, como `src/app/admin/agent/page.tsx`, `src/app/admin/page.tsx`, `src/app/dashboard/loading.tsx`, `src/app/groups/[groupId]/page.tsx`, entre outros
+  - Confiança: alta
+
+## 2026-05-12
+
 ### chore
 - Atualizado plataforma de deployment de Vercel para Vercel2 no README.md
   - Arquivos: `README.md`

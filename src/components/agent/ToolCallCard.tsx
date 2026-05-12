@@ -63,10 +63,89 @@ export function ToolCallCard({ tool, result }: Props) {
       </button>
 
       {expanded && hasResult && (
-        <pre className="px-3 pb-2 text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap break-all">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+        <div className="px-3 pb-2">
+          <ResultView result={result} />
+        </div>
       )}
     </div>
+  );
+}
+
+function parseResult(result: unknown): unknown {
+  if (typeof result === "string") {
+    try {
+      return JSON.parse(result);
+    } catch {
+      return result;
+    }
+  }
+  return result;
+}
+
+function ResultView({ result }: { result: unknown }) {
+  const parsed = parseResult(result);
+
+  // Array de objetos → tabela
+  if (
+    Array.isArray(parsed) &&
+    parsed.length > 0 &&
+    typeof parsed[0] === "object" &&
+    parsed[0] !== null
+  ) {
+    const keys = Object.keys(parsed[0] as Record<string, unknown>);
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr>
+              {keys.map((k) => (
+                <th
+                  key={k}
+                  className="text-left text-muted-foreground font-medium border-b border-border/40 pb-1 pr-3 capitalize"
+                >
+                  {k.replace(/_/g, " ")}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(parsed as Record<string, unknown>[]).map((row, i) => (
+              <tr key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
+                {keys.map((k) => (
+                  <td key={k} className="py-0.5 pr-3 text-muted-foreground">
+                    {row[k] == null ? "-" : String(row[k])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // Objeto simples → key: value
+  if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+    return (
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
+        {Object.entries(parsed as Record<string, unknown>).map(([k, v]) => (
+          <>
+            <dt key={`k-${k}`} className="text-muted-foreground font-medium capitalize">
+              {k.replace(/_/g, " ")}
+            </dt>
+            <dd key={`v-${k}`} className="text-muted-foreground">
+              {v == null ? "-" : String(v)}
+            </dd>
+          </>
+        ))}
+      </dl>
+    );
+  }
+
+  // Fallback → texto simples
+  return (
+    <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-all">
+      {typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2)}
+    </pre>
   );
 }

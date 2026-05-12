@@ -45,6 +45,7 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [quotaRefreshKey, setQuotaRefreshKey] = useState(0);
   const [conversationId, setConversationId] = useState<string | undefined>(
     initialConversationId
   );
@@ -198,10 +199,18 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
 
               case "done":
                 setPreviousResponseId(data.responseId as string | undefined);
+                setQuotaRefreshKey((k) => k + 1);
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
-                      ? { ...m, pending: false }
+                      ? {
+                          ...m,
+                          pending: false,
+                          // Marca toolCalls ainda pendentes como concluídos
+                          toolCalls: m.toolCalls?.map((tc) =>
+                            tc.result === undefined ? { ...tc, result: null } : tc
+                          ),
+                        }
                       : m
                   )
                 );
@@ -281,7 +290,7 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <h2 className="font-semibold text-sm">Assistente do Grupo</h2>
-        <QuotaBadge />
+        <QuotaBadge refreshKey={quotaRefreshKey} />
       </div>
 
       {/* Messages */}

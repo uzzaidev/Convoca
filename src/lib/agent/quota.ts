@@ -1,12 +1,12 @@
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 
-// Preços estimados do gpt-4o-mini (USD por 1M tokens)
-// Atualizar conforme https://platform.openai.com/docs/pricing
+// Preços do gpt-5.4-nano (USD por 1M tokens) — Standard
+// https://developers.openai.com/api/docs/pricing
 const PRICING = {
-  input_per_1m: 0.15,
-  output_per_1m: 0.6,
-  reasoning_per_1m: 0.6,
+  input_per_1m: 0.20,
+  output_per_1m: 1.25,
+  reasoning_per_1m: 1.25,
 };
 
 function currentYearMonth(): string {
@@ -26,8 +26,8 @@ async function getDefaultLimits(): Promise<{
   `;
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   return {
-    tokenLimit: parseInt(map["default_monthly_token_limit"] ?? "200000", 10),
-    requestLimit: parseInt(map["default_monthly_request_limit"] ?? "200", 10),
+    tokenLimit: parseInt(map["default_monthly_token_limit"] ?? "10000000", 10),
+    requestLimit: parseInt(map["default_monthly_request_limit"] ?? "2000", 10),
   };
 }
 
@@ -49,9 +49,8 @@ export async function checkAndReserveQuota(userId: string): Promise<void> {
     getDefaultLimits(),
   ]);
 
-  const tokenLimit = quota[0]?.monthly_token_limit ?? defaults.tokenLimit;
-  const requestLimit =
-    quota[0]?.monthly_request_limit ?? defaults.requestLimit;
+  const tokenLimit = Number(quota[0]?.monthly_token_limit ?? defaults.tokenLimit);
+  const requestLimit = Number(quota[0]?.monthly_request_limit ?? defaults.requestLimit);
 
   // Busca uso atual
   const usage = await sql<{
@@ -65,11 +64,11 @@ export async function checkAndReserveQuota(userId: string): Promise<void> {
     WHERE user_id = ${userId} AND year_month = ${yearMonth}
   `;
 
-  const currentRequests = usage[0]?.requests ?? 0;
+  const currentRequests = Number(usage[0]?.requests ?? 0);
   const currentTokens =
-    (usage[0]?.input_tokens ?? 0) +
-    (usage[0]?.output_tokens ?? 0) +
-    (usage[0]?.reasoning_tokens ?? 0);
+    Number(usage[0]?.input_tokens ?? 0) +
+    Number(usage[0]?.output_tokens ?? 0) +
+    Number(usage[0]?.reasoning_tokens ?? 0);
 
   if (currentRequests >= requestLimit) {
     const err = new Error(
@@ -163,12 +162,12 @@ export async function getUserQuotaStatus(userId: string): Promise<{
   ]);
 
   return {
-    requestsUsed: usage[0]?.requests ?? 0,
-    requestLimit: quota[0]?.monthly_request_limit ?? defaults.requestLimit,
+    requestsUsed: Number(usage[0]?.requests ?? 0),
+    requestLimit: Number(quota[0]?.monthly_request_limit ?? defaults.requestLimit),
     tokensUsed:
-      (usage[0]?.input_tokens ?? 0) +
-      (usage[0]?.output_tokens ?? 0) +
-      (usage[0]?.reasoning_tokens ?? 0),
-    tokenLimit: quota[0]?.monthly_token_limit ?? defaults.tokenLimit,
+      Number(usage[0]?.input_tokens ?? 0) +
+      Number(usage[0]?.output_tokens ?? 0) +
+      Number(usage[0]?.reasoning_tokens ?? 0),
+    tokenLimit: Number(quota[0]?.monthly_token_limit ?? defaults.tokenLimit),
   };
 }

@@ -10,7 +10,11 @@ interface QuotaData {
   tokenLimit: number;
 }
 
-export function QuotaBadge() {
+interface Props {
+  refreshKey?: number;
+}
+
+export function QuotaBadge({ refreshKey = 0 }: Props) {
   const [quota, setQuota] = useState<QuotaData | null>(null);
 
   useEffect(() => {
@@ -18,7 +22,7 @@ export function QuotaBadge() {
       .then((r) => r.json())
       .then((data: { quota: QuotaData }) => setQuota(data.quota))
       .catch(() => null);
-  }, []);
+  }, [refreshKey]);
 
   if (!quota) return null;
 

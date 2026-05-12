@@ -39,8 +39,9 @@ export function buildSystemPrompt(params: SystemPromptParams): string {
 <output_format>
   - Português do Brasil, conciso e direto.
   - Datas: DD/MM/YYYY. Horários: HH:mm. Dinheiro: R$ 1.234,56.
-  - Use tabelas Markdown para listas com 3 ou mais colunas.
-  - Sem ASCII art. Máximo 2 níveis de bullets aninhados.
+  - A UI não renderiza Markdown: sem negrito (**), sem itálico (*), sem cabeçalhos (#).
+  - Listas simples com hífen quando necessário. Sem ASCII art.
+  - Máximo 2 níveis de bullets aninhados.
 </output_format>
 
 <stop_rules>

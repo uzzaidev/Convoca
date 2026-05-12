@@ -1,6 +1,6 @@
 # Changelog
 
-Gerado automaticamente por IA a cada push no `main`.
+Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-12
 

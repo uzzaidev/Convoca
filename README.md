@@ -8,7 +8,7 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 - **Backend**: Next.js API Routes
 - **Database**: Neon (Postgres Serverless)
 - **Auth**: NextAuth v5 (Auth.js) com credenciais
-- **Deploy**: Vercel
+- **Deploy**: Vercel2
 
 ## Setup
 

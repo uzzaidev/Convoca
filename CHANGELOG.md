@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-12
 
+### chore
+- Atualizado plataforma de deployment de Vercel para Vercel2 no README.md
+  - Arquivos: `README.md`
+  - Confiança: alta
+
+## 2026-05-12
+
 ### feat
 - Adicionou ferramentas para gerenciamento de eventos, finanças e interações de membros
   - Arquivos: `.env.example`, `AGENTS.md`

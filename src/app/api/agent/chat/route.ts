@@ -161,16 +161,24 @@ export async function POST(req: NextRequest) {
             continue;
           }
 
-          if (evType === "response.mcp_call.in_progress") {
-            const name = (event as { name?: string }).name ?? "unknown";
-            send("tool_call", { tool: name, status: "running" });
+          if (evType === "response.output_item.added") {
+            const item = (event as { item?: { type?: string; name?: string; status?: string } }).item;
+            if (item?.type === "mcp_call") {
+              send("tool_call", { tool: item.name ?? "unknown", status: "running" });
+            }
             continue;
           }
 
-          if (evType === "response.mcp_call.completed") {
-            const name = (event as { name?: string }).name ?? "unknown";
-            const output = (event as { output?: unknown }).output;
-            send("tool_result", { tool: name, result: output });
+          if (evType === "response.output_item.done") {
+            const item = (event as { item?: { type?: string; name?: string; output?: unknown } }).item;
+            if (item?.type === "mcp_call") {
+              send("tool_result", { tool: item.name ?? "unknown", result: item.output });
+            }
+            continue;
+          }
+
+          if (evType === "response.mcp_call.in_progress" || evType === "response.mcp_call.completed") {
+            // Eventos cobertos por output_item.added/done — ignorar
             continue;
           }
 

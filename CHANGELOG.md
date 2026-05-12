@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-12
 
 ### feat
+- Adicionou ferramentas para gerenciamento de eventos, finanças e interações de membros
+  - Arquivos: `.env.example`, `AGENTS.md`
+  - Confiança: alta
+
+## 2026-05-12
+
+### feat
 - Adicionada documentação de Pull Request Summary e novas funcionalidades de participação em eventos
   - Arquivos: `PR_SUMMARY.md`
   - Confiança: alta

@@ -88,7 +88,11 @@ export async function PATCH(
     });
 
     const body = await request.json();
-    const { name, description, privacy } = body;
+    const { name, description, privacy, appMode } = body;
+
+    if (appMode !== undefined && !["ranking", "control"].includes(appMode)) {
+      return NextResponse.json({ error: "Modo do grupo invalido" }, { status: 400 });
+    }
 
     const [updated] = await sql`
       UPDATE groups
@@ -96,6 +100,7 @@ export async function PATCH(
         name = COALESCE(${name ?? null}, name),
         description = COALESCE(${description ?? null}, description),
         privacy = COALESCE(${privacy ?? null}, privacy),
+        app_mode = COALESCE(${appMode ?? null}, app_mode),
         updated_at = NOW()
       WHERE id = ${groupId}
       RETURNING *

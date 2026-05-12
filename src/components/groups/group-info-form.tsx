@@ -29,6 +29,7 @@ type Group = {
   name: string;
   description: string | null;
   privacy: string;
+  appMode: "ranking" | "control";
 };
 
 type GroupInfoFormProps = {
@@ -43,6 +44,7 @@ export function GroupInfoForm({ group }: GroupInfoFormProps) {
     name: group.name,
     description: group.description || "",
     privacy: group.privacy,
+    appMode: group.appMode,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,6 +136,28 @@ export function GroupInfoForm({ group }: GroupInfoFormProps) {
                 <SelectItem value="public">Público</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appMode">Modo do grupo</Label>
+            <Select
+              value={formData.appMode}
+              onValueChange={(value) =>
+                setFormData({ ...formData, appMode: value as "ranking" | "control" })
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger id="appMode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ranking">Ranking e controle</SelectItem>
+                <SelectItem value="control">Somente controle</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              No modo somente controle, o grupo mantem partidas, presencas, times e historico, mas esconde rankings e pontuacao.
+            </p>
           </div>
         </CardContent>
         <CardFooter>

@@ -106,6 +106,11 @@ Currently, there is no test infrastructure set up in the project. Do not add tes
 - No ORM is used in this project
 - Database schema is defined in `src/db/schema.sql`
 - Use parameterized queries to prevent SQL injection
+- Structural schema changes must be added as SQL files in `src/db/migrations/`
+- Apply migrations with the project runner, not by pasting DDL into Neon Console
+- Applied migration files are tracked in `public.schema_migrations`
+- Use `pnpm db:migrate -- --only <filename>.sql` for new production changes unless a baseline has been explicitly prepared
+- Do not use `--all` casually because legacy SQL files may not be represented in `schema_migrations`
 - Example query pattern:
   ```typescript
   import { sql } from "@/db/client";
@@ -214,9 +219,15 @@ The database schema is in `src/db/schema.sql` and includes:
 
 ### Database Migrations
 
-1. Update `src/db/schema.sql` with new schema changes
-2. Run the SQL in Neon Console or via CLI
-3. Document the changes in comments
+1. Update `src/db/migrations/schema.sql` with additive schema changes
+2. Create a new SQL file in `src/db/migrations/`
+3. Check status with `pnpm db:status`
+4. Apply the new file with `pnpm db:migrate -- --only <filename>.sql`
+5. Verify the migration row exists in `public.schema_migrations`
+6. Document the changes in SQL comments
+
+The runner reads `.env.local`, prefers `POSTGRES_URL_NON_POOLING` for DDL, and
+falls back to `POSTGRES_URL` or `DATABASE_URL` if needed.
 
 ## Important Notes
 

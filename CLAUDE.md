@@ -34,17 +34,31 @@ pnpm dev          # Start dev server on http://localhost:3000
 pnpm build        # Build for production
 pnpm start        # Start production server
 pnpm lint         # Run ESLint
+pnpm db:status    # Show migration history and pending SQL files
+pnpm db:migrate -- --only <filename>.sql  # Apply one migration and record it
 ```
 
 ### Environment Setup
 ```bash
 npx vercel env pull                        # Pull env vars from Vercel
-neon sql < src/db/migrations/schema.sql    # Run migrations (if Neon CLI installed)
 openssl rand -base64 32                    # Generate AUTH_SECRET
 ```
 
-### Database Access
-Use Neon Console UI or Neon CLI to execute SQL. The project does not include migration tooling.
+### Database Migrations
+
+Use the local migration runner instead of running structural SQL manually in Neon.
+Migration files live in `src/db/migrations/`, and applied files are tracked in
+`public.schema_migrations`.
+
+```bash
+pnpm db:status
+pnpm db:migrate -- --only 20260512_add_group_app_mode.sql
+```
+
+The runner reads `.env.local` and prefers `POSTGRES_URL_NON_POOLING` for DDL,
+falling back to `POSTGRES_URL` or `DATABASE_URL` if needed. Because this project
+had legacy migrations before the tracking table existed, use `--only <file>.sql`
+for new production changes unless a baseline has been intentionally created.
 
 ## Architecture
 
@@ -238,9 +252,11 @@ Components are added to `src/components/ui/` and can be customized with Tailwind
 ### Database Changes
 
 1. Update `src/db/migrations/schema.sql`
-2. Execute SQL in Neon Console or via CLI
-3. Document changes with SQL comments
-4. Update relevant types if needed
+2. Create a new SQL file in `src/db/migrations/`
+3. Run `pnpm db:status`
+4. Apply the new file with `pnpm db:migrate -- --only <filename>.sql`
+5. Verify the row exists in `public.schema_migrations`
+6. Update relevant types if needed
 
 ### Validation
 
@@ -353,5 +369,5 @@ Deploy via Vercel with Neon integration:
 1. Connect GitHub repo to Vercel
 2. Add Neon integration in Vercel dashboard
 3. Environment variables are auto-configured
-4. Run migrations manually in Neon Console
+4. Run pending migrations with `pnpm db:migrate -- --only <filename>.sql`
 5. Verify build succeeds before deploying

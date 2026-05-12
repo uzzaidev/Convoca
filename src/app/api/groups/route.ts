@@ -17,6 +17,7 @@ export async function GET() {
         g.name,
         g.description,
         g.privacy,
+        g.app_mode,
         g.photo_url,
         g.status,
         g.status_reason,
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description, privacy, planId } = validation.data;
+    const { name, description, privacy, appMode, planId } = validation.data;
 
     // Criar grupo com status pending_payment
     const [group] = await sql`
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
         name,
         description,
         privacy,
+        app_mode,
         created_by,
         status,
         status_updated_at,
@@ -71,6 +73,7 @@ export async function POST(request: NextRequest) {
         ${name},
         ${description || null},
         ${privacy},
+        ${appMode},
         ${user.id},
         'pending_payment',
         NOW(),

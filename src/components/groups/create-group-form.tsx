@@ -34,6 +34,7 @@ export function CreateGroupForm() {
     name: "",
     description: "",
     privacy: "private",
+    appMode: "ranking",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,6 +133,26 @@ export function CreateGroupForm() {
                 <SelectItem value="public">Publico</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appMode">Modo do grupo</Label>
+            <Select
+              value={formData.appMode}
+              onValueChange={(value) => setFormData({ ...formData, appMode: value })}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="appMode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ranking">Ranking e controle</SelectItem>
+                <SelectItem value="control">Somente controle</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Voce pode trocar isso depois nas configuracoes do grupo.
+            </p>
           </div>
 
           <PlanSelector

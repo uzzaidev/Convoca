@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS groups (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   privacy VARCHAR(20) DEFAULT 'private' CHECK (privacy IN ('private', 'public')),
+  app_mode VARCHAR(20) NOT NULL DEFAULT 'ranking' CHECK (app_mode IN ('ranking', 'control')),
   photo_url TEXT,
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive', 'rejected')),
@@ -363,3 +364,61 @@ CREATE OR REPLACE TRIGGER trigger_refresh_scoreboard
 AFTER INSERT OR UPDATE OR DELETE ON event_actions
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_event_scoreboard();
+
+
+-- ============================================================
+-- Agente Conversacional (adicionado em 2026-05)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS agent_conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  title TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_conv_user_group ON agent_conversations(user_id, group_id);
+
+CREATE TABLE IF NOT EXISTS agent_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES agent_conversations(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'tool')),
+  content TEXT,
+  metadata JSONB,
+  response_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_agent_msg_conv ON agent_messages(conversation_id, created_at);
+
+CREATE TABLE IF NOT EXISTS agent_quotas (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  monthly_token_limit INT NOT NULL DEFAULT 200000,
+  monthly_request_limit INT NOT NULL DEFAULT 200,
+  updated_by UUID REFERENCES users(id),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS agent_usage (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  year_month CHAR(7) NOT NULL,
+  requests INT NOT NULL DEFAULT 0,
+  input_tokens BIGINT NOT NULL DEFAULT 0,
+  output_tokens BIGINT NOT NULL DEFAULT 0,
+  reasoning_tokens BIGINT NOT NULL DEFAULT 0,
+  cost_usd_cents INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, year_month)
+);
+
+CREATE TABLE IF NOT EXISTS agent_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO agent_settings (key, value) VALUES
+  ('default_monthly_token_limit', '200000'),
+  ('default_monthly_request_limit', '200'),
+  ('model', '"gpt-4o-mini"'),
+  ('reasoning_effort', '"low"'),
+  ('verbosity', '"low"')
+ON CONFLICT (key) DO NOTHING;

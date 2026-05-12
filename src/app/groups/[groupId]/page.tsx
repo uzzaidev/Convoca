@@ -161,6 +161,8 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
     );
   }
 
+  const isRankingMode = group.appMode === "ranking";
+
   // Buscar próximos eventos do grupo
   const upcomingEvents = await sql`
     SELECT
@@ -644,6 +646,9 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <GroupStatusBadge status={group.status} className="border-white/20 bg-white/10 text-white" />
+              <Badge className="bg-white/20 border-white/30 text-white">
+                {isRankingMode ? "Modo ranking" : "Modo controle"}
+              </Badge>
               <Badge
                 variant={group.userRole === "admin" || group.isSystemAdmin ? "default" : "secondary"}
                 className="bg-white/20 border-white/30 text-white"
@@ -688,27 +693,38 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           />
         </div>
 
-        {/* Minhas Estatísticas */}
-        <div className="mb-8">
-          <MyStatsCard {...myStats} />
-        </div>
+        {isRankingMode ? (
+          <>
+            {/* Minhas Estatísticas */}
+            <div className="mb-8">
+              <MyStatsCard {...myStats} />
+            </div>
 
-        {/* Rankings com Tabs */}
-        <div className="mb-8">
-          <RankingsCard
-            topScorers={stats.topScorers}
-            topAssisters={stats.topAssisters}
-            topGoalkeepers={stats.topGoalkeepers}
-            generalRanking={generalRanking}
-            playerFrequency={stats.playerFrequency}
-            currentUserId={user.id}
-            scoringConfig={scoringConfig}
-            seasons={allSeasons as unknown as Array<{ id: string; name: string; status: string; starts_at: string; ends_at: string }>}
-            currentSeasonId={seasonId}
-            currentSeasonName={seasonFilter?.name}
-            groupId={groupId}
-          />
-        </div>
+            {/* Rankings com Tabs */}
+            <div className="mb-8">
+              <RankingsCard
+                topScorers={stats.topScorers}
+                topAssisters={stats.topAssisters}
+                topGoalkeepers={stats.topGoalkeepers}
+                generalRanking={generalRanking}
+                playerFrequency={stats.playerFrequency}
+                currentUserId={user.id}
+                scoringConfig={scoringConfig}
+                seasons={allSeasons as unknown as Array<{ id: string; name: string; status: string; starts_at: string; ends_at: string }>}
+                currentSeasonId={seasonId}
+                currentSeasonName={seasonFilter?.name}
+                groupId={groupId}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="mb-8 rounded-lg border bg-white p-6">
+            <h2 className="text-xl font-semibold">Controle de partidas</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Este grupo esta no modo somente controle. Rankings, pontuacao e estatisticas competitivas ficam ocultos, enquanto eventos, confirmacoes, times, jogo ao vivo, pagamentos e historico seguem disponiveis.
+            </p>
+          </div>
+        )}
 
         {/* Jogos Recentes */}
         <div className="mb-8">

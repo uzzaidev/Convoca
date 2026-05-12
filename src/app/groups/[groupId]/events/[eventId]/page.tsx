@@ -93,10 +93,12 @@ export default async function EventDetailPage({ params }: RouteParams) {
 
   // Verificar se o usuário é membro do grupo
   let isAdmin = false;
+  let appMode: "ranking" | "control" = "ranking";
 
   try {
     const groupAccess = await requireGroupAccess(groupId, user);
     isAdmin = groupAccess.isSystemAdmin || groupAccess.userRole === "admin";
+    appMode = groupAccess.appMode;
   } catch (error) {
     if (error instanceof GroupAccessError) {
       redirect(`/groups/${groupId}`);
@@ -290,6 +292,7 @@ export default async function EventDetailPage({ params }: RouteParams) {
           userAttendance={userAttendance}
           groupMembers={groupMembers}
           currentUserId={user.id}
+          appMode={appMode}
         />
       </div>
     </div>

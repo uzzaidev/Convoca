@@ -8,6 +8,7 @@ Documentação completa do projeto Convoca, organizada por categoria.
 Guias para começar com o projeto.
 
 - [Setup Completo](01-getting-started/SETUP.md) - Configuração inicial do projeto
+- [Instruções de Setup (PT-BR)](01-getting-started/SETUP-INSTRUCOES.md) - Passo a passo em português
 - [Configuração de Ambiente](01-getting-started/ENV_SETUP_GUIDE.md) - Variáveis de ambiente
 - [Quick Start - Autenticação](01-getting-started/QUICK_START_AUTH.md) - Início rápido com auth
 - [Guia de Correções Rápidas](01-getting-started/QUICK_FIX_GUIDE.md) - Soluções rápidas
@@ -33,6 +34,7 @@ Estrutura e migrações do banco de dados.
 
 - [Migração de Database](04-database/DATABASE_MIGRATION.md) - Processo de migração
 - [Guia de Migrações](04-database/MIGRATIONS_GUIDE.md) - Como fazer migrações
+- [Como Restaurar no Supabase](04-database/COMO_RESTAURAR_NO_SUPABASE.md) - Restauração de backup
 
 ### 05. Authentication
 Sistema de autenticação.
@@ -52,7 +54,8 @@ Documentação de features específicas.
 ### 07. Deployment
 Deploy e integração.
 
-- [Checklist de Deploy](07-deployment/DEPLOYMENT_CHECKLIST.md) - Lista de verificação
+- [Checklist de Deploy (Vercel Fix)](07-deployment/DEPLOYMENT_CHECKLIST.md) - Checklist do fix 404 no Vercel
+- [Checklist de Deploy (Link Participação)](07-deployment/DEPLOY_CHECKLIST_LINK_PARTICIPACAO.md) - Checklist da feature
 - [Build Success](07-deployment/BUILD_SUCCESS.md) - Garantindo builds bem-sucedidos
 - [Vercel Fix](07-deployment/VERCEL_FIX.md) - Correções específicas da Vercel
 - [Integração Vercel + Neon](07-deployment/VERCEL_NEON_INTEGRATION.md) - Setup de integração
@@ -65,6 +68,7 @@ Guias gerais e boas práticas.
 ### 09. Troubleshooting
 Soluções de problemas comuns.
 
+- [Correções 11/02/2026](09-troubleshooting/CORRECOES_11_02_2026.md) - Lote de correções
 - [Fix: 404 Persistente](09-troubleshooting/FIX_404_PERSISTENTE.md) - Resolução de 404s
 - [Resumo Fix 404](09-troubleshooting/RESUMO_FIX_404.md) - Resumo da solução
 - [Quick Fix](09-troubleshooting/QUICK_FIX.md) - Correções rápidas
@@ -89,13 +93,30 @@ Documentação para desenvolvimento de aplicativos iOS e Android.
 - [Setup Capacitor](11-app/CAPACITOR_SETUP.md) - Guia completo de implementação
 - [API Helper](11-app/API_HELPER.md) - Cliente de API para mobile
 
+### 12. Checkpoints
+Snapshots do projeto e comparações com outras apps de peladas/eventos.
+
+- [Checkpoint 2026-04-11](12-checkpoints/CHECKPOINT_2026-04-11.md) - Snapshot completo do projeto
+- [Compare Checkpoint 2026-04-11](12-checkpoints/CHECKPOINT_COMPARE_2026-04-11.md) - Comparativos
+- [Convoca vs ResenhAPP](12-checkpoints/COMPARE_CONVOCA_vs_RESENHAPP_2026-04-11.md) - Análise comparativa
+- [Convoca vs Uzzops](12-checkpoints/COMPARE_CONVOCA_vs_UZZOPS_2026-04-11.md) - Análise comparativa
+- [Prompt Checkpoint Uzzops](12-checkpoints/PROMPT_CHECKPOINT_UZZOPS.md) - Template de prompt
+- [Prompt Genérico de Checkpoint](12-checkpoints/PROMPT_GENERIC_PROJECT_CHECKPOINT.md) - Template reutilizável
+
 ### Branding
 Identidade visual do projeto.
 
 - [Cores](branding/colors.md) - Paleta de cores e guia de estilo
 
+### Presentation
+Materiais de apresentação do projeto.
+
+- [Apresentação Convoca (PDF)](presentation/Apresentação%20Convoca.pdf)
+- `html/` - Versão HTML do deck
+- `extracted-images/`, `output/`, `workspace/` - Artefatos de geração
+
 ### Migrations
-Arquivos SQL de migração do banco de dados.
+Arquivos SQL de migração do banco de dados (referência histórica).
 
 - `migration-add-dm-status.sql`
 - `migration-admin-member-separation.sql`
@@ -103,11 +124,14 @@ Arquivos SQL de migração do banco de dados.
 - `migration-draw-configs.sql`
 - `migration-event-settings.sql`
 
+> As migrações canônicas vivem em [src/db/migrations/](../src/db/migrations/).
+
 ### Deprecated
 Documentação antiga mantida para referência histórica.
 
 - Vários guias da autenticação Stack Auth (substituída por NextAuth)
 - Documentação de Magic Link (removido)
+- Resumos de PRs antigos
 
 ## Navegação Rápida
 
@@ -122,7 +146,7 @@ Documentação antiga mantida para referência histórica.
 - [Guia de Migrações](04-database/MIGRATIONS_GUIDE.md)
 
 **Deploy?** Veja:
-- [Checklist de Deploy](07-deployment/DEPLOYMENT_CHECKLIST.md)
+- [Checklist de Deploy (Vercel Fix)](07-deployment/DEPLOYMENT_CHECKLIST.md)
 - [Integração Vercel + Neon](07-deployment/VERCEL_NEON_INTEGRATION.md)
 
 **Problemas?** Procure em:
@@ -144,7 +168,7 @@ Documentação antiga mantida para referência histórica.
 ## Contribuindo
 
 Ao adicionar nova documentação:
-1. Coloque na pasta apropriada (01-11)
+1. Coloque na pasta apropriada (01-12)
 2. Use formato Markdown
 3. Atualize este README.md se adicionar seções importantes
 4. Mantenha links relativos funcionando

@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-12
 
 ### feat
+- Melhorada a visualização de resultados com componentes de tabela do shadcn/ui para exibição de dados em formato tabular
+  - Arquivos: `src/components/agent/ToolCallCard.tsx`
+  - Confiança: alta
+
+## 2026-05-12
+
+### feat
 - Adicionadas páginas de pagamentos, configurações, participação e nova página de grupo
   - Arquivos: `app/groups/[groupId]/payments/page.tsx`, `app/groups/[groupId]/settings/page.tsx`, `app/groups/join/page.tsx`, `app/groups/[groupId]/page.tsx`
   - Confiança: alta

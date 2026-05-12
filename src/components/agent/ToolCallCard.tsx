@@ -1,6 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Props {
   tool: string;
@@ -85,41 +93,40 @@ function parseResult(result: unknown): unknown {
 function ResultView({ result }: { result: unknown }) {
   const parsed = parseResult(result);
 
-  // Array de objetos → tabela
+  // Array de objetos → tabela shadcn
   if (
     Array.isArray(parsed) &&
     parsed.length > 0 &&
     typeof parsed[0] === "object" &&
     parsed[0] !== null
   ) {
-    const keys = Object.keys(parsed[0] as Record<string, unknown>);
+    const keys = Object.keys(parsed[0] as Record<string, unknown>).filter(
+      (k) => (parsed as Record<string, unknown>[])[0][k] !== null || (parsed as Record<string, unknown>[]).some((r) => r[k] !== null)
+    );
     return (
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
-          <thead>
-            <tr>
+      <div className="overflow-x-auto rounded-md border border-border/40">
+        <Table>
+          <TableHeader>
+            <TableRow>
               {keys.map((k) => (
-                <th
-                  key={k}
-                  className="text-left text-muted-foreground font-medium border-b border-border/40 pb-1 pr-3 capitalize"
-                >
+                <TableHead key={k} className="capitalize text-xs py-2">
                   {k.replace(/_/g, " ")}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {(parsed as Record<string, unknown>[]).map((row, i) => (
-              <tr key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
+              <TableRow key={i}>
                 {keys.map((k) => (
-                  <td key={k} className="py-0.5 pr-3 text-muted-foreground">
-                    {row[k] == null ? "-" : String(row[k])}
-                  </td>
+                  <TableCell key={k} className="text-xs py-1.5">
+                    {row[k] == null ? <span className="text-muted-foreground">-</span> : String(row[k])}
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     );
   }

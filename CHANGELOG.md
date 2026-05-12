@@ -2,6 +2,18 @@
 
 Gerado automaticamente por IA a cada push no `main`.
 
+## 2026-05-12
+
+### feat
+- Adicionada documentação de Pull Request Summary e novas funcionalidades de participação em eventos
+  - Arquivos: `PR_SUMMARY.md`
+  - Confiança: alta
+
+### chore
+- Removidos arquivos de debug e scripts de migração antigos, incluindo `debug-check-db.js`, `debug-game-results.sql`, `debug-pedro-stats.sql`, `run-migration-seasons.mjs`, `run-password-reset-migration.mjs`, e outros
+  - Arquivos: vários
+  - Confiança: alta
+
 ## 2026-04-13
 
 ### fix

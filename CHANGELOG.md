@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-13
 
 ### feat
+- Adicionadas scripts iniciais de setup e verificação para gerenciamento de usuários no banco de dados
+  - Arquivos: `.github/copilot-instructions.md`, `src/db/migrations/schema.sql`
+  - Evidência: commit e alterações nos scripts de setup
+  - Confiança: alta
+
+## 2026-05-13
+
+### feat
 - Melhorias no componente ChargesDataTable com design responsivo e opções de filtragem aprimoradas
   - Arquivos: `src/components/payments/charges-data-table.tsx`
   - Confiança: alta

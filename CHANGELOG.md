@@ -4,6 +4,18 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-13
 
+### feat
+- Melhorias no componente ChargesDataTable com design responsivo e opções de filtragem aprimoradas
+  - Arquivos: `src/components/payments/charges-data-table.tsx`
+  - Confiança: alta
+
+### refactor
+- Ajustes no componente UpcomingEventsCard para melhorar layout e responsividade
+  - Arquivos: `src/components/group/upcoming-events-card.tsx`
+  - Confiança: alta
+
+## 2026-05-13
+
 ### chore
 - Limpeza na estrutura de código e remoção de blocos de código não utilizados
   - Arquivos: `migration.log`

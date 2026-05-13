@@ -110,6 +110,7 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
         let buffer = "";
         let assistantText = "";
         const toolCalls: { tool: string; result?: unknown }[] = [];
+        let receivedDone = false;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -198,6 +199,7 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
                 break;
 
               case "done":
+                receivedDone = true;
                 setPreviousResponseId(data.responseId as string | undefined);
                 setQuotaRefreshKey((k) => k + 1);
                 setMessages((prev) =>
@@ -224,6 +226,18 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
                 break;
             }
           }
+        }
+
+        // Stream fechou sem evento "done" (timeout, erro silencioso, etc.)
+        if (!receivedDone) {
+          setError("A resposta foi interrompida inesperadamente. Tente novamente.");
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? { ...m, pending: false }
+                : m
+            )
+          );
         }
       } catch (err) {
         if ((err as Error).name !== "AbortError") {

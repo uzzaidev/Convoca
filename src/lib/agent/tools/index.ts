@@ -3,6 +3,7 @@ import "./read-event";
 import "./read-ranking";
 import "./read-member";
 import "./read-finance";
+import "./read-query";
 import "./write-event";
 import "./write-rsvp";
 import "./write-finance";

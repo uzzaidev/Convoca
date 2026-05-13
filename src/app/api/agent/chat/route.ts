@@ -104,6 +104,8 @@ export async function POST(req: NextRequest) {
           role,
           today: new Date().toISOString().slice(0, 10),
           groupContext,
+          groupId,
+          userId: user.id,
         });
 
         // 9. Configurar tools de escrita que requerem aprovação

@@ -109,8 +109,8 @@ Currently, there is no test infrastructure set up in the project. Do not add tes
 - Structural schema changes must be added as SQL files in `src/db/migrations/`
 - Apply migrations with the project runner, not by pasting DDL into Neon Console
 - Applied migration files are tracked in `public.schema_migrations`
-- Use `pnpm db:migrate -- --only <filename>.sql` for new production changes unless a baseline has been explicitly prepared
-- Do not use `--all` casually because legacy SQL files may not be represented in `schema_migrations`
+- Use `pnpm db:migrate -- --only <filename>.sql` for new production changes (preferred for traceability)
+- Baseline was performed in 2026-05 — all existing files are registered in `schema_migrations`
 - Example query pattern:
   ```typescript
   import { sql } from "@/db/client";

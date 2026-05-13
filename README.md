@@ -51,9 +51,9 @@ pnpm db:migrate -- --only 20260512_add_group_app_mode.sql
 pnpm backup                                          # dump local em src/db/backups/
 ```
 
-Use `--only <arquivo>.sql` para aplicar uma migration nova específica. **Não use
-`--all`**: o projeto tem migrations legadas anteriores à tabela de histórico que
-não devem ser reaplicadas.
+Use `--only <arquivo>.sql` para aplicar uma migration nova específica (preferido
+por traceability). O baseline foi feito em 2026-05 — todas as migrations
+existentes já estão registradas em `schema_migrations`.
 
 Detalhes completos em [src/db/MIGRATION_WORKFLOW.md](./src/db/MIGRATION_WORKFLOW.md).
 

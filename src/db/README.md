@@ -60,9 +60,11 @@ pnpm db:status
 - **Mantenha `migrations/schema.sql`** em sync com mudanças aditivas (não substituir, complementar).
 - **Não edite migrations já aplicadas** — crie uma nova migration de correção.
 
-## Migrations legadas (PEND no `db:status`)
+## Baseline (2026-05)
 
-O projeto tem várias migrations criadas **antes** da tabela `schema_migrations` existir (todos os `.sql` que aparecem como `PEND` no status). Elas já foram aplicadas nos bancos de produção há muito tempo — não tente reaplicar com `--all`. Use sempre `--only <arquivo>.sql` para mudanças novas.
+Durante a migração Supabase → Neon foi feito um **baseline**: todas as migrations existentes foram registradas em `schema_migrations` sem reexecução (já estavam aplicadas no banco). `pnpm db:status` agora mostra 100% OK.
+
+Para mudanças novas, continue usando `pnpm db:migrate -- --only <arquivo>.sql` (preferido por traceability — você vê exatamente qual arquivo está rodando).
 
 ## Restaurar um backup
 

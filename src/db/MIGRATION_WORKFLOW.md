@@ -5,7 +5,7 @@ Convoca usa um runner próprio em `src/db/migrate.mjs` com histórico em `public
 ## Regras
 
 - `POSTGRES_URL_NON_POOLING` para DDL (conexão direta, sem PgBouncer). O runner cai pra `DATABASE_URL_UNPOOLED`, `POSTGRES_URL`, `DATABASE_URL` se a primeira faltar.
-- Sempre `pnpm db:migrate -- --only <arquivo>.sql` para um arquivo específico. **Não use `--all`** porque há migrations legadas pré-tracking-table que não estão registradas e não devem ser re-aplicadas.
+- Sempre `pnpm db:migrate -- --only <arquivo>.sql` para um arquivo específico (preferido por traceability). O baseline foi feito em 2026-05, então `--all` aplicaria apenas migrations futuras — mesmo assim, `--only` é mais seguro em produção.
 - Mantenha `migrations/schema.sql` em sync com mudanças aditivas, para servir de referência.
 
 ## Fluxo padrão

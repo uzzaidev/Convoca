@@ -56,9 +56,10 @@ pnpm db:migrate -- --only 20260512_add_group_app_mode.sql
 ```
 
 The runner reads `.env.local` and prefers `POSTGRES_URL_NON_POOLING` for DDL,
-falling back to `POSTGRES_URL` or `DATABASE_URL` if needed. Because this project
-had legacy migrations before the tracking table existed, use `--only <file>.sql`
-for new production changes unless a baseline has been intentionally created.
+falling back to `POSTGRES_URL` or `DATABASE_URL` if needed. A baseline was
+performed in 2026-05 on the Supabase→Neon migration, so every existing migration
+file is registered in `schema_migrations`. New migrations should still be applied
+one at a time with `--only <file>.sql` for traceability.
 
 ## Architecture
 

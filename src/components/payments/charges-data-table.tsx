@@ -282,82 +282,173 @@ export function ChargesDataTable({
     },
   });
 
+  const rows = table.getRowModel().rows;
+
   return (
     <div className="w-full">
-      <div className="flex items-center py-4 gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap py-4 gap-2 sm:gap-4">
         <Input
           placeholder="Filtrar por jogador..."
           value={(table.getColumn("user_name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("user_name")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
-        <Select
-          value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-          onValueChange={(value) =>
-            table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="pending">Pendente</SelectItem>
-            <SelectItem value="paid">Pago</SelectItem>
-            <SelectItem value="canceled">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={(table.getColumn("type")?.getFilterValue() as string) ?? "all"}
-          onValueChange={(value) =>
-            table.getColumn("type")?.setFilterValue(value === "all" ? "" : value)
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os tipos</SelectItem>
-            <SelectItem value="monthly">Mensalidade</SelectItem>
-            <SelectItem value="daily">Diária</SelectItem>
-            <SelectItem value="fine">Multa</SelectItem>
-            <SelectItem value="other">Outro</SelectItem>
-          </SelectContent>
-        </Select>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Colunas <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id === "user_name" && "Jogador"}
-                    {column.id === "amount_cents" && "Valor"}
-                    {column.id === "type" && "Tipo"}
-                    {column.id === "event_name" && "Partida"}
-                    {column.id === "due_date" && "Vencimento"}
-                    {column.id === "status" && "Status"}
-                    {column.id === "created_at" && "Criado em"}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-2 flex-wrap">
+          <Select
+            value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
+            onValueChange={(value) =>
+              table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)
+            }
+          >
+            <SelectTrigger className="flex-1 min-w-[140px] sm:flex-none sm:w-[180px]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="paid">Pago</SelectItem>
+              <SelectItem value="canceled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={(table.getColumn("type")?.getFilterValue() as string) ?? "all"}
+            onValueChange={(value) =>
+              table.getColumn("type")?.setFilterValue(value === "all" ? "" : value)
+            }
+          >
+            <SelectTrigger className="flex-1 min-w-[140px] sm:flex-none sm:w-[180px]">
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="monthly">Mensalidade</SelectItem>
+              <SelectItem value="daily">Diária</SelectItem>
+              <SelectItem value="fine">Multa</SelectItem>
+              <SelectItem value="other">Outro</SelectItem>
+            </SelectContent>
+          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="hidden md:inline-flex md:ml-auto">
+                Colunas <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {column.id === "user_name" && "Jogador"}
+                      {column.id === "amount_cents" && "Valor"}
+                      {column.id === "type" && "Tipo"}
+                      {column.id === "event_name" && "Partida"}
+                      {column.id === "due_date" && "Vencimento"}
+                      {column.id === "status" && "Status"}
+                      {column.id === "created_at" && "Criado em"}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <div className="rounded-md border">
+
+      {/* Mobile: cards */}
+      <div className="md:hidden space-y-2">
+        {rows.length === 0 ? (
+          <div className="rounded-md border bg-background p-8 text-center text-sm text-muted-foreground">
+            Nenhuma cobrança encontrada.
+          </div>
+        ) : (
+          rows.map((row) => {
+            const charge = row.original;
+            const status = charge.status;
+            const statusBorder =
+              status === "paid"
+                ? "border-l-green-600"
+                : status === "canceled"
+                  ? "border-l-destructive"
+                  : "border-l-amber-500";
+            return (
+              <div
+                key={row.id}
+                className={`rounded-md border border-l-4 ${statusBorder} bg-background p-3 flex items-start gap-3`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium truncate">{charge.user_name}</div>
+                    <div className="font-semibold whitespace-nowrap">
+                      {formatCurrency(charge.amount_cents)}
+                    </div>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                    <Badge variant={statusVariants[status]} className="text-xs">
+                      {statusLabels[status]}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {chargeTypeLabels[charge.type]}
+                    </Badge>
+                    {charge.due_date && (
+                      <span>Vence {formatDate(charge.due_date)}</span>
+                    )}
+                  </div>
+                  {charge.event_name && (
+                    <div className="mt-1 text-xs text-muted-foreground truncate">
+                      {charge.event_name}
+                      {charge.event_date && ` · ${formatDate(charge.event_date)}`}
+                    </div>
+                  )}
+                </div>
+                {isAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0 shrink-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {status === "pending" && (
+                        <>
+                          <DropdownMenuItem onClick={() => onMarkAsPaid(charge.id)}>
+                            <Check className="mr-2 h-4 w-4" />
+                            Marcar como Pago
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onCancel(charge.id)}>
+                            <X className="mr-2 h-4 w-4" />
+                            Cancelar
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuItem
+                        onClick={() => onDelete(charge.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -407,7 +498,7 @@ export function ChargesDataTable({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} cobrança(s) encontrada(s).
         </div>

@@ -92,34 +92,43 @@ export function UpcomingEventsCard({ events, groupId, userRole }: UpcomingEvents
         <div className="space-y-3">
           {events.map((event) => (
             <div key={event.id} className="p-4 rounded-lg border bg-card hover:bg-accent transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <Link href={`/events/${event.id}`} className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {formatDate(event.starts_at)}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                <Link href={`/events/${event.id}`} className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                      <Calendar className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{formatDate(event.starts_at)}</span>
+                    </div>
+                    <Badge
+                      variant={event.status === "live" ? "destructive" : "secondary"}
+                      className="shrink-0 sm:hidden"
+                    >
+                      {event.status === "live" ? "Ao vivo" : "Agendado"}
+                    </Badge>
                   </div>
                   {event.venue_name && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      {event.venue_name}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{event.venue_name}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span className="text-sm">
                       <span className="font-medium">{event.confirmed_count}</span>
                       <span className="text-muted-foreground">/{event.max_players} confirmados</span>
                     </span>
                   </div>
                 </Link>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
                   <Badge
                     variant={event.status === "live" ? "destructive" : "secondary"}
+                    className="hidden sm:inline-flex"
                   >
                     {event.status === "live" ? "Ao vivo" : "Agendado"}
                   </Badge>
-                  <div className="flex gap-2">
-                    <Button asChild variant="ghost" size="sm" className="gap-1">
+                  <div className="flex gap-2 flex-1 sm:flex-none">
+                    <Button asChild variant="ghost" size="sm" className="gap-1 flex-1 sm:flex-none">
                       <Link href={`/events/${event.id}`}>
                         Ver detalhes
                         <ArrowRight className="h-4 w-4" />
@@ -131,7 +140,7 @@ export function UpcomingEventsCard({ events, groupId, userRole }: UpcomingEvents
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
                             disabled={cancelingId === event.id}
                           >
                             <XCircle className="h-4 w-4" />

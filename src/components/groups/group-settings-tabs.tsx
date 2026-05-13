@@ -54,17 +54,17 @@ export function GroupSettingsTabs({
 }: GroupSettingsTabsProps) {
   return (
     <Tabs defaultValue="info" className="w-full">
-      <TabsList className={`grid w-full ${group.appMode === "ranking" ? "grid-cols-8" : "grid-cols-7"}`}>
-        <TabsTrigger value="info">Info</TabsTrigger>
-        <TabsTrigger value="events">Eventos</TabsTrigger>
-        <TabsTrigger value="recurrences">Peladas</TabsTrigger>
+      <TabsList className="flex h-auto w-full flex-wrap gap-1 bg-muted p-1">
+        <TabsTrigger value="info" className="flex-1 text-xs sm:text-sm">Info</TabsTrigger>
+        <TabsTrigger value="events" className="flex-1 text-xs sm:text-sm">Eventos</TabsTrigger>
+        <TabsTrigger value="recurrences" className="flex-1 text-xs sm:text-sm">Peladas</TabsTrigger>
         {group.appMode === "ranking" && (
-          <TabsTrigger value="scoring">Pontuacao</TabsTrigger>
+          <TabsTrigger value="scoring" className="flex-1 text-xs sm:text-sm">Pontuação</TabsTrigger>
         )}
-        <TabsTrigger value="seasons">Temporadas</TabsTrigger>
-        <TabsTrigger value="invites">Convites</TabsTrigger>
-        <TabsTrigger value="members">Membros</TabsTrigger>
-        <TabsTrigger value="billing">Assinatura</TabsTrigger>
+        <TabsTrigger value="seasons" className="flex-1 text-xs sm:text-sm">Temporadas</TabsTrigger>
+        <TabsTrigger value="invites" className="flex-1 text-xs sm:text-sm">Convites</TabsTrigger>
+        <TabsTrigger value="members" className="flex-1 text-xs sm:text-sm">Membros</TabsTrigger>
+        <TabsTrigger value="billing" className="flex-1 text-xs sm:text-sm">Assinatura</TabsTrigger>
       </TabsList>
       <TabsContent value="info" className="mt-6">
         <GroupInfoForm group={group} />

@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-13
 
+### docs
+- Atualizadas as instruções de migração para maior clareza e rastreabilidade
+  - Arquivos: `.github/copilot-instructions.md`, `AGENTS.md`, `README.md`, `src/db/MIGRATION_WORKFLOW.md`, `src/db/README.md`, `src/db/migrations/README.md`
+  - Confiança: alta
+
+## 2026-05-13
+
 ### feat
 - Adicionadas scripts iniciais de setup e verificação para gerenciamento de usuários no banco de dados
   - Arquivos: `.github/copilot-instructions.md`, `src/db/migrations/schema.sql`

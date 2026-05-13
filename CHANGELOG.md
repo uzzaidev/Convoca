@@ -2,6 +2,26 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-05-13
+
+### feat
+- Implementada lógica de timeout de 90 segundos na chamada OpenAI para evitar streams pendurados. Inclui logs de aviso ao atingir o timeout.
+  - Arquivos: `src/app/api/agent/chat/route.ts`
+  - Evidência: adição de `AbortController`, `setTimeout`, e logs relacionados
+  - Confiança: alta
+
+### feat
+- Adicionados logs de informações durante o fluxo de chat, incluindo autenticação, acesso ao grupo, quota, início de chamada OpenAI, chamadas de ferramentas e conclusão da stream.
+  - Arquivos: `src/app/api/agent/chat/route.ts`
+  - Evidência: múltiplas chamadas a `logger.info` ao longo do código
+  - Confiança: alta
+
+### feat
+- Incluído controle de evento "done" na interface de chat para detectar encerramentos inesperados da stream e exibir mensagem de erro ao usuário.
+  - Arquivos: `src/components/agent/ChatInterface.tsx`
+  - Evidência: adição da variável `receivedDone` e lógica de verificação após o loop de streaming
+  - Confiança: alta
+
 ## 2026-05-12
 
 ### feat

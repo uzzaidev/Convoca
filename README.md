@@ -6,16 +6,15 @@ App para gestão de peladas de futebol - criação de grupos, organização de p
 
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
-- **Database**: Neon (Postgres Serverless)
+- **Database**: Neon (Postgres Serverless) via lib `postgres` (raw SQL, sem ORM)
 - **Auth**: NextAuth v5 (Auth.js) com credenciais
-- **Deploy**: Vercel2
+- **Deploy**: Vercel
 
 ## Setup
 
-> **🔧 Documentação Importante**:
-> - **Autenticação**: Veja [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md) para o guia completo
-> - **Migração do Banco**: Veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md)
-> - **Documentação antiga**: Arquivos com prefixo `DEPRECATED_` são mantidos apenas para referência
+> **Documentação relacionada**:
+> - **Workflow de banco**: [src/db/README.md](./src/db/README.md) e [src/db/MIGRATION_WORKFLOW.md](./src/db/MIGRATION_WORKFLOW.md)
+> - **Convenções para agentes/IDE**: [CLAUDE.md](./CLAUDE.md), [.github/copilot-instructions.md](./.github/copilot-instructions.md), [AGENTS.md](./AGENTS.md)
 
 ### 1. Instalar dependências
 
@@ -43,43 +42,33 @@ Isso vai criar um arquivo `.env.local` com as variáveis do Vercel.
 
 ### 4. Rodar migrations
 
-As migrations ficam em `src/db/migrations/` e devem ser aplicadas pelo runner do
-projeto, que registra o historico em `public.schema_migrations`.
+As migrations ficam em `src/db/migrations/` e são aplicadas pelo runner do
+projeto, que registra o histórico em `public.schema_migrations`.
 
 ```bash
-pnpm db:status
+pnpm db:status                                       # lista pendentes + aplicadas
 pnpm db:migrate -- --only 20260512_add_group_app_mode.sql
+pnpm backup                                          # dump local em src/db/backups/
 ```
 
-Use `--only <arquivo>.sql` para aplicar uma migration nova especifica. Nao use
-`--all` sem preparar um baseline, porque o projeto tem migrations antigas que
-foram criadas antes da tabela de historico.
+Use `--only <arquivo>.sql` para aplicar uma migration nova específica. **Não use
+`--all`**: o projeto tem migrations legadas anteriores à tabela de histórico que
+não devem ser reaplicadas.
 
-O runner le `.env.local` e usa `POSTGRES_URL_NON_POOLING` quando disponivel,
-com fallback para `POSTGRES_URL` ou `DATABASE_URL`.
-
-**Importante:** Se voce esta migrando de uma versao anterior com Stack Auth, veja [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md).
+Detalhes completos em [src/db/MIGRATION_WORKFLOW.md](./src/db/MIGRATION_WORKFLOW.md).
 
 ### 5. Configurar NextAuth
 
-A autenticação usa NextAuth v5 (Auth.js) com autenticação por credenciais (email e senha).
+A autenticação usa NextAuth v5 (Auth.js) com credenciais (email e senha).
 
-**Variáveis necessárias** (adicionar no `.env.local`):
+**Variáveis necessárias** (no `.env.local`):
 - `NEXTAUTH_URL=http://localhost:3000`
-- `AUTH_SECRET=` (gerar com `openssl rand -base64 32`) - NextAuth v5 recomendado
+- `AUTH_SECRET=` (gerar com `openssl rand -base64 32`)
   - Ou `NEXTAUTH_SECRET=` para compatibilidade
-
-Veja o guia completo em [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md)
 
 ### 6. Criar usuário inicial
 
-Para criar seu primeiro usuário, acesse:
-
-```
-http://localhost:3000/auth/signup
-```
-
-Ou use a API diretamente (veja [NEON_AUTH_GUIDE.md](./NEON_AUTH_GUIDE.md) para detalhes).
+Acesse `http://localhost:3000/auth/signup` para criar a primeira conta.
 
 ### 7. Desenvolvimento
 

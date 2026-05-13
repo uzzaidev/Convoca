@@ -12,7 +12,7 @@ This repository contains a soccer match management app built with modern web tec
 - **Frontend**: React 19, TypeScript, Tailwind CSS
 - **UI Components**: shadcn/ui (Radix UI + Tailwind)
 - **Database**: Neon (PostgreSQL Serverless)
-- **Database Client**: @neondatabase/serverless (Raw SQL, no ORM)
+- **Database Client**: `postgres` lib (porsager/postgres) with `prepare: false` for Neon pooler compatibility — raw SQL, no ORM
 - **Authentication**: NextAuth v5
 - **Validation**: Zod
 - **Logging**: Pino
@@ -102,9 +102,9 @@ Currently, there is no test infrastructure set up in the project. Do not add tes
 
 ### Database
 
-- Use raw SQL queries with the Neon serverless client
+- Use raw SQL queries via the `postgres` lib (template-tagged `sql\`...\``)
 - No ORM is used in this project
-- Database schema is defined in `src/db/schema.sql`
+- Schema snapshot lives in `src/db/migrations/schema.sql` (reference, not auto-applied)
 - Use parameterized queries to prevent SQL injection
 - Structural schema changes must be added as SQL files in `src/db/migrations/`
 - Apply migrations with the project runner, not by pasting DDL into Neon Console
@@ -182,22 +182,18 @@ Environment variables should be defined in:
 
 ## Database Schema
 
-The database schema is in `src/db/schema.sql` and includes:
+The schema snapshot is in `src/db/migrations/schema.sql`. Key tables:
 
-- **users**: User accounts
-- **groups**: Soccer groups/communities
-- **group_members**: Group membership with roles
-- **venues**: Match locations
-- **events**: Soccer matches/events
-- **event_attendance**: RSVP and attendance tracking
-- **teams**: Drawn teams for matches
-- **team_members**: Players in teams
-- **event_actions**: Match actions (goals, assists, etc.)
-- **player_ratings**: Player performance ratings
-- **invites**: Group invitation codes
-- **wallets**: Group and user wallets
-- **charges**: Payment charges
-- **transactions**: Financial transactions
+- **users / groups / group_members / invites / venues**: Core entities and membership
+- **events / event_attendance / event_recurrences / event_settings**: Matches and RSVPs
+- **teams / team_members / event_actions**: Match day data (drawn teams, goals, assists, cards)
+- **player_ratings / mvp_tiebreakers / mvp_tiebreaker_votes**: Voting / rating system
+- **wallets / charges / transactions / expenses**: Financial tracking
+- **subscription_plans / group_subscriptions**: Stripe subscriptions
+- **agent_conversations / agent_messages / agent_quotas / agent_settings / agent_usage**: AI agent
+- **seasons / season_snapshots / scoring_configs / draw_configs**: Season & config tables
+- **schema_migrations**: Migration runner tracking
+- **mv_event_scoreboard**: Materialized view refreshed via trigger on `event_actions`
 
 ## Common Tasks
 
@@ -219,12 +215,12 @@ The database schema is in `src/db/schema.sql` and includes:
 
 ### Database Migrations
 
-1. Update `src/db/migrations/schema.sql` with additive schema changes
-2. Create a new SQL file in `src/db/migrations/`
-3. Check status with `pnpm db:status`
-4. Apply the new file with `pnpm db:migrate -- --only <filename>.sql`
-5. Verify the migration row exists in `public.schema_migrations`
-6. Document the changes in SQL comments
+1. (Opt.) `pnpm backup` to dump the current state into `src/db/backups/`
+2. Create a new SQL file: `./src/db/create-migration.ps1 "descricao_curta"`
+3. Edit the generated file in `src/db/migrations/`
+4. Apply: `pnpm db:migrate -- --only <filename>.sql`
+5. Verify: `pnpm db:status` → row should appear in `public.schema_migrations`
+6. Keep `src/db/migrations/schema.sql` in sync with the additive DDL
 
 The runner reads `.env.local`, prefers `POSTGRES_URL_NON_POOLING` for DDL, and
 falls back to `POSTGRES_URL` or `DATABASE_URL` if needed.

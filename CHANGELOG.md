@@ -5,6 +5,19 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-13
 
 ### feat
+- Melhorada a responsividade das abas de configurações do grupo, ajustando layout e estilos no componente `group-settings-tabs.tsx`. As abas agora usam flex-wrap e classes de tamanho ajustável para melhor adaptação em diferentes tamanhos de tela.
+  - Arquivos: `src/components/groups/group-settings-tabs.tsx`
+  - Confiança: alta
+
+### fix
+- Atualizado o carregamento do contexto do grupo para incluir cálculo de pontuação, resultados de partidas e estatísticas de jogadores, com melhorias na consulta SQL para maior clareza e desempenho.
+  - Arquivos: `src/lib/agent/context-loader.ts`
+  - Evidência: adição de novas subconsultas e ajustes na lógica de pontuação e resultados
+  - Confiança: alta
+
+## 2026-05-13
+
+### feat
 - Implementada carga e formatação do contexto do grupo para uso na prompt do sistema.
   - Arquivos: `src/app/api/agent/chat/route.ts`, `src/lib/agent/context-loader.ts`, `src/lib/agent/system-prompt.ts`
   - Evidência: adição de funções para carregar e formatar o contexto do grupo, além de injetar os dados no prompt.

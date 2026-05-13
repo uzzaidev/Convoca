@@ -122,7 +122,7 @@ export async function loadGroupContext(
       LIMIT 3
     `,
 
-    // Ranking top 10
+    // Ranking top 10 (mesma lógica da API /rankings)
     sql<RankingRow[]>`
       WITH scoring AS (
         SELECT
@@ -131,23 +131,75 @@ export async function loadGroupContext(
           COALESCE(sc.points_loss, 0)     AS pts_loss,
           COALESCE(sc.points_goal, 0)     AS pts_goal,
           COALESCE(sc.points_assist, 0)   AS pts_assist,
+          COALESCE(sc.points_mvp, 0)      AS pts_mvp,
           COALESCE(sc.points_presence, 0) AS pts_presence
         FROM scoring_configs sc
         WHERE sc.group_id = ${groupId}
         LIMIT 1
       ),
+      finished_events AS (
+        SELECT id FROM events
+        WHERE group_id = ${groupId} AND status = 'finished' AND deleted_at IS NULL
+      ),
+      team_scores AS (
+        SELECT
+          t.id AS team_id,
+          t.event_id,
+          (
+            COALESCE((SELECT COUNT(*) FROM event_actions ea
+             WHERE ea.team_id = t.id AND ea.action_type = 'goal'
+               AND ea.event_id IN (SELECT id FROM finished_events)), 0)
+            + COALESCE((SELECT COUNT(*) FROM event_actions ea
+               INNER JOIN teams t_opp ON ea.team_id = t_opp.id
+               WHERE ea.action_type = 'own_goal'
+                 AND t_opp.event_id = t.event_id AND ea.team_id != t.id
+                 AND ea.event_id IN (SELECT id FROM finished_events)), 0)
+          ) AS goals_scored
+        FROM teams t
+        WHERE t.event_id IN (SELECT id FROM finished_events)
+      ),
+      player_matches AS (
+        SELECT
+          tm.user_id,
+          t.event_id,
+          ts_own.goals_scored AS team_goals,
+          COALESCE((SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+            WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id), 0) AS opponent_goals,
+          CASE
+            WHEN ts_own.goals_scored > COALESCE((SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+              WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id), 0) THEN 'win'
+            WHEN ts_own.goals_scored = COALESCE((SELECT SUM(ts2.goals_scored) FROM team_scores ts2
+              WHERE ts2.event_id = t.event_id AND ts2.team_id != t.id), 0) THEN 'draw'
+            ELSE 'loss'
+          END AS result
+        FROM team_members tm
+        INNER JOIN teams t ON tm.team_id = t.id
+        INNER JOIN team_scores ts_own ON ts_own.team_id = t.id
+        WHERE t.event_id IN (SELECT id FROM finished_events)
+      ),
       stats AS (
         SELECT
           u.name,
-          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes') AS games_played,
-          COUNT(act.id) FILTER (WHERE act.action_type = 'goal') AS goals,
-          COUNT(act.id) FILTER (WHERE act.action_type = 'assist') AS assists
+          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) AS games_played,
+          COUNT(DISTINCT pm.event_id) FILTER (WHERE pm.result = 'win')  AS wins,
+          COUNT(DISTINCT pm.event_id) FILTER (WHERE pm.result = 'draw') AS draws,
+          COUNT(DISTINCT pm.event_id) FILTER (WHERE pm.result = 'loss') AS losses,
+          COUNT(DISTINCT eact_g.id) AS goals,
+          COUNT(DISTINCT eact_a.id) AS assists,
+          COUNT(DISTINCT pr.id) FILTER (WHERE 'mvp' = ANY(pr.tags)) AS mvp_count
         FROM group_members gm
         JOIN users u ON u.id = gm.user_id
         LEFT JOIN event_attendance ea ON ea.user_id = gm.user_id
-          AND EXISTS (SELECT 1 FROM events e WHERE e.id = ea.event_id AND e.group_id = ${groupId} AND e.status = 'finished')
-        LEFT JOIN event_actions act ON act.actor_user_id = gm.user_id
-          AND EXISTS (SELECT 1 FROM events e WHERE e.id = act.event_id AND e.group_id = ${groupId})
+          AND ea.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN player_matches pm ON pm.user_id = gm.user_id
+        LEFT JOIN event_actions eact_g ON eact_g.subject_user_id = gm.user_id
+          AND eact_g.action_type = 'goal'
+          AND eact_g.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN event_actions eact_a ON eact_a.subject_user_id = gm.user_id
+          AND eact_a.action_type = 'assist'
+          AND eact_a.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN player_ratings pr ON pr.rated_user_id = gm.user_id
+          AND pr.event_id IN (SELECT id FROM finished_events)
         WHERE gm.group_id = ${groupId}
         GROUP BY u.name
       )
@@ -157,12 +209,17 @@ export async function loadGroupContext(
         s.goals::int,
         s.assists::int,
         (
-          s.games_played * COALESCE((SELECT pts_presence FROM scoring), 0)
-          + s.goals * COALESCE((SELECT pts_goal FROM scoring), 0)
+          s.wins     * COALESCE((SELECT pts_win     FROM scoring), 3)
+          + s.draws  * COALESCE((SELECT pts_draw    FROM scoring), 1)
+          + s.losses * COALESCE((SELECT pts_loss    FROM scoring), 0)
+          + s.goals  * COALESCE((SELECT pts_goal    FROM scoring), 0)
           + s.assists * COALESCE((SELECT pts_assist FROM scoring), 0)
+          + s.mvp_count * COALESCE((SELECT pts_mvp  FROM scoring), 0)
+          + s.games_played * COALESCE((SELECT pts_presence FROM scoring), 0)
         )::int AS points
       FROM stats s
-      ORDER BY points DESC, s.goals DESC, s.name
+      WHERE s.games_played > 0
+      ORDER BY points DESC, s.wins DESC, s.goals DESC
       LIMIT 10
     `,
 

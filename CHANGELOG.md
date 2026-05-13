@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-13
 
 ### feat
+- Implementada carga e formatação do contexto do grupo para uso na prompt do sistema.
+  - Arquivos: `src/app/api/agent/chat/route.ts`, `src/lib/agent/context-loader.ts`, `src/lib/agent/system-prompt.ts`
+  - Evidência: adição de funções para carregar e formatar o contexto do grupo, além de injetar os dados no prompt.
+  - Confiança: alta
+
+## 2026-05-13
+
+### feat
 - Implementada lógica de timeout de 90 segundos na chamada OpenAI para evitar streams pendurados. Inclui logs de aviso ao atingir o timeout.
   - Arquivos: `src/app/api/agent/chat/route.ts`
   - Evidência: adição de `AbortController`, `setTimeout`, e logs relacionados

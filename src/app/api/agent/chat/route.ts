@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       try {
         // 1. Autenticação
         const user = await requireAuth();
+        logger.info({ userId: user.id }, "agent/chat: usuário autenticado");
 
         // 2. Parse body
         let body: z.infer<typeof bodySchema>;
@@ -46,13 +47,16 @@ export async function POST(req: NextRequest) {
         }
 
         const { groupId, message, conversationId, previousResponseId, confirmed } = body;
+        logger.info({ userId: user.id, groupId, conversationId, messageLen: message.length }, "agent/chat: body recebido");
 
         // 3. Verificar acesso ao grupo
         const ctx = await requireGroupAccess(groupId, user);
         const role = ctx.userRole === "admin" ? "admin" : "member";
+        logger.info({ userId: user.id, groupId, role, groupName: ctx.name }, "agent/chat: acesso ao grupo ok");
 
         // 4. Verificar quota
         await checkAndReserveQuota(user.id);
+        logger.info({ userId: user.id, groupId }, "agent/chat: quota ok");
 
         // 5. Criar ou recuperar conversa
         let convId = conversationId;
@@ -104,6 +108,8 @@ export async function POST(req: NextRequest) {
         const openai = getOpenAIClient();
         const model = getAgentModel();
 
+        logger.info({ userId: user.id, groupId, role, model }, "agent: iniciando chamada OpenAI");
+
         send("thinking", { status: "iniciando" });
 
         // 10. Chamar OpenAI Responses API com streaming
@@ -133,7 +139,16 @@ export async function POST(req: NextRequest) {
           stream: true,
         };
 
-        const response = await openai.responses.create(responseParams);
+        // Timeout de 90s para evitar stream pendurado indefinidamente
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => {
+          logger.warn({ userId: user.id, groupId }, "agent: timeout de 90s atingido, abortando");
+          abortController.abort();
+        }, 90_000);
+
+        const response = await openai.responses.create(responseParams, {
+          signal: abortController.signal,
+        });
 
         let fullText = "";
         let lastResponseId: string | undefined;
@@ -142,11 +157,14 @@ export async function POST(req: NextRequest) {
         let inputTokens = 0;
         let outputTokens = 0;
         let reasoningTokens = 0;
+        let eventCount = 0;
 
-        for await (const event of response) {
+        try {
+          for await (const event of response) {
           const evType = (event as { type?: string }).type;
 
           if (!evType) continue;
+          eventCount++;
 
           if (evType === "response.created" || evType === "response.in_progress") {
             const id = (event as { response?: { id?: string } }).response?.id;
@@ -164,6 +182,7 @@ export async function POST(req: NextRequest) {
           if (evType === "response.output_item.added") {
             const item = (event as { item?: { type?: string; name?: string; status?: string } }).item;
             if (item?.type === "mcp_call") {
+              logger.info({ userId: user.id, groupId, tool: item.name }, "agent: tool chamada");
               send("tool_call", { tool: item.name ?? "unknown", status: "running" });
             }
             continue;
@@ -172,6 +191,7 @@ export async function POST(req: NextRequest) {
           if (evType === "response.output_item.done") {
             const item = (event as { item?: { type?: string; name?: string; output?: unknown } }).item;
             if (item?.type === "mcp_call") {
+              logger.info({ userId: user.id, groupId, tool: item.name }, "agent: tool concluída");
               send("tool_result", { tool: item.name ?? "unknown", result: item.output });
             }
             continue;
@@ -204,29 +224,48 @@ export async function POST(req: NextRequest) {
             }
           }
         }
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         // 11. Salvar resposta do assistente (se não bloqueada por aprovação)
-        if (!approvalRequired && fullText) {
-          const [msgRow] = await sql<{ id: string }[]>`
-            INSERT INTO agent_messages (conversation_id, role, content, response_id)
-            VALUES (${convId}, 'assistant', ${fullText}, ${lastResponseId ?? null})
-            RETURNING id
-          `;
+        logger.info(
+          { userId: user.id, groupId, eventCount, textLength: fullText.length, approvalRequired },
+          "agent: stream concluído"
+        );
 
-          await recordUsage(user.id, {
-            input_tokens: inputTokens,
-            output_tokens: outputTokens,
-            reasoning_tokens: reasoningTokens,
-          });
+        if (!approvalRequired) {
+          let savedMessageId: string | undefined;
 
-          send("usage", {
-            input_tokens: inputTokens,
-            output_tokens: outputTokens,
-          });
+          if (fullText) {
+            const [msgRow] = await sql<{ id: string }[]>`
+              INSERT INTO agent_messages (conversation_id, role, content, response_id)
+              VALUES (${convId}, 'assistant', ${fullText}, ${lastResponseId ?? null})
+              RETURNING id
+            `;
+            savedMessageId = msgRow?.id;
 
+            await recordUsage(user.id, {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+              reasoning_tokens: reasoningTokens,
+            });
+
+            send("usage", {
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+            });
+          } else {
+            logger.warn(
+              { userId: user.id, groupId, eventCount, inputTokens, outputTokens },
+              "agent: resposta sem texto (fullText vazio)"
+            );
+          }
+
+          // Sempre envia done para o frontend não ficar travado
           send("done", {
             conversationId: convId,
-            messageId: msgRow?.id,
+            messageId: savedMessageId ?? null,
             responseId: lastResponseId,
           });
         }

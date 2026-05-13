@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-13
 
 ### feat
+- Implementado componente FloatingAgentBubble com chat flutuante para grupos, incluindo store de chat do agente.
+  - Arquivos: `src/components/agent/FloatingAgentBubble.tsx`, `src/lib/stores/agent-chat-store.ts`
+  - Confiança: alta
+
+## 2026-05-13
+
+### feat
 - Adicionada ferramenta `query_data` para execução de consultas SQL SELECT personalizadas com filtro por `group_id`.
   - Arquivos: `src/lib/agent/tools/read-query.ts`, `src/lib/agent/tools/index.ts`
   - Confiança: alta

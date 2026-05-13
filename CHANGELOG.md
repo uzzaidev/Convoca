@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-05-13
 
 ### feat
+- Adicionada ferramenta `query_data` para execução de consultas SQL SELECT personalizadas com filtro por `group_id`.
+  - Arquivos: `src/lib/agent/tools/read-query.ts`, `src/lib/agent/tools/index.ts`
+  - Confiança: alta
+
+## 2026-05-13
+
+### feat
 - Melhorada a responsividade das abas de configurações do grupo, ajustando layout e estilos no componente `group-settings-tabs.tsx`. As abas agora usam flex-wrap e classes de tamanho ajustável para melhor adaptação em diferentes tamanhos de tela.
   - Arquivos: `src/components/groups/group-settings-tabs.tsx`
   - Confiança: alta

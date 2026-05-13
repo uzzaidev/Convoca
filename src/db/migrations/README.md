@@ -44,8 +44,8 @@ COMMIT;
 
 Snapshot consolidado do schema. **Não é uma migration que roda** — é referência. Mantenha sincronizado quando adicionar tabelas ou colunas novas (cole o DDL aditivo da migration no lugar correspondente).
 
-## Legados (PEND no `db:status`)
+## Baseline
 
-Vários arquivos aqui foram criados **antes** da tabela `schema_migrations` existir. Eles já estão aplicados nos bancos de produção mas não estão registrados. Aparecem como `PEND` no `pnpm db:status` — isso é esperado. **Não use `pnpm db:migrate -- --all`**: vai tentar reaplicar e quebrar. Sempre `--only <arquivo>.sql` para mudanças novas.
+Em 2026-05 foi feito um baseline: todos os arquivos existentes foram inseridos em `schema_migrations` sem reexecução. `pnpm db:status` deve mostrar 100% OK. Para mudanças novas, prefira `--only <arquivo>.sql` em vez de `--all`, por traceability.
 
 Arquivos antigos de setup inicial / scripts de verificação ficam em `_archive/` e não são lidos pelo runner.

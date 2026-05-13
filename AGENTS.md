@@ -35,6 +35,6 @@ Important rules:
 
 + Prefer `POSTGRES_URL_NON_POOLING` from `.env.local` for migrations; the runner falls back to `POSTGRES_URL`/`DATABASE_URL`.
 + The runner records applied files in `public.schema_migrations`.
-+ Apply a specific new file with `--only <filename>.sql` unless a baseline has been explicitly prepared.
-+ Do not use `--all` casually, because older legacy SQL files may not be represented in `schema_migrations`.
++ Apply a specific new file with `--only <filename>.sql` (preferred for traceability).
++ Baseline was performed in 2026-05 — all existing files are registered.
 + Keep `src/db/migrations/schema.sql` in sync with additive schema changes.

@@ -6,6 +6,7 @@ import { requireGroupAccess } from "@/lib/group-access";
 import { checkAndReserveQuota, recordUsage } from "@/lib/agent/quota";
 import { signAgentSessionToken } from "@/lib/agent/session-token";
 import { buildSystemPrompt } from "@/lib/agent/system-prompt";
+import { loadGroupContext, formatGroupContext } from "@/lib/agent/context-loader";
 import { getOpenAIClient, getAgentModel, getMcpPublicUrl } from "@/lib/agent/openai-client";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
@@ -83,12 +84,26 @@ export async function POST(req: NextRequest) {
           role,
         });
 
-        // 8. Construir system prompt
+        // 8. Pré-carregar contexto do grupo via SQL (evita dependência de MCP para reads)
+        let groupContext: string | undefined;
+        try {
+          const ctxData = await loadGroupContext(groupId, user.id, role);
+          groupContext = formatGroupContext(ctxData);
+          logger.info(
+            { userId: user.id, groupId, members: ctxData.members.length, upcomingEvents: ctxData.upcomingEvents.length },
+            "agent: contexto do grupo carregado"
+          );
+        } catch (ctxErr) {
+          logger.warn({ userId: user.id, groupId, err: ctxErr }, "agent: falha ao carregar contexto do grupo, continuando sem ele");
+        }
+
+        // 9. Construir system prompt com contexto injetado
         const systemPrompt = buildSystemPrompt({
           groupName: ctx.name,
           userName: user.name,
           role,
           today: new Date().toISOString().slice(0, 10),
+          groupContext,
         });
 
         // 9. Configurar tools de escrita que requerem aprovação

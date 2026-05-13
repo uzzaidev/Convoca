@@ -28,7 +28,8 @@ export function getTool(name: string): AgentTool | undefined {
 
 export function listTools(role: "admin" | "member"): AgentTool[] {
   return Array.from(registry.values()).filter(
-    (t) => role === "admin" || t.minRole === "member"
+    // Só expõe tools de escrita no MCP; leitura é feita via context injection
+    (t) => t.kind === "write" && (role === "admin" || t.minRole === "member")
   );
 }
 

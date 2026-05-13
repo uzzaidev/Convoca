@@ -7,57 +7,30 @@ import { ChatMessage } from "./ChatMessage";
 import { ToolCallCard } from "./ToolCallCard";
 import { ConfirmationCard } from "./ConfirmationCard";
 import { QuotaBadge } from "./QuotaBadge";
+import {
+  useAgentChatStore,
+  selectGroupChat,
+} from "@/lib/stores/agent-chat-store";
 
-export type MessageRole = "user" | "assistant";
-
-export type SseEventType =
-  | "thinking"
-  | "token"
-  | "tool_call"
-  | "tool_result"
-  | "confirmation_required"
-  | "conversation_created"
-  | "usage"
-  | "done"
-  | "error";
-
-export interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
-  toolCalls?: { tool: string; result?: unknown }[];
-  pending?: boolean;
-}
-
-export interface ConfirmationPayload {
-  tool: string;
-  arguments: unknown;
-  responseId: string;
-}
+export type { MessageRole, SseEventType, Message, ConfirmationPayload } from "@/lib/stores/agent-chat-store";
 
 interface Props {
   groupId: string;
   role: "admin" | "member";
+  // Mantido por compatibilidade; ignorado pois agora a conversa vive no store.
   initialConversationId?: string;
 }
 
-export function ChatInterface({ groupId, role, initialConversationId }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ChatInterface({ groupId }: Props) {
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [quotaRefreshKey, setQuotaRefreshKey] = useState(0);
-  const [conversationId, setConversationId] = useState<string | undefined>(
-    initialConversationId
-  );
-  const [previousResponseId, setPreviousResponseId] = useState<
-    string | undefined
-  >();
-  const [confirmation, setConfirmation] = useState<ConfirmationPayload | null>(
-    null
-  );
-  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
+
+  const { messages, loading, confirmation, error, quotaRefreshKey } =
+    useAgentChatStore(selectGroupChat(groupId));
+  const sendMessage = useAgentChatStore((s) => s.sendMessage);
+  const confirmStore = useAgentChatStore((s) => s.confirm);
+  const cancelStore = useAgentChatStore((s) => s.cancel);
+  const stopStore = useAgentChatStore((s) => s.stop);
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -67,199 +40,12 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const sendMessage = useCallback(
-    async (messageText: string, confirmed?: boolean) => {
-      if (!messageText.trim() || loading) return;
-
-      setError(null);
-      setLoading(true);
-      setConfirmation(null);
-
-      const userMsgId = crypto.randomUUID();
-      setMessages((prev) => [
-        ...prev,
-        { id: userMsgId, role: "user", content: messageText },
-      ]);
-
-      const assistantMsgId = crypto.randomUUID();
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantMsgId, role: "assistant", content: "", pending: true },
-      ]);
-
-      abortRef.current = new AbortController();
-
-      try {
-        const res = await fetch("/api/agent/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            groupId,
-            message: messageText,
-            conversationId,
-            previousResponseId,
-            confirmed,
-          }),
-          signal: abortRef.current.signal,
-        });
-
-        if (!res.body) throw new Error("Resposta sem corpo");
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let assistantText = "";
-        const toolCalls: { tool: string; result?: unknown }[] = [];
-        let receivedDone = false;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
-          buffer = parts.pop() ?? "";
-
-          for (const part of parts) {
-            if (!part.trim()) continue;
-
-            const lines = part.split("\n");
-            let evType = "";
-            let evData = "";
-
-            for (const line of lines) {
-              if (line.startsWith("event: ")) evType = line.slice(7);
-              if (line.startsWith("data: ")) evData = line.slice(6);
-            }
-
-            if (!evType || !evData) continue;
-
-            let data: Record<string, unknown>;
-            try {
-              data = JSON.parse(evData);
-            } catch {
-              continue;
-            }
-
-            switch (evType as SseEventType) {
-              case "conversation_created":
-                setConversationId(data.conversationId as string);
-                break;
-
-              case "token":
-                assistantText += data.delta as string;
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId
-                      ? { ...m, content: assistantText }
-                      : m
-                  )
-                );
-                break;
-
-              case "tool_call":
-                toolCalls.push({ tool: data.tool as string });
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId
-                      ? { ...m, toolCalls: [...toolCalls] }
-                      : m
-                  )
-                );
-                break;
-
-              case "tool_result": {
-                const idx = toolCalls.findIndex((t) => t.tool === data.tool);
-                if (idx >= 0) {
-                  toolCalls[idx] = { ...toolCalls[idx], result: data.result };
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === assistantMsgId
-                        ? { ...m, toolCalls: [...toolCalls] }
-                        : m
-                    )
-                  );
-                }
-                break;
-              }
-
-              case "confirmation_required":
-                setConfirmation({
-                  tool: data.tool as string,
-                  arguments: data.arguments,
-                  responseId: data.responseId as string,
-                });
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId
-                      ? { ...m, pending: false, toolCalls: [...toolCalls] }
-                      : m
-                  )
-                );
-                break;
-
-              case "done":
-                receivedDone = true;
-                setPreviousResponseId(data.responseId as string | undefined);
-                setQuotaRefreshKey((k) => k + 1);
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMsgId
-                      ? {
-                          ...m,
-                          pending: false,
-                          // Marca toolCalls ainda pendentes como concluídos
-                          toolCalls: m.toolCalls?.map((tc) =>
-                            tc.result === undefined ? { ...tc, result: null } : tc
-                          ),
-                        }
-                      : m
-                  )
-                );
-                break;
-
-              case "error":
-                setError(data.message as string);
-                setMessages((prev) =>
-                  prev.filter((m) => m.id !== assistantMsgId)
-                );
-                break;
-            }
-          }
-        }
-
-        // Stream fechou sem evento "done" (timeout, erro silencioso, etc.)
-        if (!receivedDone) {
-          setError("A resposta foi interrompida inesperadamente. Tente novamente.");
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsgId
-                ? { ...m, pending: false }
-                : m
-            )
-          );
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          setError("Falha ao conectar ao agente. Tente novamente.");
-          setMessages((prev) =>
-            prev.filter((m) => m.id !== assistantMsgId)
-          );
-        }
-      } finally {
-        setLoading(false);
-        abortRef.current = null;
-      }
-    },
-    [loading, groupId, conversationId, previousResponseId]
-  );
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
     setInput("");
-    void sendMessage(text);
+    void sendMessage(groupId, text);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -268,35 +54,8 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
       const text = input.trim();
       if (!text) return;
       setInput("");
-      void sendMessage(text);
+      void sendMessage(groupId, text);
     }
-  };
-
-  const handleConfirm = () => {
-    if (!confirmation) return;
-    const lastUserMsg = [...messages]
-      .reverse()
-      .find((m) => m.role === "user");
-    setPreviousResponseId(confirmation.responseId);
-    setConfirmation(null);
-    void sendMessage(lastUserMsg?.content ?? "confirmar", true);
-  };
-
-  const handleCancel = () => {
-    setConfirmation(null);
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Ação cancelada pelo usuário.",
-      },
-    ]);
-  };
-
-  const handleStop = () => {
-    abortRef.current?.abort();
-    setLoading(false);
   };
 
   return (
@@ -332,8 +91,8 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
           <ConfirmationCard
             tool={confirmation.tool}
             arguments={confirmation.arguments}
-            onConfirm={handleConfirm}
-            onCancel={handleCancel}
+            onConfirm={() => confirmStore(groupId)}
+            onCancel={() => cancelStore(groupId)}
           />
         )}
 
@@ -361,7 +120,7 @@ export function ChatInterface({ groupId, role, initialConversationId }: Props) {
           disabled={loading || !!confirmation}
         />
         {loading ? (
-          <Button type="button" variant="outline" onClick={handleStop}>
+          <Button type="button" variant="outline" onClick={() => stopStore(groupId)}>
             Parar
           </Button>
         ) : (

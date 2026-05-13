@@ -13,6 +13,7 @@ import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppSidebar, type SidebarUser, type SidebarGroup } from "./AppSidebar";
 import { useResizableSidebar } from "@/hooks/useResizableSidebar";
+import { FloatingAgentBubble } from "@/components/agent/FloatingAgentBubble";
 
 interface AppLayoutProps {
   user: SidebarUser;
@@ -130,6 +131,8 @@ export function AppLayout({ user, groups, children }: AppLayoutProps) {
           {children}
         </div>
       </main>
+
+      <FloatingAgentBubble groups={groups} />
     </div>
   );
 }

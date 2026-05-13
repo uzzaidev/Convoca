@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-13
 
+### chore
+- Limpeza na estrutura de código e remoção de blocos de código não utilizados
+  - Arquivos: `migration.log`
+  - Evidência: commit "chore: clean up code structure and remove unused code blocks"
+  - Confiança: alta
+
+## 2026-05-13
+
 ### feat
 - Implementado componente FloatingAgentBubble com chat flutuante para grupos, incluindo store de chat do agente.
   - Arquivos: `src/components/agent/FloatingAgentBubble.tsx`, `src/lib/stores/agent-chat-store.ts`

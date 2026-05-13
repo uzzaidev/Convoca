@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "backup": "bash src/db/backup-supabase.sh",
+    "backup": "node scripts/backup-neon.mjs",
     "db:migrate": "node src/db/migrate.mjs",
     "db:status": "node src/db/migrate.mjs --status"
   },

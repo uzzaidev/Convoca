@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Frontend**: React 19, TypeScript, Tailwind CSS
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Database**: Neon PostgreSQL Serverless with raw SQL (no ORM)
-- **Database Client**: `@neondatabase/serverless`
+- **Database Client**: `postgres` (https://github.com/porsager/postgres) with `prepare: false` for Neon pooler compatibility
 - **Authentication**: NextAuth v5 (Auth.js) with credentials provider
 - **Validation**: Zod
 - **State Management**: Zustand
@@ -74,7 +74,7 @@ API routes use `requireAuth()` to enforce authentication. Middleware in `src/mid
 
 ### Database Pattern
 
-All database operations use raw SQL via `@neondatabase/serverless`:
+All database operations use raw SQL via the `postgres` lib (template tagged):
 
 ```typescript
 import { sql } from "@/db/client";
@@ -94,8 +94,9 @@ Key tables:
 - **teams**: Drawn teams per event
 - **team_members**: Players assigned to teams
 - **event_actions**: Goals, assists, cards
-- **votes**: Player voting system (replaces traditional ratings)
-- **wallets/charges/transactions**: Financial tracking
+- **player_ratings / mvp_tiebreakers / mvp_tiebreaker_votes**: Player voting/rating system
+- **wallets/charges/transactions/expenses**: Financial tracking
+- **agent_conversations / agent_messages / agent_quotas / agent_settings / agent_usage**: AI agent
 - **invites**: Group invitation codes
 - **venues**: Match locations
 
@@ -322,9 +323,9 @@ Planned (Phase 2+):
 ## Documentation References
 
 - `README.md`: Quick start and setup
-- `NEON_AUTH_GUIDE.md`: Complete auth setup guide
-- `DATABASE_MIGRATION.md`: Migration from Stack Auth
+- `src/db/README.md` / `src/db/MIGRATION_WORKFLOW.md`: DB workflow
 - `.github/copilot-instructions.md`: Detailed conventions (used as source for this file)
+- `scripts/migrate-to-neon.mjs`: Reference orchestrator for Postgres-to-Postgres dumps (originally Supabase → Neon migration in 2026-05)
 
 ## API Endpoints Overview
 

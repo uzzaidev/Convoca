@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-14
 
+### fix
+- Corrigido erro de digitação na seção de arquitetura do README
+  - Arquivos: `docs/README.md`
+  - Evidência: correção de texto na seção "02. Architecture"
+  - Confiança: alta
+
+## 2026-05-14
+
 ### feat
 - Adicionado configuração de critérios de desempate (tiebreakers) na classificação e rankings, permitindo personalização da ordem de critérios como vitórias, saldo, gols, jogos, assistências e MVPs.
   - Arquivos: `src/app/api/groups/[groupId]/rankings/route.ts`, `src/app/api/groups/[groupId]/scoring-config/route.ts`, `src/components/group/rankings-card.tsx`, `src/components/groups/scoring-config-form.tsx`

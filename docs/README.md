@@ -14,7 +14,7 @@ Guias para começar com o projeto.
 - [Guia de Correções Rápidas](01-getting-started/QUICK_FIX_GUIDE.md) - Soluções rápidas
 
 ### 02. Architecture
-Arquitetura e estrutura do projeto.
+Arquitetura e estrutura do projetoo.
 
 - [Resumo do Projeto](02-architecture/PROJECT_SUMMARY.md) - Visão geral completa
 - [Estrutura de Componentes](02-architecture/COMPONENT_STRUCTURES.md) - Organização dos componentes

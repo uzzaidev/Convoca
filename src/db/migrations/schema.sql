@@ -272,6 +272,10 @@ CREATE TABLE IF NOT EXISTS scoring_configs (
   points_presence INTEGER DEFAULT 0 CHECK (points_presence >= 0 AND points_presence <= 10),
   -- Ranking mode: 'standard' (V/E/D only), 'complete' (V/E/D + individual stats)
   ranking_mode VARCHAR(20) DEFAULT 'standard' CHECK (ranking_mode IN ('standard', 'complete')),
+  -- Tiebreaker criteria applied in order after 'points DESC'.
+  -- Valid items: 'wins', 'goal_difference', 'goals', 'games_played',
+  -- 'games_played_asc' (fewer games first), 'assists', 'mvp_count'.
+  tiebreakers JSONB NOT NULL DEFAULT '["wins", "goal_difference", "goals", "games_played"]'::jsonb,
   -- Metadata
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT NOW(),

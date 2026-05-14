@@ -7,6 +7,13 @@ import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
+const DEFAULT_TIEBREAKERS = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+] as const;
+
 const DEFAULT_SCORING = {
   pointsWin: 3,
   pointsDraw: 1,
@@ -16,7 +23,64 @@ const DEFAULT_SCORING = {
   pointsMvp: 0,
   pointsPresence: 0,
   rankingMode: "standard",
+  tiebreakers: DEFAULT_TIEBREAKERS,
 };
+
+type RankingRow = Record<string, unknown> & {
+  points?: number | string | null;
+  wins?: number | string | null;
+  goal_difference?: number | string | null;
+  goals?: number | string | null;
+  games_played?: number | string | null;
+  assists?: number | string | null;
+  mvp_count?: number | string | null;
+};
+
+function toNum(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v) || 0;
+  return 0;
+}
+
+// Compare fn for one tiebreaker key. Returns the JS-sort delta (negative = a first).
+function compareByKey(a: RankingRow, b: RankingRow, key: string): number {
+  switch (key) {
+    case "wins":
+      return toNum(b.wins) - toNum(a.wins);
+    case "goal_difference":
+      return toNum(b.goal_difference) - toNum(a.goal_difference);
+    case "goals":
+      return toNum(b.goals) - toNum(a.goals);
+    case "games_played":
+      return toNum(b.games_played) - toNum(a.games_played);
+    case "games_played_asc":
+      return toNum(a.games_played) - toNum(b.games_played);
+    case "assists":
+      return toNum(b.assists) - toNum(a.assists);
+    case "mvp_count":
+      return toNum(b.mvp_count) - toNum(a.mvp_count);
+    default:
+      return 0;
+  }
+}
+
+function sortRankings<T extends RankingRow>(
+  rows: T[],
+  rawTiebreakers: unknown
+): T[] {
+  const tb: string[] = Array.isArray(rawTiebreakers)
+    ? rawTiebreakers.filter((k): k is string => typeof k === "string")
+    : [...DEFAULT_TIEBREAKERS];
+  return [...rows].sort((a, b) => {
+    const dp = toNum(b.points) - toNum(a.points);
+    if (dp !== 0) return dp;
+    for (const key of tb) {
+      const d = compareByKey(a, b, key);
+      if (d !== 0) return d;
+    }
+    return 0;
+  });
+}
 
 // GET /api/groups/:groupId/rankings - Get player rankings for a group
 export async function GET(
@@ -85,7 +149,8 @@ export async function GET(
             points_assist as "pointsAssist",
             points_mvp as "pointsMvp",
             points_presence as "pointsPresence",
-            ranking_mode as "rankingMode"
+            ranking_mode as "rankingMode",
+            tiebreakers
           FROM scoring_configs
           WHERE group_id = ${groupId}
         `;
@@ -111,7 +176,14 @@ export async function GET(
               ? ((Number(snapshot.wins) / Number(snapshot.games_played)) * 100).toFixed(2)
               : "0",
           })),
-          scoringConfig: scoringConfig || DEFAULT_SCORING,
+          scoringConfig: {
+            ...(scoringConfig || DEFAULT_SCORING),
+            tiebreakers: Array.isArray(scoringConfig?.tiebreakers)
+              ? (scoringConfig.tiebreakers as unknown[]).filter(
+                  (k): k is string => typeof k === "string"
+                )
+              : [...DEFAULT_TIEBREAKERS],
+          },
           season: { id: season.id, name: season.name, status: season.status },
         });
       }
@@ -152,12 +224,15 @@ export async function GET(
         points_assist as "pointsAssist",
         points_mvp as "pointsMvp",
         points_presence as "pointsPresence",
-        ranking_mode as "rankingMode"
+        ranking_mode as "rankingMode",
+        tiebreakers
       FROM scoring_configs
       WHERE group_id = ${groupId}
     `;
 
     const config = scoringConfig || DEFAULT_SCORING;
+    const rawTiebreakers =
+      (scoringConfig?.tiebreakers as unknown) ?? DEFAULT_TIEBREAKERS;
 
     const rankings = seasonFilter
       ? await sql`
@@ -288,7 +363,7 @@ export async function GET(
         )::integer as points
       FROM player_stats
       WHERE games_played > 0
-      ORDER BY points DESC, wins DESC, goal_difference DESC, goals DESC
+      ORDER BY points DESC
     `
       : await sql`
       WITH
@@ -414,13 +489,18 @@ export async function GET(
         )::integer as points
       FROM player_stats
       WHERE games_played > 0
-      ORDER BY points DESC, wins DESC, goal_difference DESC, goals DESC
+      ORDER BY points DESC
     `;
+
+    const sortedRankings = sortRankings(
+      rankings as unknown as RankingRow[],
+      rawTiebreakers
+    );
 
     logger.info({
       groupId,
       seasonId: activeSeason?.id || null,
-      totalPlayers: rankings.length,
+      totalPlayers: sortedRankings.length,
       config: {
         pointsWin: config.pointsWin,
         pointsDraw: config.pointsDraw,
@@ -429,9 +509,18 @@ export async function GET(
       }
     }, "Rankings calculated");
 
+    const normalizedConfig = {
+      ...config,
+      tiebreakers: Array.isArray(rawTiebreakers)
+        ? (rawTiebreakers as unknown[]).filter(
+            (k): k is string => typeof k === "string"
+          )
+        : [...DEFAULT_TIEBREAKERS],
+    };
+
     return NextResponse.json({
-      rankings,
-      scoringConfig: config,
+      rankings: sortedRankings,
+      scoringConfig: normalizedConfig,
       ...(activeSeason && { season: activeSeason }),
     });
   } catch (error) {

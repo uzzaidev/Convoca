@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-14
 
+### feat
+- Melhorada a lógica de filtragem por temporada e atualização da UI para seleção de temporada. Agora, o sistema trata o valor "all" para exibir todas as temporadas e ajusta o nome exibido na interface. Arquivos: `page.tsx`, `rankings-card.tsx`, `route.ts`. Confiança: alta
+
+### refactor
+- Simplificado o código para manipulação do parâmetro `seasonId`, consolidando o tratamento do valor "all" e removendo redundâncias. Arquivos: `route.ts`, `rankings-card.tsx`. Confiança: alta
+
+## 2026-05-14
+
 ### fix
 - Corrigido erro de digitação na seção de arquitetura do README
   - Arquivos: `docs/README.md`

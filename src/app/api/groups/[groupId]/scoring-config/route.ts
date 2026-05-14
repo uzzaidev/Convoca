@@ -8,6 +8,25 @@ import { handleRouteError } from "@/lib/route-errors";
 
 type Params = Promise<{ groupId: string }>;
 
+export const TIEBREAKER_KEYS = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+  "games_played_asc",
+  "assists",
+  "mvp_count",
+] as const;
+
+export type TiebreakerKey = (typeof TIEBREAKER_KEYS)[number];
+
+const DEFAULT_TIEBREAKERS: TiebreakerKey[] = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+];
+
 const DEFAULT_CONFIG = {
   pointsWin: 3,
   pointsDraw: 1,
@@ -17,6 +36,7 @@ const DEFAULT_CONFIG = {
   pointsMvp: 0,
   pointsPresence: 0,
   rankingMode: "standard" as const,
+  tiebreakers: DEFAULT_TIEBREAKERS,
 };
 
 const scoringConfigSchema = z.object({
@@ -28,9 +48,34 @@ const scoringConfigSchema = z.object({
   pointsMvp: z.number().min(0).max(10),
   pointsPresence: z.number().min(0).max(10),
   rankingMode: z.enum(["standard", "complete"]),
+  tiebreakers: z
+    .array(z.enum(TIEBREAKER_KEYS))
+    .max(TIEBREAKER_KEYS.length)
+    .refine((arr) => new Set(arr).size === arr.length, {
+      message: "Critérios de desempate duplicados",
+    })
+    .refine(
+      (arr) =>
+        !(arr.includes("games_played") && arr.includes("games_played_asc")),
+      { message: "Use 'mais jogos' OU 'menos jogos', não os dois" }
+    ),
 });
 
 export type ScoringConfig = z.infer<typeof scoringConfigSchema>;
+
+function normalizeTiebreakers(raw: unknown): TiebreakerKey[] {
+  if (!Array.isArray(raw)) return DEFAULT_TIEBREAKERS;
+  const seen = new Set<string>();
+  const out: TiebreakerKey[] = [];
+  for (const item of raw) {
+    if (typeof item !== "string") continue;
+    if (!(TIEBREAKER_KEYS as readonly string[]).includes(item)) continue;
+    if (seen.has(item)) continue;
+    seen.add(item);
+    out.push(item as TiebreakerKey);
+  }
+  return out;
+}
 
 // GET /api/groups/:groupId/scoring-config - Get scoring configuration for group
 export async function GET(
@@ -43,7 +88,7 @@ export async function GET(
 
     await requireGroupAccess(groupId, user);
 
-    const [config] = await sql`
+    const [row] = await sql`
       SELECT
         points_win as "pointsWin",
         points_draw as "pointsDraw",
@@ -52,16 +97,23 @@ export async function GET(
         points_assist as "pointsAssist",
         points_mvp as "pointsMvp",
         points_presence as "pointsPresence",
-        ranking_mode as "rankingMode"
+        ranking_mode as "rankingMode",
+        tiebreakers
       FROM scoring_configs
       WHERE group_id = ${groupId}
     `;
 
-    return NextResponse.json({ config: config || DEFAULT_CONFIG });
+    if (!row) {
+      return NextResponse.json({ config: DEFAULT_CONFIG });
+    }
+
+    return NextResponse.json({
+      config: { ...row, tiebreakers: normalizeTiebreakers(row.tiebreakers) },
+    });
   } catch (error) {
     return handleRouteError(error, {
       logMessage: "Error getting scoring config",
-      fallbackMessage: "Erro ao buscar configuraÃ§Ã£o de pontuaÃ§Ã£o",
+      fallbackMessage: "Erro ao buscar configuração de pontuação",
     });
   }
 }
@@ -79,7 +131,7 @@ export async function PATCH(
     const validation = scoringConfigSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: "ConfiguraÃ§Ã£o invÃ¡lida", details: validation.error.flatten() },
+        { error: "Configuração inválida", details: validation.error.flatten() },
         { status: 400 }
       );
     }
@@ -88,7 +140,7 @@ export async function PATCH(
 
     await requireGroupAccess(groupId, user, {
       minRole: "admin",
-      adminErrorMessage: "Apenas admins podem alterar configuraÃ§Ãµes de pontuaÃ§Ã£o",
+      adminErrorMessage: "Apenas admins podem alterar configurações de pontuação",
     });
 
     await sql`
@@ -102,6 +154,7 @@ export async function PATCH(
         points_mvp,
         points_presence,
         ranking_mode,
+        tiebreakers,
         created_by,
         updated_at
       ) VALUES (
@@ -114,6 +167,7 @@ export async function PATCH(
         ${config.pointsMvp},
         ${config.pointsPresence},
         ${config.rankingMode},
+        ${JSON.stringify(config.tiebreakers)}::jsonb,
         ${user.id},
         NOW()
       )
@@ -127,6 +181,7 @@ export async function PATCH(
         points_mvp = EXCLUDED.points_mvp,
         points_presence = EXCLUDED.points_presence,
         ranking_mode = EXCLUDED.ranking_mode,
+        tiebreakers = EXCLUDED.tiebreakers,
         updated_at = NOW()
     `;
 
@@ -136,7 +191,7 @@ export async function PATCH(
   } catch (error) {
     return handleRouteError(error, {
       logMessage: "Error saving scoring config",
-      fallbackMessage: "Erro ao salvar configuraÃ§Ã£o de pontuaÃ§Ã£o",
+      fallbackMessage: "Erro ao salvar configuração de pontuação",
     });
   }
 }

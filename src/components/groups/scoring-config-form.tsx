@@ -6,8 +6,51 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trophy, Target, Users, Star, Medal } from "lucide-react";
+import { Loader2, Trophy, Target, Users, Star, Medal, ArrowUp, ArrowDown, ArrowDownUp, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type TiebreakerKey =
+  | "wins"
+  | "goal_difference"
+  | "goals"
+  | "games_played"
+  | "games_played_asc"
+  | "assists"
+  | "mvp_count";
+
+const TIEBREAKER_LABELS: Record<TiebreakerKey, string> = {
+  wins: "Vitórias",
+  goal_difference: "Saldo de gols",
+  goals: "Gols feitos",
+  games_played: "Mais jogos (presença)",
+  games_played_asc: "Menos jogos (eficiência)",
+  assists: "Assistências",
+  mvp_count: "MVPs",
+};
+
+const ALL_TIEBREAKERS: TiebreakerKey[] = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+  "games_played_asc",
+  "assists",
+  "mvp_count",
+];
+
+const DEFAULT_TIEBREAKERS: TiebreakerKey[] = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+];
 
 type ScoringConfig = {
   pointsWin: number;
@@ -18,6 +61,7 @@ type ScoringConfig = {
   pointsMvp: number;
   pointsPresence: number;
   rankingMode: "standard" | "complete";
+  tiebreakers: TiebreakerKey[];
 };
 
 const PRESETS = {
@@ -33,6 +77,7 @@ const PRESETS = {
       pointsMvp: 0,
       pointsPresence: 0,
       rankingMode: "standard" as const,
+      tiebreakers: [...DEFAULT_TIEBREAKERS],
     },
   },
   complete: {
@@ -47,6 +92,7 @@ const PRESETS = {
       pointsMvp: 2,
       pointsPresence: 0,
       rankingMode: "complete" as const,
+      tiebreakers: [...DEFAULT_TIEBREAKERS],
     },
   },
   participation: {
@@ -61,6 +107,7 @@ const PRESETS = {
       pointsMvp: 3,
       pointsPresence: 1,
       rankingMode: "complete" as const,
+      tiebreakers: ["wins", "games_played", "goal_difference", "goals"] as TiebreakerKey[],
     },
   },
 };
@@ -98,8 +145,18 @@ export function ScoringConfigForm({ groupId }: ScoringConfigFormProps) {
       const res = await fetch(`/api/groups/${groupId}/scoring-config`);
       if (res.ok) {
         const data = await res.json();
-        setConfig(data.config);
-        setOriginalConfig(data.config);
+        const normalized: ScoringConfig = {
+          ...data.config,
+          tiebreakers:
+            Array.isArray(data.config?.tiebreakers) &&
+            data.config.tiebreakers.length > 0
+              ? data.config.tiebreakers.filter((k: string) =>
+                  ALL_TIEBREAKERS.includes(k as TiebreakerKey)
+                )
+              : [...DEFAULT_TIEBREAKERS],
+        };
+        setConfig(normalized);
+        setOriginalConfig(normalized);
       }
     } catch (error) {
       console.error("Error fetching scoring config:", error);
@@ -121,6 +178,44 @@ export function ScoringConfigForm({ groupId }: ScoringConfigFormProps) {
       p.games * cfg.pointsPresence
     );
   };
+
+  const updateTiebreakers = (next: TiebreakerKey[]) => {
+    const newConfig = { ...config, tiebreakers: next };
+    setConfig(newConfig);
+    setHasChanges(JSON.stringify(newConfig) !== JSON.stringify(originalConfig));
+  };
+
+  const moveTiebreaker = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= config.tiebreakers.length) return;
+    const next = [...config.tiebreakers];
+    [next[index], next[target]] = [next[target], next[index]];
+    updateTiebreakers(next);
+  };
+
+  const removeTiebreaker = (index: number) => {
+    updateTiebreakers(config.tiebreakers.filter((_, i) => i !== index));
+  };
+
+  const addTiebreaker = (key: TiebreakerKey) => {
+    if (config.tiebreakers.includes(key)) return;
+    // "games_played" and "games_played_asc" are mutually exclusive.
+    const filtered = config.tiebreakers.filter((k) => {
+      if (key === "games_played" && k === "games_played_asc") return false;
+      if (key === "games_played_asc" && k === "games_played") return false;
+      return true;
+    });
+    updateTiebreakers([...filtered, key]);
+  };
+
+  const availableToAdd = ALL_TIEBREAKERS.filter((k) => {
+    if (config.tiebreakers.includes(k)) return false;
+    if (k === "games_played" && config.tiebreakers.includes("games_played_asc"))
+      return false;
+    if (k === "games_played_asc" && config.tiebreakers.includes("games_played"))
+      return false;
+    return true;
+  });
 
   const updateConfig = (key: keyof ScoringConfig, value: number | string) => {
     const newConfig = { ...config, [key]: value };
@@ -366,6 +461,99 @@ export function ScoringConfigForm({ groupId }: ScoringConfigFormProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tiebreakers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ArrowDownUp className="h-4 w-4" />
+            Critérios de Desempate
+          </CardTitle>
+          <CardDescription>
+            Quando dois jogadores empatam em pontos, esses critérios são
+            aplicados na ordem abaixo até desempatar. Arraste com as setas
+            para reorganizar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {config.tiebreakers.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">
+              Nenhum critério configurado — empates ficam na ordem que o banco
+              retornar. Adicione pelo menos um critério abaixo.
+            </p>
+          ) : (
+            <ol className="space-y-2">
+              {config.tiebreakers.map((key, index) => (
+                <li
+                  key={key}
+                  className="flex items-center gap-2 rounded-md border bg-card p-2"
+                >
+                  <Badge variant="outline" className="font-mono w-8 justify-center">
+                    {index + 1}º
+                  </Badge>
+                  <span className="flex-1 text-sm">{TIEBREAKER_LABELS[key]}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => moveTiebreaker(index, -1)}
+                    disabled={index === 0}
+                    aria-label="Subir critério"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => moveTiebreaker(index, 1)}
+                    disabled={index === config.tiebreakers.length - 1}
+                    aria-label="Descer critério"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-600 hover:text-red-700"
+                    onClick={() => removeTiebreaker(index)}
+                    aria-label="Remover critério"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          {availableToAdd.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value=""
+                onValueChange={(val) => addTiebreaker(val as TiebreakerKey)}
+              >
+                <SelectTrigger className="w-full sm:w-[260px]">
+                  <SelectValue placeholder="Adicionar critério..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableToAdd.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {TIEBREAKER_LABELS[key]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+            <strong>Como funciona:</strong> a tabela é ordenada primeiro por
+            pontos (maior → menor). Em caso de empate, aplica o 1º critério; se
+            ainda empatar, o 2º; e assim por diante.
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Preview */}
       <Card className="bg-gradient-to-br from-gray-50 to-gray-100">

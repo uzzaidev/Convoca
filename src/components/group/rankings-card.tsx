@@ -100,6 +100,15 @@ const STICKY_NAME_LEFT = STICKY_RANK_WIDTH;
 type SortField = ColumnKey;
 type SortDirection = 'asc' | 'desc';
 
+type TiebreakerKey =
+  | "wins"
+  | "goal_difference"
+  | "goals"
+  | "games_played"
+  | "games_played_asc"
+  | "assists"
+  | "mvp_count";
+
 type ScoringConfig = {
   pointsWin: number;
   pointsDraw: number;
@@ -109,7 +118,15 @@ type ScoringConfig = {
   pointsMvp: number;
   pointsPresence: number;
   rankingMode: "standard" | "complete";
+  tiebreakers?: TiebreakerKey[];
 };
+
+const DEFAULT_TIEBREAKERS: TiebreakerKey[] = [
+  "wins",
+  "goal_difference",
+  "goals",
+  "games_played",
+];
 
 const DEFAULT_SCORING: ScoringConfig = {
   pointsWin: 3,
@@ -120,6 +137,17 @@ const DEFAULT_SCORING: ScoringConfig = {
   pointsMvp: 0,
   pointsPresence: 0,
   rankingMode: "standard",
+  tiebreakers: DEFAULT_TIEBREAKERS,
+};
+
+const TIEBREAKER_FIELD: Record<TiebreakerKey, { field: keyof GeneralRanking; dir: "asc" | "desc" }> = {
+  wins: { field: "wins", dir: "desc" },
+  goal_difference: { field: "goal_difference", dir: "desc" },
+  goals: { field: "goals", dir: "desc" },
+  games_played: { field: "games", dir: "desc" },
+  games_played_asc: { field: "games", dir: "asc" },
+  assists: { field: "assists", dir: "desc" },
+  mvp_count: { field: "mvps", dir: "desc" },
 };
 
 type RankingsCardProps = {
@@ -152,6 +180,24 @@ function getScoringDescription(config: ScoringConfig): string {
   return `Pontuação: ${parts.join(', ')}`;
 }
 
+const TIEBREAKER_LABEL_SHORT: Record<TiebreakerKey, string> = {
+  wins: "vitórias",
+  goal_difference: "saldo",
+  goals: "gols",
+  games_played: "mais jogos",
+  games_played_asc: "menos jogos",
+  assists: "assistências",
+  mvp_count: "MVPs",
+};
+
+function getTiebreakerDescription(keys: TiebreakerKey[] | undefined): string {
+  const list = keys && keys.length > 0 ? keys : DEFAULT_TIEBREAKERS;
+  return `Desempate: ${list
+    .map((k) => TIEBREAKER_LABEL_SHORT[k])
+    .filter(Boolean)
+    .join(' → ')}`;
+}
+
 export function RankingsCard({
   topScorers,
   topAssisters,
@@ -177,6 +223,7 @@ export function RankingsCard({
   };
 
   const scoringDescription = getScoringDescription(scoringConfig);
+  const tiebreakerDescription = getTiebreakerDescription(scoringConfig.tiebreakers);
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -234,11 +281,29 @@ export function RankingsCard({
     rankingSearch === '' || p.name.toLowerCase().includes(rankingSearch.toLowerCase())
   );
 
+  const tiebreakers: TiebreakerKey[] =
+    scoringConfig.tiebreakers && scoringConfig.tiebreakers.length > 0
+      ? scoringConfig.tiebreakers
+      : DEFAULT_TIEBREAKERS;
+
   const sortedGeneralRanking = [...filteredGeneralRanking].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
+    const primary = sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    if (primary !== 0) return primary;
 
-    return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    // Apply configured tiebreakers only when sorting by score (default view).
+    if (sortField === 'score') {
+      for (const key of tiebreakers) {
+        const entry = TIEBREAKER_FIELD[key];
+        if (!entry) continue;
+        const av = a[entry.field] as number;
+        const bv = b[entry.field] as number;
+        const delta = entry.dir === 'asc' ? av - bv : bv - av;
+        if (delta !== 0) return delta;
+      }
+    }
+    return 0;
   });
 
   const rankingTotalPages = Math.ceil(sortedGeneralRanking.length / PAGE_SIZE);
@@ -854,8 +919,9 @@ export function RankingsCard({
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-0">
-            <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2 md:px-0">
-              {scoringDescription}
+            <div className="text-xs md:text-sm text-muted-foreground mb-2 px-2 md:px-0 space-y-0.5">
+              <div>{scoringDescription}</div>
+              <div>{tiebreakerDescription}</div>
             </div>
             {renderGeneralRanking()}
           </TabsContent>

@@ -102,7 +102,7 @@ export async function GET(
       );
     }
 
-    if (seasonId) {
+    if (seasonId && seasonId !== "all") {
       const [season] = await sql`
         SELECT id, name, status, starts_at, ends_at
         FROM seasons
@@ -192,7 +192,9 @@ export async function GET(
     let seasonFilter: { startsAt: string; endsAt: string } | null = null;
     let activeSeason: { id: string; name: string; status: string } | null = null;
 
-    if (seasonId) {
+    if (seasonId === "all") {
+      // Agregação geral: sem filtro de temporada.
+    } else if (seasonId) {
       const [season] = await sql`
         SELECT id, name, status, starts_at, ends_at
         FROM seasons

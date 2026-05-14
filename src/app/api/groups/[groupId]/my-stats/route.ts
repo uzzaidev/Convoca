@@ -24,7 +24,9 @@ export async function GET(
 
     let seasonFilter: { startsAt: string; endsAt: string } | null = null;
 
-    if (seasonId) {
+    if (seasonId === "all") {
+      // Agregação geral: sem filtro de temporada.
+    } else if (seasonId) {
       const [season] = await sql`
         SELECT starts_at, ends_at FROM seasons
         WHERE id = ${seasonId} AND group_id = ${groupId}

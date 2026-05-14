@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-05-14
+
+### feat
+- Adicionado configuração de critérios de desempate (tiebreakers) na classificação e rankings, permitindo personalização da ordem de critérios como vitórias, saldo, gols, jogos, assistências e MVPs.
+  - Arquivos: `src/app/api/groups/[groupId]/rankings/route.ts`, `src/app/api/groups/[groupId]/scoring-config/route.ts`, `src/components/group/rankings-card.tsx`, `src/components/groups/scoring-config-form.tsx`
+  - Evidência: implementação de lógica de ordenação com critérios configuráveis e novos campos de configuração.
+  - Confiança: alta
+
 ## 2026-05-13
 
 ### docs

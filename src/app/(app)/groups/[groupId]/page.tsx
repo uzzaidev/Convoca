@@ -179,7 +179,11 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
   // Buscar eventos finalizados do grupo (com filtro de temporada)
   let seasonFilter: { startsAt: string; endsAt: string; name: string; status: string } | null = null;
 
-  if (seasonId) {
+  // seasonId === "all" → agrega todas as temporadas (sem filtro).
+  // seasonId ausente → padrão = temporada ativa.
+  if (seasonId === "all") {
+    seasonFilter = null;
+  } else if (seasonId) {
     const [s] = await sql`
       SELECT starts_at, ends_at, name, status FROM seasons
       WHERE id = ${seasonId} AND group_id = ${groupId}
@@ -707,7 +711,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
                 scoringConfig={scoringConfig}
                 seasons={allSeasons as unknown as Array<{ id: string; name: string; status: string; starts_at: string; ends_at: string }>}
                 currentSeasonId={seasonId}
-                currentSeasonName={seasonFilter?.name}
+                currentSeasonName={seasonId === "all" ? "Geral" : seasonFilter?.name}
                 groupId={groupId}
               />
             </div>

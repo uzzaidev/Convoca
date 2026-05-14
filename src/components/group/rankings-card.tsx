@@ -215,11 +215,7 @@ export function RankingsCard({
 
   const handleSeasonChange = (value: string) => {
     if (!groupId) return;
-    if (value === "all") {
-      router.push(`/groups/${groupId}`);
-    } else {
-      router.push(`/groups/${groupId}?seasonId=${value}`);
-    }
+    router.push(`/groups/${groupId}?seasonId=${value}`);
   };
 
   const scoringDescription = getScoringDescription(scoringConfig);
@@ -873,12 +869,12 @@ export function RankingsCard({
             <CardDescription>Melhores jogadores do grupo</CardDescription>
           </div>
           {seasons.length > 0 && groupId && (
-            <Select value={currentSeasonId || "all"} onValueChange={handleSeasonChange}>
+            <Select value={currentSeasonId || ""} onValueChange={handleSeasonChange}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Temporada" />
+                <SelectValue placeholder="Temporada ativa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as temporadas</SelectItem>
+                <SelectItem value="all">📊 Geral (todas)</SelectItem>
                 {seasons.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name} {s.status === "active" ? "⚽" : s.status === "finished" ? "✅" : "📅"}

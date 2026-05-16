@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, Plus, ChevronRight } from "lucide-react";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { type GroupStatus } from "@/lib/group-status";
 
@@ -21,49 +21,86 @@ type GroupsCardProps = {
   groups: Group[];
 };
 
+const AVATAR_COLORS = [
+  "var(--c-pitch)",
+  "var(--c-navy)",
+  "var(--c-gold)",
+  "var(--c-pitch-deep)",
+  "var(--c-coral)",
+];
+
+function initialsFor(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
 export function GroupsCard({ groups }: GroupsCardProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Meus Grupos</CardTitle>
-        <CardDescription>{groups.length} grupo{groups.length !== 1 ? "s" : ""}</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="font-display text-2xl tracking-display">SEUS GRUPOS</CardTitle>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/groups/new" className="flex items-center gap-1">
+            <Plus className="h-4 w-4" />
+            Novo
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         {groups.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            <p className="mb-4">Voce ainda nao faz parte de nenhum grupo.</p>
+            <p className="mb-4">Você ainda não faz parte de nenhum grupo.</p>
             <Button asChild variant="outline">
               <Link href="/groups/new">Criar seu primeiro grupo</Link>
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {groups.map((group) => (
-              <Link
-                key={group.id}
-                href={`/groups/${group.id}`}
-                className="block rounded-lg border p-4 transition-all hover:bg-accent hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-3">
+          <div className="divide-y divide-border">
+            {groups.map((group, i) => {
+              const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+              const isGoldOrCream = color === "var(--c-gold)";
+              return (
+                <Link
+                  key={group.id}
+                  href={`/groups/${group.id}`}
+                  className="flex items-center gap-3 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-cream-2/40 -mx-2 px-2 rounded-cv-sm"
+                >
+                  <div
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-cv-md font-display text-xl tracking-wide"
+                    style={{
+                      background: color,
+                      color: isGoldOrCream ? "var(--c-on-gold)" : "var(--c-on-pitch)",
+                      boxShadow: "inset 0 -3px 0 rgba(0,0,0,.15)",
+                    }}
+                  >
+                    {initialsFor(group.name)}
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="mb-1 text-base font-semibold">{group.name}</h3>
-                    {group.description && (
-                      <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">{group.description}</p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-semibold">{group.name}</h3>
+                      {group.role === "admin" && (
+                        <Badge variant="secondary" className="h-5 text-[10px]">
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-3">
+                      <span className="inline-flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {group.member_count} membro{group.member_count !== 1 ? "s" : ""}
+                        {group.member_count} membro{Number(group.member_count) !== 1 ? "s" : ""}
                       </span>
                       <GroupStatusBadge status={group.status} />
                     </div>
                   </div>
-                  <Badge variant={group.role === "admin" ? "default" : "secondary"} className="flex-shrink-0">
-                    {group.role === "admin" ? "Admin" : "Membro"}
-                  </Badge>
-                </div>
-              </Link>
-            ))}
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-ink-3" />
+                </Link>
+              );
+            })}
           </div>
         )}
       </CardContent>

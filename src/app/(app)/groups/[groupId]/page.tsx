@@ -8,11 +8,32 @@ import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
-import { Settings, Plus, ChevronLeft, DollarSign } from "lucide-react";
+import { Settings, Plus, ChevronLeft, DollarSign, MapPin, Clock, ArrowRight } from "lucide-react";
 import { getGroupAccessContext } from "@/lib/group-access";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
 import { PaymentButton } from "@/components/groups/payment-button";
+import { PitchBackground } from "@/components/ui/pitch-background";
+
+const WEEKDAY_PT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+
+function formatHeroDate(iso: string) {
+  const d = new Date(iso);
+  const weekday = WEEKDAY_PT[d.getDay()];
+  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return { weekday, time };
+}
+
+function relativeDays(iso: string): string {
+  const target = new Date(iso);
+  const now = new Date();
+  const diffMs = target.getTime() - now.getTime();
+  const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 0) return "passou";
+  if (days === 0) return "hoje";
+  if (days === 1) return "amanhã";
+  return `em ${days} dias`;
+}
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -622,66 +643,135 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-navy via-navy-light to-green-dark text-white">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="mb-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Voltar para o dashboard
-              </Button>
-            </Link>
-          </div>
+  const nextEvent = upcomingEvents[0];
+  const isAdmin = group.userRole === "admin" || group.isSystemAdmin;
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
-              {group.description && (
-                <p className="text-gray-200 text-lg">{group.description}</p>
-              )}
+  return (
+    <div className="min-h-screen bg-cream">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        {/* Breadcrumb + back */}
+        <div className="mb-4 flex items-center gap-2 text-sm">
+          <Link href="/dashboard" className="text-ink-3 hover:text-ink transition-colors inline-flex items-center gap-1">
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Meus Grupos
+          </Link>
+          <span className="text-ink-3">/</span>
+          <span className="text-ink font-medium truncate">{group.name}</span>
+        </div>
+
+        {/* Header — group name + actions */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold uppercase tracking-eyebrow text-ink-3 mb-1">
+              {isRankingMode ? "Grupo em modo ranking" : "Grupo em modo controle"}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <GroupStatusBadge status={group.status} className="border-white/20 bg-white/10 text-white" />
-              <Badge className="bg-white/20 border-white/30 text-white">
-                {isRankingMode ? "Modo ranking" : "Modo controle"}
-              </Badge>
-              <Badge
-                variant={group.userRole === "admin" || group.isSystemAdmin ? "default" : "secondary"}
-                className="bg-white/20 border-white/30 text-white"
-              >
+            <h1 className="font-display text-4xl tracking-display sm:text-5xl break-words">
+              {group.name}
+            </h1>
+            {group.description && (
+              <p className="mt-2 text-sm text-ink-2 max-w-2xl">{group.description}</p>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <GroupStatusBadge status={group.status} />
+              <Badge variant={isAdmin ? "default" : "secondary"}>
                 {group.isSystemAdmin ? "Admin Sistema" : group.userRole === "admin" ? "Admin" : "Membro"}
               </Badge>
-              {(group.userRole === "admin" || group.isSystemAdmin) && (
-                <>
-                  <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                    <Link href={`/groups/${groupId}/events/new`}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Evento
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
-                    <Link href={`/groups/${groupId}/payments`}>
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Pagamentos
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
-                    <Link href={`/groups/${groupId}/settings`}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configurações
-                    </Link>
-                  </Button>
-                </>
-              )}
             </div>
           </div>
+          {isAdmin && (
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/groups/${groupId}/settings`}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurações
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/groups/${groupId}/payments`}>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Pagamentos
+                </Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href={`/groups/${groupId}/events/new`}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Evento
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* HERO — next event on pitch (only if there is one) */}
+        {nextEvent && (
+          <Link
+            href={`/events/${nextEvent.id}`}
+            className="mb-8 block overflow-hidden rounded-cv-2xl shadow-cv-lg transition-transform hover:scale-[1.005]"
+          >
+            <div className="relative">
+              <PitchBackground height={220} />
+              <div
+                className="absolute inset-0 flex flex-col justify-between p-6 sm:p-7"
+                style={{ color: "var(--c-on-pitch)" }}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span
+                      className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm"
+                      style={{ background: "rgba(10,22,40,.55)", color: "#FFF" }}
+                    >
+                      Próxima pelada
+                    </span>
+                    <h2
+                      className="mt-3 font-display tracking-scoreboard"
+                      style={{
+                        fontSize: "clamp(32px, 6vw, 48px)",
+                        lineHeight: 0.9,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {(() => {
+                        const { weekday, time } = formatHeroDate(nextEvent.starts_at);
+                        return `${weekday} · ${time}`;
+                      })()}
+                    </h2>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ opacity: 0.9 }}>
+                      {nextEvent.venue_name && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4" />
+                          {nextEvent.venue_name}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        {relativeDays(nextEvent.starts_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] font-semibold uppercase tracking-eyebrow" style={{ opacity: 0.7 }}>
+                      Presença
+                    </div>
+                    <div className="font-display num" style={{ fontSize: 44, lineHeight: 1 }}>
+                      {nextEvent.confirmed_count}
+                      <span style={{ opacity: 0.5, fontSize: 22 }}>/{nextEvent.max_players}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full bg-pitch-glow px-4 py-2 text-sm font-semibold text-ink"
+                    style={{ boxShadow: "var(--shadow-glow)" }}
+                  >
+                    Ver detalhes
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        )}
 
         {/* Próximas Partidas */}
         <div className="mb-8">

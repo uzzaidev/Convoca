@@ -2,66 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+   Convoca · Design System
+   Dual-mode: Sunday Pelada (light) ⇄ Stadium Nightlife (dark)
+   ========================================================= */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 142 76% 36%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* ─── Convoca tokens (canonical) ─── */
+    --c-bg:        #FAF6EE;
+    --c-surface:   #FFFFFF;
+    --c-surface-2: #F4EFE2;
+    --c-surface-3: #EBE3CC;
+    --c-ink:       #0A1628;
+    --c-ink-2:     #44546B;
+    --c-ink-3:     #8A95A3;
+    --c-border:    #EADFC4;
+    --c-border-strong: #D8C9A2;
 
-    /* Custom colors for landing page */
-    --navy: 215 60% 16%;
-    --navy-light: 215 50% 25%;
-    --green-dark: 152 70% 22%;
-    --green-light: 152 60% 35%;
+    --c-pitch:       #1A7A3A;
+    --c-pitch-deep:  #115226;
+    --c-pitch-glow:  #22C55E;
+    --c-pitch-50:    #E7F6EC;
+    --c-navy:        #0A1628;
+    --c-navy-2:      #16243F;
+    --c-gold:        #E8B243;
+    --c-gold-50:     #FAEFCF;
+    --c-coral:       #E26B4A;
+
+    --c-on-pitch:   #FAF6EE;
+    --c-on-navy:    #FAF6EE;
+    --c-on-gold:    #2B1E04;
+
+    --c-success: #1A7A3A;
+    --c-warning: #E8B243;
+    --c-danger:  #E26B4A;
+    --c-info:    #2563EB;
+
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-2xl: 32px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 2px rgba(10,22,40,.05);
+    --shadow-md: 0 6px 18px rgba(10,22,40,.06), 0 1px 3px rgba(10,22,40,.04);
+    --shadow-lg: 0 18px 40px rgba(10,22,40,.08), 0 4px 10px rgba(10,22,40,.05);
+    --shadow-glow: 0 0 0 4px rgba(34,197,94,.18);
+
+    --font-display: 'Bebas Neue', 'Oswald', 'Anton', 'Impact', sans-serif;
+    --font-body:    'DM Sans', system-ui, 'Helvetica Neue', sans-serif;
+    --font-mono:    'JetBrains Mono', 'Space Mono', ui-monospace, monospace;
+
+    /* ─── shadcn/ui compatibility (remapped to Convoca tokens, in HSL) ─── */
+    --background: 40 60% 95%;            /* #FAF6EE */
+    --foreground: 217 60% 10%;           /* #0A1628 */
+    --card: 0 0% 100%;                   /* #FFFFFF */
+    --card-foreground: 217 60% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 60% 10%;
+    --primary: 142 64% 29%;              /* #1A7A3A pitch */
+    --primary-foreground: 40 60% 95%;
+    --secondary: 40 49% 92%;             /* warm sand */
+    --secondary-foreground: 217 60% 10%;
+    --muted: 40 49% 92%;
+    --muted-foreground: 213 21% 35%;     /* #44546B */
+    --accent: 142 71% 45%;               /* pitch glow */
+    --accent-foreground: 217 60% 10%;
+    --destructive: 13 71% 59%;           /* coral */
+    --destructive-foreground: 40 60% 95%;
+    --border: 40 49% 84%;                /* warm cream border */
+    --input: 40 49% 84%;
+    --ring: 142 71% 45%;
+    --radius: 0.875rem;                  /* ~14px = radius-md */
+
+    --chart-1: 142 64% 29%;              /* pitch */
+    --chart-2: 142 71% 45%;              /* pitch glow */
+    --chart-3: 40 78% 59%;               /* gold */
+    --chart-4: 13 71% 59%;               /* coral */
+    --chart-5: 217 60% 25%;              /* navy lighter */
+
+    /* legacy landing-page tokens — kept for backward compat */
+    --navy: 217 60% 10%;
+    --navy-light: 217 53% 19%;
+    --green-dark: 142 64% 22%;
+    --green-light: 142 71% 35%;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 142 70% 45%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142 70% 45%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+  .dark,
+  [data-theme="dark"] {
+    --c-bg:        #060B16;
+    --c-surface:   #0E1729;
+    --c-surface-2: #16223A;
+    --c-surface-3: #1F2D48;
+    --c-ink:       #FAF6EE;
+    --c-ink-2:     #A5B3C7;
+    --c-ink-3:     #5E6E85;
+    --c-border:    #1F2D48;
+    --c-border-strong: #2C3D5C;
+
+    --c-pitch:       #22C55E;
+    --c-pitch-deep:  #16A34A;
+    --c-pitch-glow:  #5BFF8A;
+    --c-pitch-50:    #0F2417;
+    --c-navy:        #060B16;
+    --c-navy-2:      #0E1729;
+    --c-gold:        #FFC85B;
+    --c-gold-50:     #2A2008;
+    --c-coral:       #FF7A55;
+
+    --c-on-pitch:   #06150C;
+    --c-on-navy:    #FAF6EE;
+    --c-on-gold:    #2B1E04;
+
+    --c-success: #22C55E;
+    --c-warning: #FFC85B;
+    --c-danger:  #FF7A55;
+    --c-info:    #60A5FA;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-md: 0 6px 18px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.35);
+    --shadow-lg: 0 18px 40px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.4);
+    --shadow-glow: 0 0 0 4px rgba(34,197,94,.28);
+
+    /* shadcn dark */
+    --background: 217 60% 6%;
+    --foreground: 40 60% 95%;
+    --card: 217 53% 11%;
+    --card-foreground: 40 60% 95%;
+    --popover: 217 53% 11%;
+    --popover-foreground: 40 60% 95%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 217 60% 6%;
+    --secondary: 217 47% 17%;
+    --secondary-foreground: 40 60% 95%;
+    --muted: 217 47% 17%;
+    --muted-foreground: 215 24% 64%;
+    --accent: 142 95% 68%;
+    --accent-foreground: 217 60% 6%;
+    --destructive: 13 100% 67%;
+    --destructive-foreground: 40 60% 95%;
+    --border: 217 41% 20%;
+    --input: 217 41% 20%;
+    --ring: 142 71% 45%;
   }
 }
 
@@ -71,18 +156,180 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  /* Bebas Neue is opt-in via .font-display — NOT applied to all headings,
+     because shadcn CardTitle/etc render as h3 and would inherit unwanted
+     all-caps display styling everywhere. Apply font-display deliberately. */
+  .font-display {
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    line-height: 1;
   }
 }
 
-/* Responsividade Global - Zoom e Telas Grandes */
+/* Bebas Neue is condensed — needs extra letter-spacing for long all-caps
+   words to stay readable. */
 @layer utilities {
-  /* Previne overflow horizontal em qualquer zoom */
+  .tracking-display { letter-spacing: 0.06em; }
+  .tracking-scoreboard { letter-spacing: 0.04em; }
+  .tracking-eyebrow { letter-spacing: 0.14em; }
+}
+
+/* =========================================================
+   Convoca primitives — utility classes
+   ========================================================= */
+@layer components {
+  /* Typography utilities */
+  .font-display { font-family: var(--font-display); }
+  .font-body { font-family: var(--font-body); }
+  .font-mono { font-family: var(--font-mono); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Pitch background (grass stripes + center circle) */
+  .cv-pitch-bg {
+    position: relative;
+    overflow: hidden;
+    color: var(--c-on-pitch);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0) 60%, rgba(0,0,0,.15) 100%),
+      repeating-linear-gradient(90deg,
+        var(--c-pitch) 0 60px,
+        var(--c-pitch-deep) 60px 120px);
+  }
+  .cv-pitch-bg::after {
+    content: '';
+    position: absolute;
+    right: -80px;
+    bottom: -80px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.18);
+    pointer-events: none;
+  }
+
+  /* Jersey avatar (numbered shirt) */
+  .cv-jersey {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--c-pitch);
+    color: var(--c-on-pitch);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: .02em;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
+    flex-shrink: 0;
+  }
+  .cv-jersey > .cv-jersey-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 9px;
+    background: rgba(255,255,255,.25);
+  }
+  .cv-jersey > .cv-jersey-number {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Scoreboard (live match digits) */
+  .cv-scoreboard {
+    background: var(--c-navy);
+    color: var(--c-on-navy);
+    border-radius: var(--radius-xl);
+    padding: 18px 22px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  .cv-scoreboard-digits {
+    font-family: var(--font-display);
+    font-size: 72px;
+    line-height: .9;
+    letter-spacing: .04em;
+    color: var(--c-pitch-glow);
+    text-shadow: 0 0 24px rgba(34, 197, 94, .45);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Live badge with pulse */
+  .cv-badge-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 16px;
+    border-radius: var(--radius-full);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    background: var(--c-coral);
+    color: #FFF;
+    position: relative;
+  }
+  .cv-badge-live::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #FFF;
+    transform: translateY(-50%);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.45);
+    animation: cv-pulse 1.4s infinite;
+  }
+  @keyframes cv-pulse {
+    50% { opacity: .4; }
+  }
+
+  /* Stat tile (label + big display number + trend) */
+  .cv-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 20px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-lg);
+  }
+  .cv-stat-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--c-ink-3);
+    font-weight: 600;
+  }
+  .cv-stat-value {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cv-stat-trend {
+    font-size: 12px;
+    color: var(--c-ink-2);
+  }
+}
+
+/* =========================================================
+   Legacy responsive utilities (kept as-is)
+   ========================================================= */
+@layer utilities {
   html, body {
     overflow-x: hidden;
     max-width: 100vw;
   }
 
-  /* Melhor responsividade para containers */
   .container-responsive {
     width: 100%;
     max-width: 100vw;
@@ -92,15 +339,13 @@
     margin-right: auto;
   }
 
-  /* Botões responsivos que ficam sempre visíveis */
   .btn-responsive {
-    min-height: 44px; /* Tamanho mínimo para toque */
+    min-height: 44px;
     padding: 0.75rem 1rem;
     font-size: clamp(0.875rem, 2.5vw, 1rem);
     white-space: nowrap;
   }
 
-  /* Textos que se adaptam ao zoom */
   .text-responsive {
     font-size: clamp(0.875rem, 2.5vw, 1.125rem);
     line-height: 1.5;
@@ -116,14 +361,12 @@
     line-height: 1.4;
   }
 
-  /* Containers com scroll interno quando necessário */
   .scroll-container {
     max-height: 70vh;
     overflow-y: auto;
     overflow-x: hidden;
   }
 
-  /* Modal overlay melhorado */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -132,7 +375,6 @@
     backdrop-filter: blur(4px);
   }
 
-  /* Animações suaves para melhor UX */
   .animate-fade-in {
     animation: fadeIn 0.2s ease-in-out;
   }

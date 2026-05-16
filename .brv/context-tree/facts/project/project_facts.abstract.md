@@ -1,0 +1,1 @@
+Convoca is a sports-event platform with documented APIs and schemas for draws, event settings, rankings, finances, invites, RSVPs, voting, match actions, search, and lifecycle rules, built with PostgreSQL, raw SQL, Zod validation, and role-based admin/member behavior.

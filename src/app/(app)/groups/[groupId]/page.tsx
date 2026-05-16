@@ -647,29 +647,29 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
   const isAdmin = group.userRole === "admin" || group.isSystemAdmin;
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
         {/* Breadcrumb + back */}
         <div className="mb-4 flex items-center gap-2 text-sm">
-          <Link href="/dashboard" className="text-ink-3 hover:text-ink transition-colors inline-flex items-center gap-1">
+          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
             <ChevronLeft className="h-3.5 w-3.5" />
             Meus Grupos
           </Link>
-          <span className="text-ink-3">/</span>
-          <span className="text-ink font-medium truncate">{group.name}</span>
+          <span className="text-muted-foreground">/</span>
+          <span className="text-foreground font-medium truncate">{group.name}</span>
         </div>
 
         {/* Header — group name + actions */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold uppercase tracking-eyebrow text-ink-3 mb-1">
+            <div className="text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground mb-1">
               {isRankingMode ? "Grupo em modo ranking" : "Grupo em modo controle"}
             </div>
             <h1 className="font-display text-4xl tracking-display sm:text-5xl break-words">
               {group.name}
             </h1>
             {group.description && (
-              <p className="mt-2 text-sm text-ink-2 max-w-2xl">{group.description}</p>
+              <p className="mt-2 text-sm text-muted-foreground max-w-2xl">{group.description}</p>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <GroupStatusBadge status={group.status} />
@@ -706,20 +706,14 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
         {nextEvent && (
           <Link
             href={`/events/${nextEvent.id}`}
-            className="mb-8 block overflow-hidden rounded-cv-2xl shadow-cv-lg transition-transform hover:scale-[1.005]"
+            className="mb-8 block overflow-hidden rounded-2xl shadow-warm-lg transition-transform hover:scale-[1.005]"
           >
             <div className="relative">
               <PitchBackground height={220} />
-              <div
-                className="absolute inset-0 flex flex-col justify-between p-6 sm:p-7"
-                style={{ color: "var(--c-on-pitch)" }}
-              >
+              <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-7 text-primary-foreground">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <span
-                      className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm"
-                      style={{ background: "rgba(10,22,40,.55)", color: "#FFF" }}
-                    >
+                    <span className="inline-block rounded-full bg-navy/55 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
                       Próxima pelada
                     </span>
                     <h2
@@ -735,7 +729,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
                         return `${weekday} · ${time}`;
                       })()}
                     </h2>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ opacity: 0.9 }}>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm opacity-90">
                       {nextEvent.venue_name && (
                         <span className="inline-flex items-center gap-1.5">
                           <MapPin className="h-4 w-4" />
@@ -749,7 +743,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] font-semibold uppercase tracking-eyebrow" style={{ opacity: 0.7 }}>
+                    <div className="text-[11px] font-semibold uppercase tracking-eyebrow opacity-70">
                       Presença
                     </div>
                     <div className="font-display num" style={{ fontSize: 44, lineHeight: 1 }}>
@@ -760,10 +754,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
                 </div>
 
                 <div className="mt-3 flex justify-end">
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-pitch-glow px-4 py-2 text-sm font-semibold text-ink"
-                    style={{ boxShadow: "var(--shadow-glow)" }}
-                  >
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-pitch-glow px-4 py-2 text-sm font-semibold text-navy shadow-glow">
                     Ver detalhes
                     <ArrowRight className="h-4 w-4" />
                   </span>

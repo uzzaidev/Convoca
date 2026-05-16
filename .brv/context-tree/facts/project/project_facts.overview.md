@@ -1,0 +1,8 @@
+- Convoca is a sports-event management system with durable facts captured around draw configs, event settings, rankings, finances, invites, roles, RSVP, voting, match actions, search, and event lifecycle.
+- The document emphasizes the main flow: draw configuration -> event settings -> RSVP/check-in -> team draw -> match actions -> voting/rankings -> charges.
+- It documents multiple API surfaces, including draw config, event settings, rankings, charges, invites, RSVP/check-in, team swaps, actions, and user search.
+- Core data entities include group_draw_configs, group_event_settings, invites, wallets, charges, transactions, event_actions, player_ratings, mvp_tiebreakers, and mvp_tiebreaker_votes.
+- Key operational rules include waitlist FIFO promotion, only checked-in yes RSVPs being eligible for draw, no self-voting, and voting only after an event is finished.
+- Ranking and scoreboard logic is derived from event actions and membership data, with a materialized view refreshed by triggers.
+- The codebase uses raw SQL with a postgres client, Zod validation, and a standardized error-handling pattern for authentication and generic failures.
+- Notable entities and decisions include admin/member separation, seed-based draw reproducibility, BRL as default wallet currency, and a replacement of traditional ratings with a structured voting/tiebreaker model.

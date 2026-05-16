@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogIn } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { PitchBackground } from "@/components/ui/pitch-background";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -22,9 +21,6 @@ export default function SignInPage() {
     setError("");
     setIsLoading(true);
 
-    console.log('[FRONTEND] Tentando fazer login...');
-    console.log('[FRONTEND] Email:', email);
-
     try {
       const result = await signIn("credentials", {
         email,
@@ -32,142 +28,213 @@ export default function SignInPage() {
         redirect: false,
       });
 
-      console.log('[FRONTEND] Resultado do signIn:', result);
-
       if (result?.error) {
-        console.log('[FRONTEND] Erro no login:', result.error);
         setError("Email ou senha incorretos");
         setIsLoading(false);
         return;
       }
 
-      console.log('[FRONTEND] Login bem-sucedido!');
       router.push("/dashboard");
       router.refresh();
-    } catch (error) {
-      console.error("[FRONTEND] Exceção no login:", error);
+    } catch (err) {
+      console.error("Sign-in error:", err);
       setError("Erro ao fazer login. Tente novamente.");
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy via-navy-light to-green-dark relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md mx-4">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-              <path d="M12 2C12 2 8 6 8 12C8 18 12 22 12 22" stroke="currentColor" strokeWidth="2"/>
-              <path d="M12 2C12 2 16 6 16 12C16 18 12 22 12 22" stroke="currentColor" strokeWidth="2"/>
-              <path d="M2 12C2 12 6 8 12 8C18 8 22 12 22 12" stroke="currentColor" strokeWidth="2"/>
-              <path d="M2 12C2 12 6 16 12 16C18 16 22 12 22 12" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Convoca</h1>
-          <p className="text-gray-200">Organize suas peladas de forma profissional</p>
+    <div className="min-h-screen bg-background grid lg:grid-cols-[1.1fr_1fr]">
+      {/* ───────── Left: pitch hero ───────── */}
+      <div className="relative hidden overflow-hidden lg:block">
+        <div className="absolute inset-0">
+          <PitchBackground height="100%" style={{ height: "100%" }} />
         </div>
+        <div className="absolute inset-0 flex flex-col justify-between p-12 text-primary-foreground">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-md font-display text-2xl"
+              style={{
+                background: "hsl(var(--navy))",
+                color: "hsl(var(--pitch-glow))",
+                letterSpacing: "0.02em",
+              }}
+            >
+              C
+            </div>
+            <div>
+              <div className="font-display text-2xl tracking-display leading-none">CONVOCA</div>
+              <div className="text-[11px] uppercase tracking-eyebrow opacity-75">
+                Pelada Manager
+              </div>
+            </div>
+          </div>
 
-        {/* Login Card */}
-        <Card className="border-0 shadow-2xl">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center text-navy">Entrar</CardTitle>
-            <CardDescription className="text-center">
-              Entre com seu email e senha para acessar sua conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-navy">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="border-gray-300 focus:border-green-600 focus:ring-green-600"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-navy">Senha</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-sm text-green-600 hover:text-green-700 hover:underline"
-                  >
-                    Esqueceu a senha?
-                  </Link>
+          {/* Big tagline */}
+          <div>
+            <h2
+              className="font-display tracking-scoreboard"
+              style={{ fontSize: "clamp(36px, 4.2vw, 60px)", lineHeight: 0.95 }}
+            >
+              CONVOQUE A GALERA.
+              <br />
+              JOGUE A PELADA.
+              <br />
+              VENÇA A SEMANA.
+            </h2>
+            <p className="mt-4 max-w-md text-base leading-relaxed opacity-90">
+              Marque jogos, confirme presença, sorteie times equilibrados e
+              acompanhe rankings da turma — tudo num só lugar.
+            </p>
+          </div>
+
+          {/* Value props (real features instead of fake stats) */}
+          <div className="flex flex-wrap gap-6">
+            {[
+              { title: "Times", subtitle: "sorteio equilibrado" },
+              { title: "Rankings", subtitle: "artilheiros + MVPs" },
+              { title: "Carteira", subtitle: "cobrar e dividir" },
+            ].map((item) => (
+              <div key={item.title}>
+                <div className="font-display text-3xl tracking-display leading-none">
+                  {item.title}
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  minLength={6}
-                  className="border-gray-300 focus:border-green-600 focus:ring-green-600"
-                />
-              </div>
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                  {error}
+                <div className="mt-1 text-[11px] uppercase tracking-eyebrow opacity-75">
+                  {item.subtitle}
                 </div>
-              )}
-              <Button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ───────── Right: form ───────── */}
+      <div className="flex flex-col justify-center px-6 py-12 sm:px-12">
+        <div className="mx-auto w-full max-w-md">
+          {/* mobile logo (only shows when hero is hidden) */}
+          <div className="mb-6 flex items-center gap-3 lg:hidden">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-md font-display text-xl"
+              style={{
+                background: "hsl(var(--navy))",
+                color: "hsl(var(--pitch-glow))",
+                letterSpacing: "0.02em",
+              }}
+            >
+              C
+            </div>
+            <div className="font-display text-xl tracking-display leading-none">CONVOCA</div>
+          </div>
+
+          <span className="inline-flex items-center rounded-full bg-pitch-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-eyebrow text-pitch">
+            Bem-vindo de volta
+          </span>
+
+          <h1 className="mt-3 font-display text-4xl tracking-display sm:text-5xl">
+            BORA JOGAR?
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Acesse sua conta pra confirmar a próxima pelada.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+              >
+                E-mail
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={isLoading}
-              >
-                {isLoading ? (
-                  "Entrando..."
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Entrar
-                  </>
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Não tem uma conta?</span>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button asChild variant="outline" className="w-full border-navy text-navy hover:bg-navy hover:text-white">
-                  <Link href="/auth/signup">
-                    Criar conta grátis
-                  </Link>
-                </Button>
-              </div>
+                autoComplete="email"
+                autoFocus
+              />
             </div>
 
-            <div className="mt-6 text-center">
-              <Link
-                href="/"
-                className="text-sm text-gray-600 hover:text-green-600 hover:underline"
-              >
-                ← Voltar para o início
-              </Link>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+                >
+                  Senha
+                </label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs font-semibold text-pitch hover:underline"
+                >
+                  esqueci minha senha
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                minLength={6}
+                autoComplete="current-password"
+              />
             </div>
-          </CardContent>
-        </Card>
+
+            {error && (
+              <div
+                role="alert"
+                className="rounded-md border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral"
+              >
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full justify-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Entrando…
+                </>
+              ) : (
+                <>
+                  Entrar e convocar
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <p className="text-sm text-muted-foreground">Primeira vez por aqui?</p>
+            <Link
+              href="/auth/signup"
+              className="text-sm font-semibold text-pitch hover:underline"
+            >
+              Criar minha conta
+            </Link>
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Voltar para o início
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

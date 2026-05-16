@@ -1,152 +1,115 @@
+/* ============================================================
+   Convoca · Design System
+   Tailwind v3 + shadcn/ui · Sunday Pelada (light) ⇄ Stadium (dark)
+   Canonical handoff from designer + Convoca custom extras
+   ============================================================ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* =========================================================
-   Convoca · Design System
-   Dual-mode: Sunday Pelada (light) ⇄ Stadium Nightlife (dark)
-   ========================================================= */
-
 @layer base {
   :root {
-    /* ─── Convoca tokens (canonical) ─── */
-    --c-bg:        #FAF6EE;
-    --c-surface:   #FFFFFF;
-    --c-surface-2: #F4EFE2;
-    --c-surface-3: #EBE3CC;
-    --c-ink:       #0A1628;
-    --c-ink-2:     #44546B;
-    --c-ink-3:     #8A95A3;
-    --c-border:    #EADFC4;
-    --c-border-strong: #D8C9A2;
-
-    --c-pitch:       #1A7A3A;
-    --c-pitch-deep:  #115226;
-    --c-pitch-glow:  #22C55E;
-    --c-pitch-50:    #E7F6EC;
-    --c-navy:        #0A1628;
-    --c-navy-2:      #16243F;
-    --c-gold:        #E8B243;
-    --c-gold-50:     #FAEFCF;
-    --c-coral:       #E26B4A;
-
-    --c-on-pitch:   #FAF6EE;
-    --c-on-navy:    #FAF6EE;
-    --c-on-gold:    #2B1E04;
-
-    --c-success: #1A7A3A;
-    --c-warning: #E8B243;
-    --c-danger:  #E26B4A;
-    --c-info:    #2563EB;
-
-    --radius-xs: 6px;
-    --radius-sm: 10px;
-    --radius-md: 14px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
-    --radius-2xl: 32px;
-    --radius-full: 9999px;
-
-    --shadow-sm: 0 1px 2px rgba(10,22,40,.05);
-    --shadow-md: 0 6px 18px rgba(10,22,40,.06), 0 1px 3px rgba(10,22,40,.04);
-    --shadow-lg: 0 18px 40px rgba(10,22,40,.08), 0 4px 10px rgba(10,22,40,.05);
-    --shadow-glow: 0 0 0 4px rgba(34,197,94,.18);
-
-    --font-display: 'Bebas Neue', 'Oswald', 'Anton', 'Impact', sans-serif;
-    --font-body:    'DM Sans', system-ui, 'Helvetica Neue', sans-serif;
-    --font-mono:    'JetBrains Mono', 'Space Mono', ui-monospace, monospace;
-
-    /* ─── shadcn/ui compatibility (remapped to Convoca tokens, in HSL) ─── */
-    --background: 40 60% 95%;            /* #FAF6EE */
-    --foreground: 217 60% 10%;           /* #0A1628 */
-    --card: 0 0% 100%;                   /* #FFFFFF */
-    --card-foreground: 217 60% 10%;
+    /* ───────── shadcn core ───────── */
+    --background: 43 50% 96%;            /* #FAF6EE  cream */
+    --foreground: 218 60% 10%;           /* #0A1628  deep navy ink */
+    --card: 0 0% 100%;
+    --card-foreground: 218 60% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 217 60% 10%;
-    --primary: 142 64% 29%;              /* #1A7A3A pitch */
-    --primary-foreground: 40 60% 95%;
-    --secondary: 40 49% 92%;             /* warm sand */
-    --secondary-foreground: 217 60% 10%;
-    --muted: 40 49% 92%;
-    --muted-foreground: 213 21% 35%;     /* #44546B */
-    --accent: 142 71% 45%;               /* pitch glow */
-    --accent-foreground: 217 60% 10%;
-    --destructive: 13 71% 59%;           /* coral */
-    --destructive-foreground: 40 60% 95%;
-    --border: 40 49% 84%;                /* warm cream border */
-    --input: 40 49% 84%;
-    --ring: 142 71% 45%;
-    --radius: 0.875rem;                  /* ~14px = radius-md */
+    --popover-foreground: 218 60% 10%;
 
-    --chart-1: 142 64% 29%;              /* pitch */
-    --chart-2: 142 71% 45%;              /* pitch glow */
-    --chart-3: 40 78% 59%;               /* gold */
-    --chart-4: 13 71% 59%;               /* coral */
-    --chart-5: 217 60% 25%;              /* navy lighter */
+    --primary: 140 64% 29%;              /* #1A7A3A  pitch */
+    --primary-foreground: 43 50% 96%;
 
-    /* legacy landing-page tokens — kept for backward compat */
-    --navy: 217 60% 10%;
-    --navy-light: 217 53% 19%;
-    --green-dark: 142 64% 22%;
-    --green-light: 142 71% 35%;
+    --secondary: 43 41% 92%;             /* #F4EFE2  warm sand */
+    --secondary-foreground: 218 60% 10%;
+
+    --muted: 43 41% 92%;
+    --muted-foreground: 213 13% 45%;     /* #5C6B7E */
+
+    --accent: 40 78% 59%;                /* #E8B243  gold */
+    --accent-foreground: 30 90% 9%;      /* #2B1E04 */
+
+    --destructive: 13 73% 59%;           /* #E26B4A  warm coral */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 47% 84%;                /* #EADFC4 */
+    --input: 40 47% 84%;
+    --ring: 140 64% 29%;
+
+    --radius: 1rem;
+
+    --chart-1: 140 64% 29%;
+    --chart-2: 218 60% 10%;
+    --chart-3: 40 78% 59%;
+    --chart-4: 13 73% 59%;
+    --chart-5: 142 71% 45%;
+
+    /* ───────── brand extras (Convoca-only) ───────── */
+    --pitch: 140 64% 29%;
+    --pitch-deep: 142 64% 19%;
+    --pitch-glow: 142 71% 45%;
+    --pitch-50: 138 50% 94%;
+
+    --navy: 218 60% 10%;
+    --navy-2: 217 47% 17%;
+
+    --gold: 40 78% 59%;
+    --gold-50: 43 78% 89%;
+
+    --coral: 13 73% 59%;
+
+    /* legacy landing page aliases */
+    --navy-light: 215 50% 25%;
+    --green-dark: 140 64% 29%;
+    --green-light: 142 71% 45%;
   }
 
-  .dark,
-  [data-theme="dark"] {
-    --c-bg:        #060B16;
-    --c-surface:   #0E1729;
-    --c-surface-2: #16223A;
-    --c-surface-3: #1F2D48;
-    --c-ink:       #FAF6EE;
-    --c-ink-2:     #A5B3C7;
-    --c-ink-3:     #5E6E85;
-    --c-border:    #1F2D48;
-    --c-border-strong: #2C3D5C;
+  .dark {
+    --background: 218 60% 5%;
+    --foreground: 43 50% 96%;
+    --card: 218 50% 11%;
+    --card-foreground: 43 50% 96%;
+    --popover: 218 50% 11%;
+    --popover-foreground: 43 50% 96%;
 
-    --c-pitch:       #22C55E;
-    --c-pitch-deep:  #16A34A;
-    --c-pitch-glow:  #5BFF8A;
-    --c-pitch-50:    #0F2417;
-    --c-navy:        #060B16;
-    --c-navy-2:      #0E1729;
-    --c-gold:        #FFC85B;
-    --c-gold-50:     #2A2008;
-    --c-coral:       #FF7A55;
-
-    --c-on-pitch:   #06150C;
-    --c-on-navy:    #FAF6EE;
-    --c-on-gold:    #2B1E04;
-
-    --c-success: #22C55E;
-    --c-warning: #FFC85B;
-    --c-danger:  #FF7A55;
-    --c-info:    #60A5FA;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-    --shadow-md: 0 6px 18px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.35);
-    --shadow-lg: 0 18px 40px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.4);
-    --shadow-glow: 0 0 0 4px rgba(34,197,94,.28);
-
-    /* shadcn dark */
-    --background: 217 60% 6%;
-    --foreground: 40 60% 95%;
-    --card: 217 53% 11%;
-    --card-foreground: 40 60% 95%;
-    --popover: 217 53% 11%;
-    --popover-foreground: 40 60% 95%;
     --primary: 142 71% 45%;
-    --primary-foreground: 217 60% 6%;
-    --secondary: 217 47% 17%;
-    --secondary-foreground: 40 60% 95%;
-    --muted: 217 47% 17%;
-    --muted-foreground: 215 24% 64%;
-    --accent: 142 95% 68%;
-    --accent-foreground: 217 60% 6%;
+    --primary-foreground: 218 60% 5%;
+
+    --secondary: 218 47% 16%;
+    --secondary-foreground: 43 50% 96%;
+
+    --muted: 218 47% 16%;
+    --muted-foreground: 214 24% 71%;
+
+    --accent: 40 100% 68%;
+    --accent-foreground: 30 90% 9%;
+
     --destructive: 13 100% 67%;
-    --destructive-foreground: 40 60% 95%;
-    --border: 217 41% 20%;
-    --input: 217 41% 20%;
+    --destructive-foreground: 218 60% 5%;
+
+    --border: 218 39% 20%;
+    --input: 218 39% 20%;
     --ring: 142 71% 45%;
+
+    --chart-1: 142 71% 45%;
+    --chart-2: 43 50% 96%;
+    --chart-3: 40 100% 68%;
+    --chart-4: 13 100% 67%;
+    --chart-5: 135 100% 68%;
+
+    --pitch: 142 71% 45%;
+    --pitch-deep: 142 64% 35%;
+    --pitch-glow: 135 100% 68%;
+    --pitch-50: 142 50% 12%;
+
+    --navy: 218 60% 5%;
+    --navy-2: 218 50% 11%;
+
+    --gold: 40 100% 68%;
+    --gold-50: 40 38% 12%;
+
+    --coral: 13 100% 67%;
   }
 }
 
@@ -156,231 +119,156 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-body);
+    font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  /* Bebas Neue is opt-in via .font-display — NOT applied to all headings,
-     because shadcn CardTitle/etc render as h3 and would inherit unwanted
-     all-caps display styling everywhere. Apply font-display deliberately. */
+
+  /* Display family (Bebas Neue) — opt-in via .font-display.
+     Não aplicar globalmente a h1-h4 porque shadcn CardTitle vira <h3>
+     e herdaria all-caps indesejado em toda a app. */
   .font-display {
+    font-family: 'Bebas Neue', 'Oswald', 'Anton', Impact, sans-serif;
     font-weight: 400;
-    letter-spacing: 0.04em;
-    line-height: 1;
+    letter-spacing: 0.01em;
+    line-height: 0.96;
   }
-}
+  .font-mono-num {
+    font-family: 'JetBrains Mono', 'Space Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
 
-/* Bebas Neue is condensed — needs extra letter-spacing for long all-caps
-   words to stay readable. */
-@layer utilities {
-  .tracking-display { letter-spacing: 0.06em; }
-  .tracking-scoreboard { letter-spacing: 0.04em; }
-  .tracking-eyebrow { letter-spacing: 0.14em; }
-}
-
-/* =========================================================
-   Convoca primitives — utility classes
-   ========================================================= */
-@layer components {
-  /* Typography utilities */
-  .font-display { font-family: var(--font-display); }
-  .font-body { font-family: var(--font-body); }
-  .font-mono { font-family: var(--font-mono); }
   .num { font-variant-numeric: tabular-nums; }
+}
 
-  /* Pitch background (grass stripes + center circle) */
-  .cv-pitch-bg {
-    position: relative;
-    overflow: hidden;
-    color: var(--c-on-pitch);
+/* ============================================================
+   Convoca utilities — soccer motifs
+   ============================================================ */
+@layer utilities {
+  /* pitch surface (gramado listrado + center circle).
+     NÃO definimos position aqui porque colide com utilitários do Tailwind
+     (.absolute, .fixed) que o caller passa via className. O componente
+     <PitchBackground/> wrapeia com um <div className="relative overflow-hidden"> próprio. */
+  .bg-pitch-surface {
     background:
       linear-gradient(180deg, rgba(255,255,255,0) 60%, rgba(0,0,0,.15) 100%),
       repeating-linear-gradient(90deg,
-        var(--c-pitch) 0 60px,
-        var(--c-pitch-deep) 60px 120px);
+        hsl(var(--pitch))      0 60px,
+        hsl(var(--pitch-deep)) 60px 120px);
+    color: hsl(var(--primary-foreground));
   }
-  .cv-pitch-bg::after {
+  .bg-pitch-surface::after {
     content: '';
-    position: absolute;
-    right: -80px;
-    bottom: -80px;
-    width: 220px;
-    height: 220px;
+    position: absolute; right: -80px; bottom: -80px;
+    width: 220px; height: 220px;
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,.18);
     pointer-events: none;
   }
 
-  /* Jersey avatar (numbered shirt) */
-  .cv-jersey {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-md);
-    background: var(--c-pitch);
-    color: var(--c-on-pitch);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-size: 22px;
-    letter-spacing: .02em;
+  /* badge "AO VIVO" pulse */
+  .badge-live {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+    background: hsl(var(--destructive));
+    color: white;
     position: relative;
-    overflow: hidden;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
-    flex-shrink: 0;
+    padding-left: 1rem;
   }
-  .cv-jersey > .cv-jersey-stripe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 9px;
-    background: rgba(255,255,255,.25);
-  }
-  .cv-jersey > .cv-jersey-number {
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Scoreboard (live match digits) */
-  .cv-scoreboard {
-    background: var(--c-navy);
-    color: var(--c-on-navy);
-    border-radius: var(--radius-xl);
-    padding: 18px 22px;
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    overflow: hidden;
-  }
-  .cv-scoreboard-digits {
-    font-family: var(--font-display);
-    font-size: 72px;
-    line-height: .9;
-    letter-spacing: .04em;
-    color: var(--c-pitch-glow);
-    text-shadow: 0 0 24px rgba(34, 197, 94, .45);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Live badge with pulse */
-  .cv-badge-live {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px 3px 16px;
-    border-radius: var(--radius-full);
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: .03em;
-    text-transform: uppercase;
-    background: var(--c-coral);
-    color: #FFF;
-    position: relative;
-  }
-  .cv-badge-live::before {
+  .badge-live::before {
     content: '';
-    position: absolute;
-    left: 6px;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #FFF;
+    position: absolute; left: 0.5rem; top: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: white;
     transform: translateY(-50%);
     box-shadow: 0 0 0 2px rgba(255,255,255,.45);
-    animation: cv-pulse 1.4s infinite;
+    animation: pulse-live 1.4s infinite;
   }
-  @keyframes cv-pulse {
-    50% { opacity: .4; }
+  @keyframes pulse-live { 50% { opacity: .4; } }
+
+  /* CTA glow */
+  .btn-glow {
+    background: hsl(var(--pitch-glow));
+    color: hsl(var(--navy));
+    box-shadow: 0 0 0 4px hsl(var(--pitch-glow) / 0.18);
   }
 
-  /* Stat tile (label + big display number + trend) */
+  /* Warm shadows */
+  .shadow-warm-sm { box-shadow: 0 1px 2px hsl(218 60% 10% / .05); }
+  .shadow-warm-md { box-shadow: 0 6px 18px hsl(218 60% 10% / .06), 0 1px 3px hsl(218 60% 10% / .04); }
+  .shadow-warm-lg { box-shadow: 0 18px 40px hsl(218 60% 10% / .08), 0 4px 10px hsl(218 60% 10% / .05); }
+  .dark .shadow-warm-sm { box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .dark .shadow-warm-md { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.35); }
+  .dark .shadow-warm-lg { box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.4); }
+
+  /* Bebas Neue tracking helpers (precisa de respiro em CAIXA ALTA) */
+  .tracking-display { letter-spacing: 0.06em; }
+  .tracking-scoreboard { letter-spacing: 0.04em; }
+  .tracking-eyebrow { letter-spacing: 0.14em; }
+}
+
+/* ============================================================
+   Convoca stat tile component (used in dashboards)
+   ============================================================ */
+@layer components {
   .cv-stat {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 16px 20px;
-    background: var(--c-surface);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-lg);
+    padding: 14px 18px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
   }
   .cv-stat-label {
-    font-size: 11.5px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--c-ink-3);
+    letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground));
     font-weight: 600;
   }
   .cv-stat-value {
-    font-family: var(--font-display);
-    font-size: 40px;
+    font-family: 'Bebas Neue', 'Oswald', sans-serif;
+    font-size: 36px;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
   }
   .cv-stat-trend {
-    font-size: 12px;
-    color: var(--c-ink-2);
+    font-size: 11.5px;
+    color: hsl(var(--muted-foreground));
   }
 }
 
-/* =========================================================
-   Legacy responsive utilities (kept as-is)
-   ========================================================= */
+/* ============================================================
+   Responsividade global
+   ============================================================ */
 @layer utilities {
-  html, body {
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
+  html, body { overflow-x: hidden; max-width: 100vw; }
 
   .container-responsive {
-    width: 100%;
-    max-width: 100vw;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%; max-width: 100vw;
+    padding-left: 1rem; padding-right: 1rem;
+    margin-left: auto; margin-right: auto;
   }
-
   .btn-responsive {
     min-height: 44px;
     padding: 0.75rem 1rem;
     font-size: clamp(0.875rem, 2.5vw, 1rem);
     white-space: nowrap;
   }
+  .text-responsive    { font-size: clamp(0.875rem, 2.5vw, 1.125rem); line-height: 1.5; }
+  .text-responsive-sm { font-size: clamp(0.75rem, 2vw, 0.875rem); line-height: 1.4; }
+  .text-responsive-lg { font-size: clamp(1.125rem, 3vw, 1.25rem); line-height: 1.4; }
 
-  .text-responsive {
-    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
-    line-height: 1.5;
-  }
-
-  .text-responsive-sm {
-    font-size: clamp(0.75rem, 2vw, 0.875rem);
-    line-height: 1.4;
-  }
-
-  .text-responsive-lg {
-    font-size: clamp(1.125rem, 3vw, 1.25rem);
-    line-height: 1.4;
-  }
-
-  .scroll-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
+  .scroll-container { max-height: 70vh; overflow-y: auto; overflow-x: hidden; }
 
   .modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
-    background-color: rgba(0, 0, 0, 0.8);
+    position: fixed; inset: 0; z-index: 40;
+    background-color: rgba(0,0,0,.8);
     backdrop-filter: blur(4px);
   }
 
-  .animate-fade-in {
-    animation: fadeIn 0.2s ease-in-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+  .animate-fade-in { animation: fadeIn .2s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 }

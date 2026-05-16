@@ -9,59 +9,61 @@
     {
       "importance": 50,
       "path": "architecture/billing/context.md",
-      "tokens": 149,
+      "tokens": 152,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/billing/multi_plan_subscription_system.md",
-      "tokens": 1257,
+      "tokens": 1273,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/billing/stripe_v21_api_migration.md",
-      "tokens": 940,
+      "tokens": 956,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/context.md",
-      "tokens": 142,
+      "tokens": 148,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/database/context.md",
-      "tokens": 98,
+      "tokens": 101,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/database/provider_migration_diagnosis.md",
-      "tokens": 1124,
+      "tokens": 1140,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "facts/context.md",
-      "tokens": 115,
+      "tokens": 120,
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/project_facts.abstract.md",
+      "abstractTokens": 67,
       "importance": 50,
-      "path": "facts/project/context.md",
-      "tokens": 120,
+      "path": "facts/project/project_facts.md",
+      "tokens": 67,
       "type": "context"
     }
   ],
-  "generated_at": "2026-04-01T14:42:17.863Z",
+  "generated_at": "2026-05-16T15:54:05.559Z",
   "lane_tokens": {
-    "contexts": 3945,
+    "contexts": 3957,
     "stubs": 0,
     "summaries": 1421
   },
-  "source_fingerprint": "a2abc8efa923bce0ef87be6aecc5910523dabffce42d2d0ba97a4157e1bfabcc",
-  "total_tokens": 5366,
+  "source_fingerprint": "8b8ba9c3769bb5ae8b5cc07e709e0288ba299fbd17d05957982ea59d1650a778",
+  "total_tokens": 5378,
   "version": 1
 }

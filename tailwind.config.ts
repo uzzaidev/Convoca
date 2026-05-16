@@ -58,12 +58,52 @@ const config: Config = {
   			'green-dark': {
   				DEFAULT: 'hsl(var(--green-dark))',
   				light: 'hsl(var(--green-light))'
-  			}
+  			},
+  			// Convoca design system tokens (hex via CSS vars)
+  			pitch: {
+  				DEFAULT: 'var(--c-pitch)',
+  				deep: 'var(--c-pitch-deep)',
+  				glow: 'var(--c-pitch-glow)',
+  				50: 'var(--c-pitch-50)'
+  			},
+  			cream: {
+  				DEFAULT: 'var(--c-bg)',
+  				surface: 'var(--c-surface)',
+  				2: 'var(--c-surface-2)',
+  				3: 'var(--c-surface-3)'
+  			},
+  			ink: {
+  				DEFAULT: 'var(--c-ink)',
+  				2: 'var(--c-ink-2)',
+  				3: 'var(--c-ink-3)'
+  			},
+  			gold: {
+  				DEFAULT: 'var(--c-gold)',
+  				50: 'var(--c-gold-50)'
+  			},
+  			coral: 'var(--c-coral)'
+  		},
+  		fontFamily: {
+  			display: ['var(--font-display)'],
+  			body: ['var(--font-body)'],
+  			mono: ['var(--font-mono)']
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			'cv-xs': 'var(--radius-xs)',
+  			'cv-sm': 'var(--radius-sm)',
+  			'cv-md': 'var(--radius-md)',
+  			'cv-lg': 'var(--radius-lg)',
+  			'cv-xl': 'var(--radius-xl)',
+  			'cv-2xl': 'var(--radius-2xl)'
+  		},
+  		boxShadow: {
+  			'cv-sm': 'var(--shadow-sm)',
+  			'cv-md': 'var(--shadow-md)',
+  			'cv-lg': 'var(--shadow-lg)',
+  			'cv-glow': 'var(--shadow-glow)'
   		},
   		keyframes: {
   			'accordion-down': {

@@ -1,0 +1,1 @@
+This document records an RLM curation workflow that uses precomputed recon, recommends single-pass execution, and requires verification via applied file paths rather than rereading files.

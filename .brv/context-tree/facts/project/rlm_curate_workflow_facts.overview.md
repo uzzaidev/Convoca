@@ -1,0 +1,8 @@
+- This document captures RLM curation workflow facts for a precomputed, single-pass context.
+- A key rule is to avoid recomputing recon: use the precomputed recon result and do not call tools.curation.recon again.
+- The workflow is explicitly: precomputed recon -> extraction -> curate -> verify.
+- Verification must use result.applied[].filePath, and must not rely on readFile.
+- It defines operational guidance for extraction, including use of tools.curation.mapExtract(), groupBySubject(), and dedup(), with taskId passed as a bare variable.
+- The document includes a strong “do not print raw context” instruction and notes that chunked extraction may be used when needed.
+- Its structure mirrors the first file: front matter metadata, Reason, Raw Concept with task/changes/flow/timestamp/author, Narrative with structure/dependencies/highlights/rules, and Facts with convention/project details.
+- Notable entities and patterns include “single-pass,” “precomputed recon,” “UPSERT,” “taskId injection,” and “result.applied[].filePath” verification.

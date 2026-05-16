@@ -1,0 +1,1 @@
+This snapshot captures the project’s current facts, highlighting PostgreSQL portability, multi-plan billing, NextAuth credentials authentication, and backup-related scripts and entities.

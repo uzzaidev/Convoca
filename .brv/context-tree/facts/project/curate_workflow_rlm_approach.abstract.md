@@ -1,0 +1,1 @@
+The RLM curation workflow uses recon to choose single-pass or chunked extraction, then deduplicates and groups facts before curation, verification, and history recording.

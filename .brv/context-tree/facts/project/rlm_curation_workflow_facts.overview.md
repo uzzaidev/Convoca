@@ -1,0 +1,7 @@
+- Captures workflow constraints for an RLM curation task using a precomputed recon and a single-pass execution mode.
+- Emphasizes that raw context should not be printed; the task must use provided task identifiers and caller-supplied history/metadata.
+- Verification is restricted to result.applied[].filePath, and readFile is explicitly forbidden for verification.
+- Notes the curation context size as a 601-character, 12-line snippet curated with the RLM approach.
+- The documented flow is: precomputed recon -> single-pass curation -> verify applied file paths.
+- Highlights dependencies on the precomputed recon result and task ID, plus execution metadata.
+- The entry is organized into Reason, Raw Concept, Narrative, and Facts sections, with Facts containing key operational rules.

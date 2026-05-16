@@ -1,0 +1,8 @@
+- Snapshot of current project facts dated 2026-05-16, curated from RLM context as durable knowledge for recall.
+- Main coverage spans architecture, billing, authentication, database, and security/operations topics in the context tree.
+- Database stack is PostgreSQL-based with an emphasis on portable/common features to reduce provider lock-in.
+- Billing supports multi-plan subscriptions; `planId` is optional and falls back to `STRIPE_PRICE_ID` when missing.
+- Authentication uses NextAuth Credentials against `public.users`, with custom signup and password reset flows using token and expiry fields.
+- Discovered operational/database files include `src/db/client.ts`, `src/db/backup-supabase.sh`, and `src/db/backup-supabase.bat`.
+- Notable entities mentioned include `subscription_plans`, `group_subscriptions`, `public.users`, Stripe v21, and Resend.
+- Structure includes: Reason, Raw Concept (task/changes/files/flow/timestamp/author), Narrative (structure/dependencies/highlights/examples), and Facts.

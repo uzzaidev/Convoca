@@ -1,0 +1,8 @@
+- Documents the RLM curation workflow requirements and verification steps for small contexts.
+- Core flow: recon -> single-pass extraction -> dedup/group -> curate -> verify -> record history.
+- Emphasizes using the precomputed recon result to decide whether to handle the context in a single pass or via chunked extraction.
+- Extraction guidance says to pull facts from context without printing raw content, then organize them with deduplication and subject grouping before curation.
+- Verification must rely on the curate result summary and applied file paths, specifically checking result.applied[].filePath.
+- Explicitly notes not to call recon again and highlights the use of tools.curation.recon, tools.curation.mapExtract, tools.curation.dedup, tools.curation.groupBySubject, and tools.curate.
+- Structure includes: Reason, Raw Concept, Narrative (Structure, Dependencies, Highlights), and Facts.
+- Notable entities/patterns: curvation workflow modes (single-pass vs chunked), history recording, and convention-tagged facts such as curation_workflow_recon and curation_workflow_verification.

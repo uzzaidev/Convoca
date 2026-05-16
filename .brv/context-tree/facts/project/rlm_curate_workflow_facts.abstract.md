@@ -1,0 +1,1 @@
+This document defines the RLM curation workflow: use precomputed recon, extract in a single pass, and verify results via applied file paths.

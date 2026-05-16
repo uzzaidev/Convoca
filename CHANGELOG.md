@@ -4,6 +4,41 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-16
 
+### feat
+- Atualizado o arquivo `.brv/_queue_status.json` para refletir o aumento no processamento de 3 para 18 itens.
+  - Arquivos: `.brv/_queue_status.json`
+  - Evidência: alteração no valor de "processed"
+  - Confiança: alta
+
+### feat
+- Adicionada a nova abstração de contexto `facts/project/curate_workflow_rlm_approach.abstract.md` descrevendo o fluxo de trabalho de curadoria RLM, incluindo recon, extração, deduplication, agrupamento, verificação e gravação de histórico.
+  - Arquivos: `.brv/context-tree/facts/project/curate_workflow_rlm_approach.abstract.md`
+  - Confiança: alta
+
+### feat
+- Criada a documentação `facts/project/curate_workflow_rlm_approach.md` detalhando o fluxo de trabalho de curadoria RLM, incluindo decisões de modo, extração em chunks, verificação de resultados e dependências.
+  - Arquivos: `.brv/context-tree/facts/project/curate_workflow_rlm_approach.md`
+  - Confiança: alta
+
+### feat
+- Atualizado o arquivo `.brv/_manifest.json` para incluir as novas abstrações e documentos relacionados ao fluxo de curadoria RLM.
+  - Arquivos: `.brv/_manifest.json`
+  - Confiança: alta
+
+### feat
+- Atualizado o arquivo `.brv/facts/project/project_facts.abstract.md` para refletir fatos mais atuais sobre o stack, incluindo uso de PostgreSQL, Stripe, NextAuth, e organização de documentação.
+  - Arquivos: `.brv/context-tree/facts/project/project_facts.abstract.md`
+  - Evidência: alteração no texto de resumo
+  - Confiança: alta
+
+### feat
+- Atualizado o arquivo `.brv/facts/project/project_facts.md` para consolidar fatos do projeto, incluindo stack, billing, autenticação, banco de dados e organização de documentação.
+  - Arquivos: `.brv/context-tree/facts/project/project_facts.md`
+  - Evidência: mudança no conteúdo de resumo
+  - Confiança: alta
+
+## 2026-05-16
+
 ### refactor
 - Atualizado tokens de design e estilos para o sistema de design Convoca
   - Arquivos: `/.brv/_queue_status.json`, `/.brv/context-tree/_manifest.json`

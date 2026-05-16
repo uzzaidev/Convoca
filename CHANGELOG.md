@@ -4,6 +4,28 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-05-16
 
+### refactor
+- Atualizado tokens de design e estilos para o sistema de design Convoca
+  - Arquivos: `/.brv/_queue_status.json`, `/.brv/context-tree/_manifest.json`
+  - Confiança: alta
+
+### feat
+- Documentação de fatos duráveis do projeto Convoca, incluindo configurações de sorteio, configurações de evento, rankings, finanças, convites, papéis de membros, RSVP, votação, ações de partida, busca de usuários e ciclo de vida do evento
+  - Arquivos: `/.brv/context-tree/facts/project/project_facts.md`, `/.brv/context-tree/facts/project/project_facts.abstract.md`, `/.brv/context-tree/facts/project/project_facts.overview.md`
+  - Confiança: alta
+
+### feat
+- Documentação de fatos do projeto relacionados a Stripe, PostgreSQL, autenticação e backups
+  - Arquivos: `/.brv/review-backups/facts/project/project_facts.md`
+  - Confiança: alta
+
+### feat
+- Atualização de cores e estilos na página do dashboard
+  - Arquivos: `src/app/(app)/dashboard/page.tsx`
+  - Confiança: alta
+
+## 2026-05-16
+
 ### feat
 - Melhoria na página do grupo com detalhes do próximo evento e controles de administrador
   - Arquivos: `src/app/(app)/groups/[groupId]/page.tsx`, `src/app/(app)/dashboard/page.tsx`

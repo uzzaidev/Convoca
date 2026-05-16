@@ -22,11 +22,11 @@ type GroupsCardProps = {
 };
 
 const AVATAR_COLORS = [
-  "var(--c-pitch)",
-  "var(--c-navy)",
-  "var(--c-gold)",
-  "var(--c-pitch-deep)",
-  "var(--c-coral)",
+  "hsl(var(--pitch))",
+  "hsl(var(--navy))",
+  "hsl(var(--gold))",
+  "hsl(var(--pitch-deep))",
+  "hsl(var(--coral))",
 ];
 
 function initialsFor(name: string): string {
@@ -63,18 +63,18 @@ export function GroupsCard({ groups }: GroupsCardProps) {
           <div className="divide-y divide-border">
             {groups.map((group, i) => {
               const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
-              const isGoldOrCream = color === "var(--c-gold)";
+              const isGold = color === "hsl(var(--gold))";
               return (
                 <Link
                   key={group.id}
                   href={`/groups/${group.id}`}
-                  className="flex items-center gap-3 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-cream-2/40 -mx-2 px-2 rounded-cv-sm"
+                  className="-mx-2 flex items-center gap-3 rounded-sm px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-secondary/60"
                 >
                   <div
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-cv-md font-display text-xl tracking-wide"
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md font-display text-xl tracking-wide"
                     style={{
                       background: color,
-                      color: isGoldOrCream ? "var(--c-on-gold)" : "var(--c-on-pitch)",
+                      color: isGold ? "hsl(var(--accent-foreground))" : "hsl(var(--primary-foreground))",
                       boxShadow: "inset 0 -3px 0 rgba(0,0,0,.15)",
                     }}
                   >
@@ -89,7 +89,7 @@ export function GroupsCard({ groups }: GroupsCardProps) {
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-3">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {group.member_count} membro{Number(group.member_count) !== 1 ? "s" : ""}
@@ -97,7 +97,7 @@ export function GroupsCard({ groups }: GroupsCardProps) {
                       <GroupStatusBadge status={group.status} />
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-ink-3" />
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 </Link>
               );
             })}

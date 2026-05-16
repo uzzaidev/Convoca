@@ -1,0 +1,14 @@
+{
+  "curationsSinceDream": 3,
+  "lastDreamAt": null,
+  "lastDreamLogId": null,
+  "pendingMerges": [],
+  "staleSummaryPaths": [
+    {
+      "enqueuedAt": 1778946770001,
+      "path": "facts/project/project_facts.md"
+    }
+  ],
+  "totalDreams": 0,
+  "version": 1
+}

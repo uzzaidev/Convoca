@@ -124,18 +124,18 @@ export default async function DashboardPage() {
   const confirmedCount = upcomingEvents.filter((e) => e.user_status === "yes").length;
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl px-4 py-6 sm:py-8">
         {/* Greeting + actions */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-3">
+            <div className="text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
               Bem-vindo de volta
             </div>
             <h1 className="font-display text-4xl tracking-display sm:text-5xl">
               Olá, {firstName}
             </h1>
-            <p className="mt-1 text-sm text-ink-2">
+            <p className="mt-1 text-sm text-muted-foreground">
               {nextEvent
                 ? `Sua próxima pelada começa ${relativeDays(nextEvent.starts_at)} · ${nextEvent.confirmed_count} confirmado${
                     Number(nextEvent.confirmed_count) === 1 ? "" : "s"
@@ -163,27 +163,18 @@ export default async function DashboardPage() {
         {nextEvent ? (
           <Link
             href={`/events/${nextEvent.id}`}
-            className="block overflow-hidden rounded-cv-2xl shadow-cv-lg transition-transform hover:scale-[1.005]"
+            className="block overflow-hidden rounded-2xl shadow-warm-lg transition-transform hover:scale-[1.005]"
           >
             <div className="relative">
               <PitchBackground height={260} />
-              <div
-                className="absolute inset-0 flex flex-col justify-between p-6 sm:p-8"
-                style={{ color: "var(--c-on-pitch)" }}
-              >
+              <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-8 text-primary-foreground">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="mb-3 flex flex-wrap gap-2">
-                      <span
-                        className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm"
-                        style={{ background: "rgba(10,22,40,.55)", color: "#FFF" }}
-                      >
+                      <span className="rounded-full bg-navy/55 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
                         Próxima pelada
                       </span>
-                      <span
-                        className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm"
-                        style={{ background: "rgba(255,255,255,.2)", color: "#FFF" }}
-                      >
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
                         {nextEvent.group_name}
                       </span>
                     </div>
@@ -200,10 +191,7 @@ export default async function DashboardPage() {
                         return `${weekday} · ${time}`;
                       })()}
                     </h2>
-                    <div
-                      className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
-                      style={{ opacity: 0.9 }}
-                    >
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm opacity-90">
                       {nextEvent.venue_name && (
                         <span className="inline-flex items-center gap-1.5">
                           <MapPin className="h-4 w-4" />
@@ -217,10 +205,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div
-                      className="text-[11px] font-semibold uppercase tracking-[0.14em]"
-                      style={{ opacity: 0.7 }}
-                    >
+                    <div className="text-[11px] font-semibold uppercase tracking-eyebrow opacity-70">
                       Presença
                     </div>
                     <div
@@ -233,7 +218,7 @@ export default async function DashboardPage() {
                       </span>
                     </div>
                     {Number(nextEvent.max_players) - Number(nextEvent.confirmed_count) > 0 && (
-                      <div className="text-xs" style={{ opacity: 0.8 }}>
+                      <div className="text-xs opacity-80">
                         {Number(nextEvent.max_players) - Number(nextEvent.confirmed_count)} vagas restantes
                       </div>
                     )}
@@ -242,14 +227,11 @@ export default async function DashboardPage() {
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <span
-                    className="rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
-                    style={{
-                      background:
-                        nextEvent.user_status === "yes"
-                          ? "rgba(34,197,94,.9)"
-                          : "rgba(255,255,255,.2)",
-                      color: "#FFF",
-                    }}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm ${
+                      nextEvent.user_status === "yes"
+                        ? "bg-pitch-glow/90"
+                        : "bg-white/20"
+                    }`}
                   >
                     {nextEvent.user_status === "yes"
                       ? "✓ Você confirmou"
@@ -259,10 +241,7 @@ export default async function DashboardPage() {
                       ? "Lista de espera"
                       : "Confirme sua presença"}
                   </span>
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-pitch-glow px-4 py-2 text-sm font-semibold text-ink"
-                    style={{ boxShadow: "var(--shadow-glow)" }}
-                  >
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-pitch-glow px-4 py-2 text-sm font-semibold text-navy shadow-glow">
                     Ver detalhes
                     <ArrowRight className="h-4 w-4" />
                   </span>
@@ -271,24 +250,21 @@ export default async function DashboardPage() {
             </div>
           </Link>
         ) : (
-          <div className="overflow-hidden rounded-cv-2xl shadow-cv-md">
+          <div className="overflow-hidden rounded-2xl shadow-warm-md">
             <div className="relative">
               <PitchBackground height={200} />
-              <div
-                className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center"
-                style={{ color: "var(--c-on-pitch)" }}
-              >
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-primary-foreground">
                 <h2 className="font-display tracking-display" style={{ fontSize: 36, lineHeight: 1 }}>
                   SEM PELADAS NO HORIZONTE
                 </h2>
-                <p className="max-w-md text-sm" style={{ opacity: 0.85 }}>
+                <p className="max-w-md text-sm opacity-85">
                   Crie um grupo, marque uma pelada ou peça pra um amigo te convidar.
                 </p>
                 <div className="mt-2 flex gap-2">
                   <Button asChild variant="secondary" size="sm">
                     <Link href="/groups/new">Criar grupo</Link>
                   </Button>
-                  <Button asChild size="sm" className="bg-pitch-glow text-ink hover:bg-pitch-glow/90">
+                  <Button asChild size="sm" className="bg-pitch-glow text-navy hover:bg-pitch-glow/90">
                     <Link href="/groups/join">Entrar em grupo</Link>
                   </Button>
                 </div>
@@ -313,10 +289,7 @@ export default async function DashboardPage() {
           </div>
           <div className="cv-stat">
             <div className="cv-stat-label">Confirmações</div>
-            <div
-              className="cv-stat-value"
-              style={{ color: confirmedCount > 0 ? "var(--c-pitch)" : undefined }}
-            >
+            <div className={`cv-stat-value ${confirmedCount > 0 ? "text-pitch" : ""}`}>
               {confirmedCount}
             </div>
             <div className="cv-stat-trend">próximos jogos</div>

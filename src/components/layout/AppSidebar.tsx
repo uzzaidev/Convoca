@@ -72,14 +72,14 @@ function NavItem({ href, icon, label, isCollapsed, onClick, exact }: NavItemProp
       href={href}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+        "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-150",
         isActive
           ? "bg-white/15 text-white border-l-[3px] border-green-400 pl-[9px]"
           : "text-white/60 hover:bg-white/10 hover:text-white",
         isCollapsed && "justify-center px-2",
       )}
     >
-      <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
+      <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
       {!isCollapsed && <span className="truncate">{label}</span>}
     </Link>
   );
@@ -177,7 +177,7 @@ export function AppSidebar({
                   <path d="M2 12C2 12 6 16 12 16C18 16 22 12 22 12" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </div>
-              <span className="text-xl font-bold tracking-tight">Convoca</span>
+              <span className="text-lg font-bold tracking-tight">Convoca</span>
             </Link>
             <Button
               variant="ghost"
@@ -213,7 +213,7 @@ export function AppSidebar({
                 onValueChange={handleGroupChange}
                 disabled={isPending}
               >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white text-sm h-9 hover:bg-white/15 transition-colors">
+                <SelectTrigger className="bg-white/10 border-white/20 text-white text-[13px] h-8 hover:bg-white/15 transition-colors">
                   <SelectValue placeholder="Selecionar grupo..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,7 +308,7 @@ export function AppSidebar({
                       onClick={handleModeToggle}
                       disabled={modeLoading}
                       className={cn(
-                        "flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                        "flex items-center gap-2 w-full rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all",
                         "bg-white/10 hover:bg-white/15 text-white border border-white/10",
                         modeLoading && "opacity-50 cursor-wait",
                       )}
@@ -431,8 +431,8 @@ export function AppSidebar({
       <div className="border-t border-white/10 px-2 py-3 space-y-0.5">
         {!isCollapsed && (
           <div className="px-3 py-2 mb-1 rounded-lg bg-white/5">
-            <p className="text-xs text-white/40 truncate">{user.email}</p>
-            <p className="text-sm font-medium text-white truncate">{user.name}</p>
+            <p className="text-[11px] text-white/40 truncate">{user.email}</p>
+            <p className="text-[13px] font-medium text-white truncate">{user.name}</p>
           </div>
         )}
 
@@ -468,7 +468,7 @@ export function AppSidebar({
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/50 hover:bg-white/10 hover:text-white transition-all",
+            "flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-white/50 hover:bg-white/10 hover:text-white transition-all",
             isCollapsed && "justify-center px-2",
           )}
         >

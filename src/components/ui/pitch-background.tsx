@@ -10,9 +10,12 @@ type PitchBackgroundProps = {
 };
 
 /**
- * Soccer pitch background — green grass stripes with optional white field
- * markings (center line, center circle, penalty boxes). Used as a hero
- * surface behind dashboard / group / event headers.
+ * Soccer pitch background — green grass stripes (`.bg-pitch-surface`) plus
+ * optional white field markings (center line, center circle, penalty boxes).
+ *
+ * Self-positioning: always renders as `position: relative` so the pitch
+ * stripes ::after pseudo-element anchors correctly. If you need the pitch
+ * to absolutely fill a parent, wrap it: `<div className="absolute inset-0"><PitchBackground height="100%"/></div>`.
  */
 export function PitchBackground({
   height = 240,
@@ -23,7 +26,7 @@ export function PitchBackground({
 }: PitchBackgroundProps) {
   return (
     <div
-      className={cn("cv-pitch-bg", className)}
+      className={cn("relative overflow-hidden bg-pitch-surface", className)}
       style={{ height, ...style }}
     >
       {showMarkings && (

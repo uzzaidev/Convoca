@@ -49,21 +49,29 @@
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/curate_workflow_rlm_approach.abstract.md",
+      "abstractTokens": 43,
+      "importance": 50,
+      "path": "facts/project/curate_workflow_rlm_approach.md",
+      "tokens": 43,
+      "type": "context"
+    },
+    {
       "abstractPath": "facts/project/project_facts.abstract.md",
-      "abstractTokens": 67,
+      "abstractTokens": 50,
       "importance": 50,
       "path": "facts/project/project_facts.md",
-      "tokens": 67,
+      "tokens": 50,
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-16T15:54:05.559Z",
+  "generated_at": "2026-05-16T16:01:45.163Z",
   "lane_tokens": {
-    "contexts": 3957,
+    "contexts": 3983,
     "stubs": 0,
     "summaries": 1421
   },
-  "source_fingerprint": "8b8ba9c3769bb5ae8b5cc07e709e0288ba299fbd17d05957982ea59d1650a778",
-  "total_tokens": 5378,
+  "source_fingerprint": "cbcf25ef6a12feaef85896cf6fd519c5b3cc72da2ff73fdb7a3e3cef530edf0e",
+  "total_tokens": 5404,
   "version": 1
 }

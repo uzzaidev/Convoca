@@ -1,1 +1,1 @@
-Convoca is a sports-event platform with documented APIs and schemas for draws, event settings, rankings, finances, invites, RSVPs, voting, match actions, search, and lifecycle rules, built with PostgreSQL, raw SQL, Zod validation, and role-based admin/member behavior.
+Convoca uses PostgreSQL, Stripe v21, Resend, and NextAuth Credentials with custom signup and reset flows, while its knowledge is organized into domain-based documentation rather than a single README.

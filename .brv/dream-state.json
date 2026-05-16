@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 3,
+  "curationsSinceDream": 19,
   "lastDreamAt": null,
   "lastDreamLogId": null,
   "pendingMerges": [],
@@ -7,6 +7,22 @@
     {
       "enqueuedAt": 1778946770001,
       "path": "facts/project/project_facts.md"
+    },
+    {
+      "enqueuedAt": 1778947260423,
+      "path": "facts/project/rlm_curation_workflow_facts.md"
+    },
+    {
+      "enqueuedAt": 1778947274800,
+      "path": "facts/project/project_facts_snapshot_2026_05_16.md"
+    },
+    {
+      "enqueuedAt": 1778947289849,
+      "path": "facts/project/curate_workflow_rlm_approach.md"
+    },
+    {
+      "enqueuedAt": 1778947302208,
+      "path": "facts/project/rlm_curate_workflow_facts.md"
     }
   ],
   "totalDreams": 0,

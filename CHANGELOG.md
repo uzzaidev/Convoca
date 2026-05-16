@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-05-16
+
+### feat
+- Melhoria na página do grupo com detalhes do próximo evento e controles de administrador
+  - Arquivos: `src/app/(app)/groups/[groupId]/page.tsx`, `src/app/(app)/dashboard/page.tsx`
+  - Confiança: alta
+
 ## 2026-05-14
 
 ### feat

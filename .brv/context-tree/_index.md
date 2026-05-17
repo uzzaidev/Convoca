@@ -1,259 +1,158 @@
 ---
-children_hash: 2ae9e5472b66baed57bf1567de875fe9eee48358b5767ac913e84776a5684a55
-compression_ratio: 0.70291146761735
+children_hash: 138d40048671b4a753e8df22a10d1a0c2fcb2f090c2f521017581d714521e62c
+compression_ratio: 0.8115785688601223
 condensation_order: 3
 covers: [architecture/_index.md, facts/_index.md, security/_index.md]
-covers_token_total: 3366
+covers_token_total: 2781
 summary_level: d3
-token_count: 2366
+token_count: 2257
 type: summary
 ---
-# Knowledge Structure Summary
+# Level d3 Structural Summary
 
-## Top-level domains
-- `architecture/_index.md` — infrastructure architecture for billing and database portability
-- `facts/_index.md` — durable project facts distilled from architecture and operations
-- `security/_index.md` — operational security scope and credential-exposure remediation
+## Architecture and Database
+The architecture branch is centered on infrastructure decisions and persistence boundaries, with two main drill-down areas: **billing** and **database**.
 
-## Cross-domain pattern
-Peladeiros consistently favors **application-layer control over provider-managed abstractions**:
-- database access uses generic PostgreSQL via `src/db/client.ts`
-- auth logic is implemented in app code (`src/lib/auth.ts`, auth API routes) rather than Supabase Auth
-- billing logic resolves plans and writes subscription metadata in app/backend/webhook layers rather than delegating plan semantics entirely to Stripe
-- main residual risk is **operational hygiene**, especially hardcoded credentials in backup tooling
+### Billing
+Billing is constrained by **Stripe v21 compatibility** and a **multi-plan subscription model**. The main relationship is that subscription flow, webhook persistence, and UI state all depend on Stripe’s updated object model, so billing changes must remain aligned with API shape changes.
 
-This relationship is visible across:
-- `architecture/database/provider_migration_diagnosis.md`
-- `architecture/billing/multi_plan_subscription_system.md`
-- `architecture/billing/stripe_v21_api_migration.md`
-- `security/operations/backup_credential_exposure.md`
-- `facts/project/peladeiros_infrastructure_facts_2026_03_31.md`
-- `facts/project/peladeiros_billing_and_stripe_facts.md`
+**Drill-down entries**
+- `stripe_v21_api_migration.md` — Stripe SDK upgrade rules and field/type compatibility.
+- `multi_plan_subscription_system.md` — multi-plan billing architecture, plan selection, persistence, and UI integration.
+- `context.md` — compact billing overview.
 
----
+**Core rules and decisions**
+- Use `invoices.createPreview()` instead of `invoices.retrieveUpcoming()`.
+- Read subscription period dates from `subscription.items.data[0]`.
+- Access invoice subscription via `Invoice.parent.subscription_details.subscription`.
+- Access promotion coupons via `PromotionCode.promotion.coupon`.
+- Replace `invoice.paid` with `invoice.status === "paid"`.
+- Treat `hosted_invoice_url` as nullable and normalize with `?? null`.
+- `Invoice.status` is a `Status` enum, not a plain string.
 
-## Architecture domain
-Ref: `architecture/_index.md`
+**Multi-plan structure**
+- `planId` is optional in checkout and group creation.
+- When `planId` exists, resolve `stripe_price_id` and `trial_days` from `subscription_plans`.
+- Fall back to `STRIPE_PRICE_ID` when lookup fails or no plan is provided.
+- Webhooks persist both `plan_id` and `stripe_price_id` into `group_subscriptions`.
+- Cancellation uses `cancel_at_period_end: true`.
+- Installments are not modeled as Stripe subscriptions; they use one-time payments.
+- The semestral plan uses `month` interval with `interval_count: 6`.
 
-### Topic map
-- `billing/_index.md`
-  - `stripe_v21_api_migration.md`
-  - `multi_plan_subscription_system.md`
-- `database/_index.md`
-  - `provider_migration_diagnosis.md`
+**Related surfaces**
+- Admin and public routes: `api/admin/plans/route.ts`, `api/admin/plans/[planId]/route.ts`, `api/plans/route.ts`, `api/groups/[groupId]/billing/route.ts`, `api/stripe/checkout/route.ts`, `api/groups/route.ts`
+- UI components: `components/groups/plan-selector.tsx`, `components/groups/group-billing-tab.tsx`, `components/admin/admin-plans-tab.tsx`
+- Migration 006 creates `subscription_plans` and adds `plan_id` and `stripe_price_id` to `group_subscriptions`
 
-### Billing architecture
-Ref: `architecture/billing/_index.md`
+### Database
+The database branch focuses on **provider abstraction**, **auth data access**, **schema portability**, and **operational credential risk**. The central conclusion is that provider migration is mostly an operations and configuration problem rather than a full application rewrite.
 
-#### 1) Stripe v21 compatibility layer
-Ref: `stripe_v21_api_migration.md`
+**Drill-down entries**
+- `provider_migration_diagnosis.md` — readiness diagnosis and source-level evidence.
+- `migration-readiness-is-split-between-code-portability-and-operational-cleanup.md` — synthesis of migration readiness and remaining blockers.
+- `context.md` — domain overview.
 
-Durable SDK/API changes:
-- `invoices.retrieveUpcoming()` → `invoices.createPreview()`
-- subscription period data moves to `subscription.items.data[0]`
-- invoice subscription reference moves to `Invoice.parent.subscription_details.subscription`
-- promotion coupon access moves from `PromotionCode.coupon` to `PromotionCode.promotion.coupon`
-- paid detection changes from `invoice.paid` to `invoice.status === "paid"`
-- `hosted_invoice_url` must be handled as nullable (`?? null`)
-- `Invoice.status` should be treated as enum-typed
+**Main findings**
+- The app is largely provider-portable because it uses generic PostgreSQL access.
+- Authentication is custom and SQL-based, using **NextAuth Credentials** against `public.users`, not Supabase SDK auth.
+- Password recovery depends on `reset_token`, `reset_token_expiry`, and **Resend** email delivery.
+- The main migration path is a `DATABASE_URL` switch plus schema/data migration and cleanup of provider-specific references.
+- The biggest blockers are operational leftovers and exposed secrets in backup tooling.
 
-Affected surfaces:
-- invoice preview generation
-- billing lifecycle display
-- promotion code handling
-- invoice status checks
-- TypeScript typing safety
+**Schema and portability characteristics**
+- Standard PostgreSQL features support portability: `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
+- Migration readiness depends on updating configuration, migrating schema/data, auditing references, and rotating credentials.
+- Security overlaps with this area because backup scripts contain hardcoded credentials and other secret exposure risks.
 
-#### 2) Multi-plan subscription system
-Ref: `multi_plan_subscription_system.md`
-
-Core decision:
-- migration `006` introduces `subscription_plans`
-- `group_subscriptions` persists both `plan_id` and `stripe_price_id`
-
-Flow:
-- admin manages plans
-- public API exposes active plans
-- checkout/group creation optionally receives `planId`
-- backend resolves `stripe_price_id` and `trial_days`
-- Stripe webhook writes selected plan metadata back to `group_subscriptions`
-- billing UI reflects resulting subscription state
-
-Backend/API surfaces:
-- `api/admin/plans/route.ts`
-- `api/admin/plans/[planId]/route.ts`
-- `api/plans/route.ts`
-- `api/stripe/checkout/route.ts`
-- `api/groups/route.ts`
-- `api/groups/[groupId]/billing/route.ts`
-
-UI surfaces:
-- `components/groups/plan-selector.tsx`
-- `components/groups/group-billing-tab.tsx`
-- `components/admin/admin-plans-tab.tsx`
-
-Rules and constraints:
-- `planId` is optional in checkout and group creation
-- if present, backend looks up `stripe_price_id` and `trial_days`
-- fallback pricing uses `STRIPE_PRICE_ID`
-- cancellation uses `cancel_at_period_end: true`
-- semestral plan is modeled as `interval: month` + `interval_count: 6`
-- installment-style `parcelamento` is not represented by Stripe subscriptions; requires one-time payments
-
-Relationship:
-- `multi_plan_subscription_system.md` depends on object-access and typing changes from `stripe_v21_api_migration.md`
-
-### Database architecture
-Ref: `architecture/database/_index.md`, `provider_migration_diagnosis.md`
-
-#### Core database design
-- main connectivity goes through `src/db/client.ts`
-- project is built around **generic PostgreSQL access**
-- provider lock-in is low because runtime flows avoid Supabase-specific core APIs
-
-#### Auth/account data flow
-Key files:
-- `src/lib/auth.ts` — NextAuth Credentials login with raw SQL against `public.users`
-- `src/app/api/auth/signup/route.ts` — inserts into `users`
-- `src/app/api/auth/forgot-password/route.ts`
-- `src/app/api/auth/reset-password/route.ts`
-- `src/lib/email.ts` — Resend integration for password recovery email
-
-Data pattern:
-- login reads `public.users`
-- signup writes `users`
-- forgot-password uses `users.reset_token` and `users.reset_token_expiry`
-- reset-password validates token and updates password
-
-#### Migration readiness
-Migration between providers is mostly operational:
-- update `DATABASE_URL`
-- move schema/data
-- audit lingering provider references
-- rotate exposed credentials
-
-#### Schema portability
-Ref: `src/db/migrations/schema.sql`
-
-Portable PostgreSQL features in use:
-- `uuid-ossp`
-- `JSONB`
-- `TEXT[]`
-- materialized views
-- `plpgsql`
-- triggers
-
-#### Residual coupling/risk
-- local `.env` still points `DATABASE_URL` to a Supabase host
-- legacy scripts:
-  - `src/db/backup-supabase.sh`
-  - `src/db/backup-supabase.bat`
-- these connect directly to `security/operations/backup_credential_exposure.md`
+**Key relationship**
+- Database provider abstraction reduces lock-in at the code level, but operational credential hygiene remains a separate concern and connects directly to **security/operations**.
 
 ---
 
-## Facts domain
-Ref: `facts/_index.md`
+## Facts
+The facts branch is a high-signal recall layer for durable project knowledge, with a narrow scope focused on stable, reusable information.
 
-### Role of this domain
-A condensed fact layer that captures stable implementation choices and risks without full architectural rationale. It aggregates from:
-- `facts/project/peladeiros_infrastructure_facts_2026_03_31.md`
-- `facts/project/peladeiros_billing_and_stripe_facts.md`
+### `context.md`
+Defines the `facts` domain as a place for standalone project facts such as technology choices, environment facts, operational facts, and stable implementation details. It intentionally excludes long-form design rationale and user-facing docs.
 
-### Infrastructure facts
-Ref: `peladeiros_infrastructure_facts_2026_03_31.md`
+### Project facts cluster
+The project facts cluster groups the main factual baseline, infrastructure diagnosis, billing facts, and curation workflow rules.
 
-Stable facts:
-- runtime does not use Supabase SDK/API
-- auth uses NextAuth Credentials + raw SQL in `src/lib/auth.ts`
-- signup/password-reset flows live in auth API routes and `src/lib/email.ts`
-- database access uses generic Postgres client in `src/db/client.ts`
-- provider migration is mainly `DATABASE_URL` + schema/data transfer
-- local `.env` still contains Supabase-host configuration
-- backup scripts contain hardcoded Supabase/Neon credentials
+**Drill-down entries**
+- `project_facts.md` — broad factual baseline for the application.
+- `peladeiros_infrastructure_facts_2026_03_31.md` — point-in-time infrastructure diagnosis.
+- `peladeiros_billing_and_stripe_facts.md` — primary billing and Stripe reference.
+- `curate_workflow_rlm_approach.md` — consolidated curation workflow rules.
+- `rlm_curate_workflow_facts.md` — compact workflow fact snapshot.
 
-### Billing and Stripe facts
-Ref: `peladeiros_billing_and_stripe_facts.md`
+**Core baseline**
+- PostgreSQL is the primary database.
+- Stripe v21 is used for billing.
+- NextAuth Credentials authenticates against `public.users`.
+- Signup and password reset flows are custom.
+- Documentation is organized by domain rather than a monolithic README.
+- Core entities include `subscription_plans` and `group_subscriptions`.
 
-Stable facts preserved from architecture:
-- Stripe v21 API shape changes listed in `stripe_v21_api_migration.md`
-- migration `006` adds `subscription_plans`
-- `group_subscriptions` gains `plan_id` and `stripe_price_id`
-- admin/public/group-billing API split is explicit
-- UI split spans selector, group billing tab, and admin plans tab
-- checkout in `api/stripe/checkout/route.ts` and `api/groups/route.ts` accepts optional `planId`
-- if `planId` exists, app resolves `stripe_price_id` and `trial_days`; else fallback is `STRIPE_PRICE_ID`
-- webhooks persist both `plan_id` and `stripe_price_id`
+**Infrastructure diagnosis**
+- No runtime Supabase SDK/API usage.
+- Raw SQL is used via `postgres` in `src/db/client.ts`.
+- Provider portability mostly depends on `DATABASE_URL` plus schema/data migration.
+- Standard PostgreSQL features include `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
+- Legacy backup scripts contain hardcoded Supabase/Neon credentials and are a security risk to rotate.
 
-Additional durable constraints:
-- semestral plan = `interval=month`, `interval_count=6`
-- Stripe installments do not apply to subscriptions
-- cancellation uses `cancel_at_period_end: true`
-- Windows build exit code `3221225477` is treated as likely SWC DLL init failure; if static generation completes and “Finalizing page optimization” appears, build is still considered successful
+**Billing and Stripe facts**
+- Stripe v21 migration affects API usage and field access patterns.
+- Migration 006 adds support for `subscription_plans`, `plan_id`, and `stripe_price_id`.
+- Main surfaces include admin plans, public plans, group billing, checkout, and plan selection.
+- Checkout falls back to `STRIPE_PRICE_ID`.
+- Webhooks persist billing identifiers.
+- `cancel_at_period_end: true` is used.
+- The Windows SWC exit-code heuristic is `3221225477`.
 
-### Relationship to other domains
-`facts/_index.md` functions as the compressed recall layer for:
-- `architecture/database/provider_migration_diagnosis.md`
-- `architecture/billing/multi_plan_subscription_system.md`
-- `architecture/billing/stripe_v21_api_migration.md`
-- `security/operations/backup_credential_exposure.md`
+**Curation workflow**
+- Reuse precomputed recon results.
+- Use single-pass curation for small contexts.
+- Deduplicate and group extracted facts.
+- Verify using `result.summary` and `result.applied[].filePath`.
+- These rules are captured as durable knowledge for future curation.
 
----
-
-## Security domain
-Ref: `security/_index.md`
-
-### Domain scope
-Focused on operational security knowledge:
-- credential management risks
-- secret rotation requirements
-- operational script security
-- exposure remediation notes
-
-Explicitly excludes:
-- feature authorization logic
-- user-facing security guidance
-
-### Operations topic
-Ref: `security/operations/_index.md`, `backup_credential_exposure.md`
-
-#### Backup credential exposure
-Core finding:
-- operational backup automation still includes provider-specific scripts with embedded credentials
-
-Files:
-- `src/db/backup-supabase.sh`
-- `src/db/backup-supabase.bat`
-
-Risk flow:
-- infrastructure review
-- inspect backup scripts
-- detect embedded credentials
-- treat as exposed secrets
-- rotate credentials after migration/audit
-
-Key rule:
-- hardcoded credentials in operational scripts must be treated as exposed secrets and rotated after migration or discovery
-
-Dependencies for mitigation:
-- inventory all scripts with embedded secrets
-- replace static credentials with env-injected or managed secrets
-- rotate affected database users/passwords
-- apply remediation across providers, not only the active one
-
-Facts preserved:
-- backup scripts for Supabase and Neon contain hardcoded credentials
-- credential rotation is recommended after migration because secrets are exposed
-
-Relationship:
-- `backup_credential_exposure.md` is directly related to `architecture/database/provider_migration_diagnosis.md`
+**Key relationships**
+- `context.md` is the top-level facts overview.
+- `project_facts.md` provides the broad baseline.
+- `peladeiros_infrastructure_facts_2026_03_31.md` and `peladeiros_billing_and_stripe_facts.md` are the main drill-down points for infrastructure/auth/database and billing/Stripe.
+- The workflow entries document how knowledge should be curated in this tree.
 
 ---
 
-## Drill-down guide
-For detail on specific concerns:
-- Stripe SDK/type migration: `architecture/billing/stripe_v21_api_migration.md`
-- Subscription model and plan wiring: `architecture/billing/multi_plan_subscription_system.md`
-- Postgres portability and auth/data flow: `architecture/database/provider_migration_diagnosis.md`
-- Durable implementation facts: `facts/project/peladeiros_infrastructure_facts_2026_03_31.md`, `facts/project/peladeiros_billing_and_stripe_facts.md`
-- Credential exposure and remediation: `security/operations/backup_credential_exposure.md`
+## Security / Operations
+This branch is centered on **operational security risks** tied to provider migration and maintenance scripts. The focus is not application-layer authorization, but **exposed credentials in backup tooling** and the need for rotation and cleanup.
+
+### `context.md`
+Defines the security domain for credential management risks, secret rotation requirements, operational script security, and exposure remediation notes. It excludes feature authorization logic and user-facing security guidance.
+
+### Operational security topic
+The main topic is **hardcoded secrets in backup scripts**.
+
+**Drill-down entry**
+- `backup_credential_exposure.md` — concrete exposure finding and remediation constraint.
+
+**Main risk pattern**
+- Backup scripts for **Supabase** and **Neon** contain embedded credentials.
+- The risk is documented across `src/db/backup-supabase.sh` and `src/db/backup-supabase.bat`.
+- The operational flow is:
+  **infrastructure review -> inspect backup scripts -> detect embedded credentials -> treat as exposure risk -> rotate credentials after migration**
+- Mitigation depends on:
+  - finding every script with embedded credentials
+  - replacing static secrets with environment injection or secret management
+  - rotating affected database users/passwords
+- Rule: **hardcoded credentials in operational scripts must be treated as exposed secrets and rotated after migration or audit discovery.**
+
+### Cross-cutting synthesis
+#### `provider-portability-depends-on-secrets-hygiene.md`
+This synthesis connects architecture, facts, and security:
+- The application is largely PostgreSQL-portable at runtime.
+- Migration risk includes both schema/data portability and **secret hygiene**.
+- Residual coupling remains in `.env` values pointing `DATABASE_URL` at a **Supabase host** and legacy backup scripts with **hardcoded Supabase/Neon credentials**.
+- Conclusion: **provider portability depends on secrets cleanup and rotation, not only on database abstraction.**
+
+Use this entry as the bridge between architectural portability and operational security remediation.

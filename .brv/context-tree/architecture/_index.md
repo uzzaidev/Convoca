@@ -1,146 +1,69 @@
 ---
-children_hash: ad5fb57923578f3a8bcf2cebb50fb817c8cc81c93bfef0b603d0588a201f0df2
-compression_ratio: 0.48284063880394157
+children_hash: c0547723ce529fb0a3d9707fba4d177a9f24f5109b61c35f2654f53f6cb1b601
+compression_ratio: 0.5479892761394102
 condensation_order: 2
 covers: [billing/_index.md, context.md, database/_index.md]
-covers_token_total: 2943
+covers_token_total: 1865
 summary_level: d2
-token_count: 1421
+token_count: 1022
 type: summary
 ---
-# Architecture
+# Architecture and Database
 
-## Domain scope
-Application architecture knowledge is organized around two active topics:
+The architecture domain centers on infrastructure-level decisions and persistence design, with the billing and database topics showing the main implementation constraints and migration boundaries.
 
-- `billing/_index.md` — Stripe billing compatibility and the multi-plan subscription system
-- `database/_index.md` — PostgreSQL portability, auth/account data access, and migration risk
+## Billing
 
-The domain emphasizes infrastructure/runtime/persistence design rather than end-user feature behavior. See `context.md` for the domain boundary: architecture decisions, database client design, provider migration constraints, and infrastructure risks.
+Billing is shaped by Stripe v21 compatibility and a multi-plan subscription model. The key relationship is that subscription flow, webhook persistence, and UI state all depend on Stripe’s updated object model, so billing changes must stay aligned with API shape changes.
 
-## Topic map
+### Drill-down entries
+- **`stripe_v21_api_migration.md`** — Stripe SDK upgrade rules and field/type compatibility.
+- **`multi_plan_subscription_system.md`** — multi-plan billing architecture, plan selection, persistence, and UI integration.
+- **`context.md`** — compact billing overview.
 
-### Billing
-Primary drill-down:
-- `stripe_v21_api_migration.md`
-- `multi_plan_subscription_system.md`
+### Main decisions and rules
+- Use `invoices.createPreview()` instead of `invoices.retrieveUpcoming()`.
+- Read subscription period dates from `subscription.items.data[0]`.
+- Access invoice subscription via `Invoice.parent.subscription_details.subscription`.
+- Access promotion coupons via `PromotionCode.promotion.coupon`.
+- Replace `invoice.paid` with `invoice.status === "paid"`.
+- Treat `hosted_invoice_url` as nullable and normalize with `?? null`.
+- `Invoice.status` is a `Status` enum, not a plain string.
 
-This topic has two layers:
+### Multi-plan system structure
+- `planId` is optional in checkout and group creation.
+- When `planId` exists, resolve `stripe_price_id` and `trial_days` from `subscription_plans`.
+- Fall back to `STRIPE_PRICE_ID` when lookup fails or no plan is provided.
+- Webhooks persist both `plan_id` and `stripe_price_id` into `group_subscriptions`.
+- Cancellation uses `cancel_at_period_end: true`.
+- Installments are not modeled as Stripe subscriptions; they use one-time payments.
+- The semestral plan uses `month` interval with `interval_count: 6`.
 
-1. **Stripe SDK compatibility layer** (`stripe_v21_api_migration.md`)
-   - Required Stripe v21 migration changes:
-     - `invoices.retrieveUpcoming()` → `invoices.createPreview()`
-     - subscription period fields move to `subscription.items.data[0]`
-     - invoice subscription reference moves to `Invoice.parent.subscription_details.subscription`
-     - promotion code coupon access moves to `PromotionCode.promotion.coupon`
-     - paid detection changes from `invoice.paid` to `invoice.status === "paid"`
-     - `hosted_invoice_url` must be nullable-safe
-     - `Invoice.status` is enum-typed, not a plain string
-   - Affects invoice preview generation, lifecycle display, promotion code handling, invoice status checks, and TypeScript safety.
+### Related APIs and storage
+- Admin and public billing routes: `api/admin/plans/route.ts`, `api/admin/plans/[planId]/route.ts`, `api/plans/route.ts`, `api/groups/[groupId]/billing/route.ts`, `api/stripe/checkout/route.ts`, `api/groups/route.ts`
+- UI components: `components/groups/plan-selector.tsx`, `components/groups/group-billing-tab.tsx`, `components/admin/admin-plans-tab.tsx`
+- Migration 006 creates `subscription_plans` and adds `plan_id` and `stripe_price_id` to `group_subscriptions`
 
-2. **Application subscription architecture** (`multi_plan_subscription_system.md`)
-   - Architectural decision: introduce a dedicated `subscription_plans` model in Migration `006`.
-   - Persist both `plan_id` and `stripe_price_id` in `group_subscriptions`.
-   - `planId` remains optional in checkout and group creation; fallback is `STRIPE_PRICE_ID`.
-   - Stripe webhook is responsible for writing selected plan metadata back into `group_subscriptions`.
+## Database
 
-#### Billing flow
-- Admin manages plans
-- Public API exposes active plans
-- Checkout/group creation optionally accepts `planId`
-- Backend resolves `stripe_price_id` and `trial_days`
-- Stripe webhook persists plan linkage
-- Billing UI reflects subscription state
+The database domain focuses on provider abstraction, auth data access, schema portability, and operational credential risk. The central conclusion is that provider migration is mostly an operations and configuration problem rather than a full application rewrite.
 
-#### Billing surfaces
-Backend:
-- `api/admin/plans/route.ts`
-- `api/admin/plans/[planId]/route.ts`
-- `api/plans/route.ts`
-- `api/stripe/checkout/route.ts`
-- `api/groups/route.ts`
-- `api/groups/[groupId]/billing/route.ts`
+### Drill-down entries
+- **`provider_migration_diagnosis.md`** — readiness diagnosis and source-level evidence.
+- **`migration-readiness-is-split-between-code-portability-and-operational-cleanup.md`** — synthesis of migration readiness and remaining blockers.
+- **`context.md`** — domain overview.
 
-UI:
-- `components/groups/plan-selector.tsx`
-- `components/groups/group-billing-tab.tsx`
-- `components/admin/admin-plans-tab.tsx`
+### Main findings
+- The app is largely provider-portable because it uses generic PostgreSQL access.
+- Authentication is custom and SQL-based, using **NextAuth Credentials** against `public.users`, not Supabase SDK auth.
+- Password recovery depends on `reset_token`, `reset_token_expiry`, and **Resend** email delivery.
+- The main migration path is a `DATABASE_URL` switch plus schema/data migration and cleanup of provider-specific references.
+- The most serious blockers are operational leftovers and exposed secrets in backup tooling.
 
-#### Key billing rules
-- `planId` drives lookup of `stripe_price_id` and `trial_days`
-- fallback pricing uses `STRIPE_PRICE_ID`
-- cancellation uses `cancel_at_period_end: true`
-- semestral plan is modeled as `interval: month` with `interval_count: 6`
-- installment-style `parcelamento` is not modeled via Stripe subscriptions; it requires one-time payments
+### Schema and portability characteristics
+- Standard PostgreSQL features support portability: `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
+- Migration readiness depends on updating configuration, migrating schema/data, auditing references, and rotating credentials.
+- Security overlaps with this area because backup scripts contain hardcoded credentials and other secret exposure risks.
 
-#### Relationship inside billing
-`multi_plan_subscription_system.md` depends on the object access and type-safety rules documented in `stripe_v21_api_migration.md`.
-
----
-
-### Database
-Primary drill-down:
-- `provider_migration_diagnosis.md`
-
-This topic centers on provider portability and the fact that the project is built on **generic PostgreSQL access**, not a managed-provider SDK.
-
-#### Core architectural decisions
-- Main DB connectivity goes through `src/db/client.ts`.
-- The app is largely portable across PostgreSQL providers because it avoids Supabase-specific application APIs.
-- Authentication/account lifecycle logic lives in the application layer, not provider auth services.
-
-#### Auth and account flow
-Key files:
-- `src/lib/auth.ts` — NextAuth Credentials login using raw SQL against `public.users`
-- `src/app/api/auth/signup/route.ts` — inserts into `users`
-- `src/app/api/auth/forgot-password/route.ts`
-- `src/app/api/auth/reset-password/route.ts`
-- `src/lib/email.ts` — password recovery email via Resend
-
-Data pattern:
-- login reads `public.users`
-- signup writes `users`
-- forgot-password uses `users.reset_token` and `users.reset_token_expiry`
-- reset-password validates token and updates password
-
-#### Migration readiness
-`provider_migration_diagnosis.md` concludes provider lock-in is low because:
-- no Supabase SDK dependency in core app flows
-- no Supabase auth/storage dependency in core architecture
-- migration work is mostly operational:
-  - update `DATABASE_URL`
-  - migrate schema/data
-  - audit remaining provider references
-  - rotate exposed credentials
-
-#### Schema portability
-Relevant file:
-- `src/db/migrations/schema.sql`
-
-The schema relies on common PostgreSQL capabilities:
-- `uuid-ossp`
-- `JSONB`
-- `TEXT[]`
-- materialized views
-- `plpgsql`
-- triggers
-
-This indicates migration friction is mostly config/ops-related rather than blocked by proprietary APIs.
-
-#### Residual coupling and risk
-Provider-specific leftovers:
-- local `.env` still pointing `DATABASE_URL` to a Supabase host
-- legacy backup scripts:
-  - `src/db/backup-supabase.sh`
-  - `src/db/backup-supabase.bat`
-
-Operational risk pattern:
-- hardcoded credentials in Supabase and Neon backup scripts
-- credentials should be rotated after migration
-- this connects directly to `security/operations`
-
-## Cross-topic patterns
-- Both topics document **infrastructure-facing architecture**, not product copy or user guides.
-- `billing/_index.md` is about Stripe-backed monetization architecture and SDK compatibility.
-- `database/_index.md` is about PostgreSQL abstraction, auth data flows, and migration/secret exposure risk.
-- Shared architectural theme: the system favors **application-layer control** over provider-managed abstractions, which improves portability but makes file-level operational hygiene critical.
+### Key relationship
+- Database provider abstraction reduces lock-in at the code level, but operational credential hygiene remains a separate concern and connects directly to **security/operations**.

@@ -3,8 +3,20 @@
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 1421,
+      "tokens": 1022,
       "type": "summary"
+    },
+    {
+      "order": 2,
+      "path": "facts/_index.md",
+      "tokens": 956,
+      "type": "summary"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/billing/billing-changes-are-constrained-by-stripe-api-compatibility.md",
+      "tokens": 444,
+      "type": "context"
     },
     {
       "importance": 50,
@@ -38,14 +50,20 @@
     },
     {
       "importance": 50,
-      "path": "architecture/database/provider_migration_diagnosis.md",
-      "tokens": 1140,
+      "path": "architecture/database/migration-readiness-is-split-between-code-portability-and-operational-cleanup.md",
+      "tokens": 416,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "facts/context.md",
       "tokens": 120,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "facts/project/context.md",
+      "tokens": 125,
       "type": "context"
     },
     {
@@ -63,15 +81,29 @@
       "path": "facts/project/project_facts.md",
       "tokens": 50,
       "type": "context"
+    },
+    {
+      "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
+      "abstractTokens": 35,
+      "importance": 50,
+      "path": "facts/project/rlm_curate_workflow_facts.md",
+      "tokens": 35,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/context.md",
+      "tokens": 136,
+      "type": "context"
     }
   ],
-  "generated_at": "2026-05-16T16:01:45.163Z",
+  "generated_at": "2026-05-16T16:18:42.344Z",
   "lane_tokens": {
-    "contexts": 3983,
+    "contexts": 3999,
     "stubs": 0,
-    "summaries": 1421
+    "summaries": 1978
   },
-  "source_fingerprint": "cbcf25ef6a12feaef85896cf6fd519c5b3cc72da2ff73fdb7a3e3cef530edf0e",
-  "total_tokens": 5404,
+  "source_fingerprint": "54fb893a4d0a8387f91909ca4e3254836989a1109173399b87d4ffcdd89bb771",
+  "total_tokens": 5977,
   "version": 1
 }

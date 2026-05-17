@@ -1,76 +1,41 @@
 ---
-children_hash: fc1cf6fd5337e9d4fb908d709af5274388ce808ff2777c25a600faf97f847fbf
-compression_ratio: 0.566128067025733
+children_hash: 314ccf18c42c44454066f0b115fbf2bc24137c70f13d402de3cc9aa32e9f3a8a
+compression_ratio: 0.6306068601583114
 condensation_order: 2
 covers: [context.md, project/_index.md]
-covers_token_total: 1671
+covers_token_total: 1516
 summary_level: d2
-token_count: 946
+token_count: 956
 type: summary
 ---
-# facts / project
+## Level d2 Structural Summary
 
-Durable fact layer for Peladeiros: stable implementation choices, infrastructure signals, billing behavior, and operational risks. It complements deeper design detail in `architecture/database`, `architecture/billing`, and `security/operations`.
+### facts domain
+`context.md` defines the `facts` domain as a high-signal recall layer for standalone project facts. Its scope is intentionally narrow: technology choices, environment facts, operational facts, and stable implementation details, while excluding long-form design rationale and user-facing docs. Ownership is with Peladeiros engineering, and the domain exists to make durable facts easy to retrieve without broader architecture context.
 
-## What this topic covers
-- `context.md`: standalone high-signal project facts, not long-form rationale.
-- `peladeiros_infrastructure_facts_2026_03_31.md`: auth, database portability, environment and script risks.
-- `peladeiros_billing_and_stripe_facts.md`: Stripe v21 changes, plan/subscription wiring, product billing rules, Windows build heuristic.
+### project facts cluster
+The `project/_index.md` summary groups the project knowledge into three areas: general project facts, infrastructure/database/auth facts, and the RLM curation workflow. It also establishes that the knowledge base is organized by domain docs rather than a monolithic README, and highlights core references such as `src/db/client.ts`, `src/db/backup-supabase.sh`, and `src/db/backup-supabase.bat`.
 
-## Core facts
+#### `project_facts.md`
+This is the broad factual baseline for the application. It preserves the main stack and structure: PostgreSQL as the primary database, Stripe v21 for billing, NextAuth Credentials against `public.users` for authentication, custom signup/password reset flows, and domain-oriented documentation layout. It also captures billing fallback behavior, core entities like `subscription_plans` and `group_subscriptions`, and the project’s curated knowledge organization.
 
-### Auth and data access
-From `peladeiros_infrastructure_facts_2026_03_31.md`:
-- Runtime does **not** use Supabase SDK/API.
-- Auth uses NextAuth Credentials + raw SQL in `src/lib/auth.ts`.
-- Signup: `src/app/api/auth/signup/route.ts`.
-- Password reset uses `reset_token` / `reset_token_expiry` plus Resend via:
-  - `src/app/api/auth/forgot-password/route.ts`
-  - `src/app/api/auth/reset-password/route.ts`
-  - `src/lib/email.ts`
-- Database access uses generic Postgres client in `src/db/client.ts`.
+#### `peladeiros_infrastructure_facts_2026_03_31.md`
+This entry is the point-in-time infrastructure diagnosis. Key facts include no runtime Supabase SDK/API usage, raw SQL via `postgres` in `src/db/client.ts`, custom auth and recovery flows, provider portability mostly depending on `DATABASE_URL` plus schema/data migration, and reliance on standard PostgreSQL features like `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers. It also flags legacy backup scripts with hardcoded Supabase/Neon credentials as a security risk to rotate.
 
-### Provider portability
-From `peladeiros_infrastructure_facts_2026_03_31.md`:
-- Migration between DB providers is mainly `DATABASE_URL` + schema/data move.
-- Schema depends on standard PostgreSQL features: `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, triggers.
-- Local `.env` still references a Supabase host, indicating residual provider-specific config.
+#### `peladeiros_billing_and_stripe_facts.md`
+This is the primary billing and Stripe reference. It records Stripe v21 API migration effects, migration 006 support for `subscription_plans`, `plan_id`, and `stripe_price_id`, and the main API/UI surfaces for admin plans, public plans, group billing, checkout, and plan selection. It also preserves checkout fallback behavior to `STRIPE_PRICE_ID`, webhook persistence of billing identifiers, `cancel_at_period_end: true`, and the Windows SWC exit-code heuristic `3221225477`.
 
-### Billing and Stripe
-From `peladeiros_billing_and_stripe_facts.md`:
-- Stripe v21 durable changes:
-  - `invoices.retrieveUpcoming()` → `invoices.createPreview()`
-  - subscription period fields now come from `subscription.items.data[0]`
-  - `Invoice.subscription` → `Invoice.parent.subscription_details.subscription`
-  - `PromotionCode.coupon` → `PromotionCode.promotion.coupon`
-  - `invoice.paid` removed; use `invoice.status === "paid"`
-  - `hosted_invoice_url ?? null`
-- Multi-plan model:
-  - migration `006` creates `subscription_plans`
-  - `group_subscriptions` gains `plan_id` and `stripe_price_id`
-- API split:
-  - admin plans: `api/admin/plans/route.ts`, `api/admin/plans/[planId]/route.ts`
-  - public plans: `api/plans/route.ts`
-  - group billing: `api/groups/[groupId]/billing/route.ts`
-- UI split:
-  - `components/groups/plan-selector.tsx`
-  - `components/groups/group-billing-tab.tsx`
-  - `components/admin/admin-plans-tab.tsx`
-- Checkout in `api/stripe/checkout/route.ts` and `api/groups/route.ts` accepts optional `planId`; if present it resolves `subscription_plans` for `stripe_price_id` and `trial_days`, otherwise falls back to `STRIPE_PRICE_ID`.
-- Webhooks persist both `plan_id` and `stripe_price_id`.
+### RLM curation workflow cluster
+The workflow entries define how knowledge should be curated when the context is already precomputed and small enough for single-pass handling.
 
-### Product and operational constraints
-- Semestral plan = `interval=month`, `interval_count=6`.
-- Stripe installments do not apply to subscriptions.
-- Cancellation uses `cancel_at_period_end: true`.
-- Legacy scripts `src/db/backup-supabase.sh` and `src/db/backup-supabase.bat` contain hardcoded Supabase/Neon credentials.
-- On Windows, exit code `3221225477` is treated as likely SWC DLL init failure; successful static generation + “Finalizing page optimization” still indicates build success.
+#### `curate_workflow_rlm_approach.md`
+This consolidated workflow entry says to reuse precomputed recon results, proceed directly to extraction in single-pass mode, deduplicate and group extracted facts, and verify using `result.summary` plus `result.applied[].filePath` rather than rereading files. It frames these rules as durable knowledge for future curation.
 
-## Key structure and relationships
-- `peladeiros_infrastructure_facts_2026_03_31.md`: custom auth + generic Postgres + residual Supabase/credential debt.
-- `peladeiros_billing_and_stripe_facts.md`: Stripe API migration + multi-plan subscription wiring across migration, API, UI, checkout, and webhook layers.
-- Drill down:
-  - `architecture/database/provider_migration_diagnosis.md`
-  - `architecture/billing/multi_plan_subscription_system.md`
-  - `architecture/billing/stripe_v21_api_migration.md`
-  - `security/operations/backup_credential_exposure.md`
+#### `rlm_curate_workflow_facts.md`
+This shorter fact entry reinforces the same operational rules: do not repeat recon when already provided, use single-pass curation for small preprocessed contexts, and verify via `result.applied[].filePath`. It overlaps with the consolidated workflow entry as a compact factual snapshot.
+
+### key relationships
+- `context.md` is the top-level `facts` domain overview.
+- `project_facts.md` provides the broad project baseline.
+- `peladeiros_infrastructure_facts_2026_03_31.md` and `peladeiros_billing_and_stripe_facts.md` are the main drill-down points for infrastructure/auth/database and billing/Stripe.
+- `curate_workflow_rlm_approach.md` and `rlm_curate_workflow_facts.md` document the operational rules for curating and verifying knowledge in this context tree.

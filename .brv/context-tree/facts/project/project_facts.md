@@ -1,18 +1,13 @@
 ---
-title: Project Facts
-summary: Project facts covering Convoca stack, billing, auth, database, and documentation organization.
-tags: []
-related: [architecture/context.md, security/context.md, architecture/billing/context.md, architecture/database/context.md, security/operations/context.md]
-keywords: []
-createdAt: '2026-05-16T15:52:49.980Z'
-updatedAt: '2026-05-16T16:01:06.494Z'
+consolidated_at: '2026-05-16T16:17:53.095Z'
+consolidated_from: [{date: '2026-05-16T16:17:53.095Z', path: facts/project/project_facts_snapshot_2026_05_16.md, reason: 'These are overlapping project fact snapshots for the same date and domain, both summarizing the Convoca stack, billing, authentication, database portability, and documentation structure. The snapshot file is a narrower point-in-time derivative of the broader project_facts file, so they should be consolidated to avoid duplication.'}]
 ---
 ## Reason
-Curate extracted project facts from RLM context
+Curate extracted project facts from RLM context, preserving the broader project fact base and the 2026-05-16 snapshot details.
 
 ## Raw Concept
 **Task:**
-Capture the main project facts and stack details described in the curated context.
+Capture the main project facts and stack details described in the curated context, including the latest durable snapshot.
 
 **Changes:**
 - Identified Stripe billing and API migration as key project knowledge areas
@@ -33,6 +28,11 @@ Capture the main project facts and stack details described in the curated contex
 - Documented the database portability preference.
 - Recorded billing and subscription behavior.
 - Captured auth, stack, and documentation structure facts.
+- Captured the current project knowledge snapshot from the RLM context.
+- Preserved the live project knowledge inventory as a point-in-time snapshot dated 2026-05-16.
+- Recorded current curated domains and topic coverage.
+- Preserved architecture, billing, auth, database, and security facts.
+- Captured discovered files, scripts, and key entities.
 
 **Files:**
 - src/db/client.ts
@@ -40,6 +40,8 @@ Capture the main project facts and stack details described in the curated contex
 - docs/06-features/RANKING_LOGIC.md
 - docs/06-features/PAYMENTS_GUIDE.md
 - docs/06-features/ADMIN_MEMBER_SEPARATION.md
+- src/db/backup-supabase.sh
+- src/db/backup-supabase.bat
 
 **Flow:**
 context notes -> extract facts -> store in facts/project
@@ -50,13 +52,13 @@ context notes -> extract facts -> store in facts/project
 
 ## Narrative
 ### Structure
-This entry consolidates high-level project facts spanning persistence, billing, authentication, and documentation structure.
+This entry consolidates high-level project facts spanning persistence, billing, authentication, documentation structure, and the latest durable snapshot of the project knowledge base.
 
 ### Dependencies
-Depends on the existing Convoca architecture and billing/auth context already present in the knowledge base.
+Depends on the existing Convoca architecture and billing/auth context already present in the knowledge base, plus the live context-tree inventory as of 2026-05-16.
 
 ### Highlights
-As of 2026-05-16, the project stack and organizational conventions are documented for recall and curation.
+As of 2026-05-16, the project stack and organizational conventions are documented for recall and curation. The live snapshot emphasizes PostgreSQL portability, multi-plan billing, NextAuth Credentials authentication, and backup-related operational scripts.
 
 ### Rules
 Do not treat the project as documented in a single monolithic README; use domain-based context entries instead.
@@ -70,3 +72,9 @@ Examples include /api/groups/[groupId]/draw-config, /api/events/[eventId]/teams/
 - **authentication**: Authentication uses NextAuth Credentials against public.users with custom signup and password reset flows. [project]
 - **tech_stack**: The stack includes Stripe v21 and Resend. [project]
 - **documentation_structure**: Project knowledge is organized into domain docs such as architecture, facts, and security rather than a single monolithic README. [project]
+- **context_tree_domains**: The context tree currently includes architecture, facts, and security/operations domains, plus domain docs for billing, database, provider migration, and backup credential exposure. [project]
+- **database_stack**: The project database stack is built on PostgreSQL with portable/common features to reduce provider lock-in. [project]
+- **billing_architecture_snapshot**: Billing architecture supports multi-plan subscriptions and keeps planId optional, with fallback to STRIPE_PRICE_ID when absent. [project]
+- **auth_flow_snapshot**: The auth flow uses NextAuth Credentials against public.users, with custom signup and password reset via token and expiry fields. [project]
+- **db_files_snapshot**: Discovered files and scripts include src/db/client.ts, src/db/backup-supabase.sh, and src/db/backup-supabase.bat. [project]
+- **key_entities_snapshot**: Key entities include subscription_plans, group_subscriptions, public.users, Stripe v21, and Resend. [project]

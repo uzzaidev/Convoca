@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-05-17
+
+### chore
+- Consolidada a atualização do arquivo de fatos e do workflow de curadoria RLM, eliminando duplicações e incluindo regras de verificação e pré-computação de recon. Além disso, foram limpos caminhos obsoletos de sumários e resetado o estado de sonho após merges bem-sucedidos.
+  - Arquivos: `.brv/context-tree/_index.md`
+  - Confiança: alta
+
 ## 2026-05-16
 
 ### feat

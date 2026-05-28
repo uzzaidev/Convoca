@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-05-28
+
+### feat
+- Aprimorada a lógica de cálculo de MVP nos endpoints de estatísticas, rankings e finalização de temporada, incluindo seleção de vencedores claros e resolvidos por tiebreaker.
+  - Arquivos: `src/app/api/groups/[groupId]/my-stats/route.ts`, `src/app/api/groups/[groupId]/rankings/route.ts`, `src/app/api/groups/[groupId]/seasons/[seasonId]/finish/route.ts`
+  - Confiança: alta
+
 ## 2026-05-17
 
 ### chore

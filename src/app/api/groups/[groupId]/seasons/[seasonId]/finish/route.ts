@@ -76,6 +76,32 @@ export async function POST(
           AND starts_at >= ${season.starts_at}
           AND starts_at <= ${season.ends_at}
       ),
+      event_mvp_winners AS (
+        -- Vencedor claro (sem empate e sem tiebreaker): jogador com mais votos
+        SELECT pv.rated_user_id as user_id, pv.event_id
+        FROM (
+          SELECT rated_user_id, event_id, COUNT(*) as vote_count
+          FROM player_ratings
+          WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM season_events)
+          GROUP BY rated_user_id, event_id
+        ) pv
+        WHERE NOT EXISTS (
+          SELECT 1 FROM player_ratings pr_other
+          WHERE 'mvp' = ANY(pr_other.tags)
+            AND pr_other.event_id = pv.event_id
+            AND pr_other.rated_user_id != pv.rated_user_id
+          GROUP BY pr_other.rated_user_id
+          HAVING COUNT(*) >= pv.vote_count
+        )
+        AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+        UNION
+        -- Vencedor do tiebreaker resolvido
+        SELECT winner_user_id as user_id, event_id
+        FROM mvp_tiebreakers
+        WHERE event_id IN (SELECT id FROM season_events)
+          AND winner_user_id IS NOT NULL
+          AND status IN ('completed', 'admin_decided')
+      ),
       team_scores AS (
         SELECT
           t.event_id,
@@ -129,7 +155,7 @@ export async function POST(
           (SELECT COUNT(*) FROM event_actions ea WHERE ea.subject_user_id = pg.user_id AND ea.event_id IN (SELECT id FROM season_events) AND ea.action_type = 'goal') as goals,
           (SELECT COUNT(*) FROM event_actions ea WHERE ea.subject_user_id = pg.user_id AND ea.event_id IN (SELECT id FROM season_events) AND ea.action_type = 'assist') as assists,
           (SELECT COUNT(*) FROM event_actions ea WHERE ea.subject_user_id = pg.user_id AND ea.event_id IN (SELECT id FROM season_events) AND ea.action_type = 'own_goal') as own_goals,
-          (SELECT COUNT(*) FROM player_ratings pr WHERE pr.rated_user_id = pg.user_id AND pr.event_id IN (SELECT id FROM season_events) AND 'mvp' = ANY(pr.tags)) as mvp_count
+          (SELECT COUNT(*) FROM event_mvp_winners WHERE user_id = pg.user_id) as mvp_count
         FROM player_games pg
         GROUP BY pg.user_id
       )

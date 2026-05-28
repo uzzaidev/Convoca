@@ -247,6 +247,32 @@ export async function GET(
           AND starts_at >= ${seasonFilter.startsAt}
           AND starts_at <= ${seasonFilter.endsAt}
       ),
+      event_mvp_winners AS (
+        -- Vencedor claro (sem empate e sem tiebreaker): jogador com mais votos
+        SELECT pv.rated_user_id as user_id, pv.event_id
+        FROM (
+          SELECT rated_user_id, event_id, COUNT(*) as vote_count
+          FROM player_ratings
+          WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM finished_events)
+          GROUP BY rated_user_id, event_id
+        ) pv
+        WHERE NOT EXISTS (
+          SELECT 1 FROM player_ratings pr_other
+          WHERE 'mvp' = ANY(pr_other.tags)
+            AND pr_other.event_id = pv.event_id
+            AND pr_other.rated_user_id != pv.rated_user_id
+          GROUP BY pr_other.rated_user_id
+          HAVING COUNT(*) >= pv.vote_count
+        )
+        AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+        UNION
+        -- Vencedor do tiebreaker resolvido
+        SELECT winner_user_id as user_id, event_id
+        FROM mvp_tiebreakers
+        WHERE event_id IN (SELECT id FROM finished_events)
+          AND winner_user_id IS NOT NULL
+          AND status IN ('completed', 'admin_decided')
+      ),
       team_scores AS (
         SELECT
           t.id as team_id,
@@ -324,10 +350,7 @@ export async function GET(
           END) as own_goals,
           COALESCE(SUM(DISTINCT pm.team_goals), 0) as team_goals,
           COALESCE(SUM(DISTINCT pm.opponent_goals), 0) as goals_conceded,
-          COUNT(DISTINCT CASE
-            WHEN 'mvp' = ANY(pr.tags)
-            THEN pr.id
-          END) as mvp_count
+          COUNT(DISTINCT emw.event_id) as mvp_count
         FROM users u
         INNER JOIN group_members gm ON u.id = gm.user_id AND gm.group_id = ${groupId}
         LEFT JOIN event_attendance ea ON u.id = ea.user_id
@@ -342,8 +365,7 @@ export async function GET(
         LEFT JOIN event_actions eact_og ON u.id = eact_og.subject_user_id
           AND eact_og.action_type = 'own_goal'
           AND eact_og.event_id IN (SELECT id FROM finished_events)
-        LEFT JOIN player_ratings pr ON u.id = pr.rated_user_id
-          AND pr.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN event_mvp_winners emw ON u.id = emw.user_id
         GROUP BY u.id, u.name, u.image, gm.base_rating
       )
       SELECT
@@ -374,6 +396,32 @@ export async function GET(
         FROM events
         WHERE group_id = ${groupId}
           AND status = 'finished'
+      ),
+      event_mvp_winners AS (
+        -- Vencedor claro (sem empate e sem tiebreaker): jogador com mais votos
+        SELECT pv.rated_user_id as user_id, pv.event_id
+        FROM (
+          SELECT rated_user_id, event_id, COUNT(*) as vote_count
+          FROM player_ratings
+          WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM finished_events)
+          GROUP BY rated_user_id, event_id
+        ) pv
+        WHERE NOT EXISTS (
+          SELECT 1 FROM player_ratings pr_other
+          WHERE 'mvp' = ANY(pr_other.tags)
+            AND pr_other.event_id = pv.event_id
+            AND pr_other.rated_user_id != pv.rated_user_id
+          GROUP BY pr_other.rated_user_id
+          HAVING COUNT(*) >= pv.vote_count
+        )
+        AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+        UNION
+        -- Vencedor do tiebreaker resolvido
+        SELECT winner_user_id as user_id, event_id
+        FROM mvp_tiebreakers
+        WHERE event_id IN (SELECT id FROM finished_events)
+          AND winner_user_id IS NOT NULL
+          AND status IN ('completed', 'admin_decided')
       ),
       team_scores AS (
         SELECT
@@ -450,10 +498,7 @@ export async function GET(
           END) as own_goals,
           COALESCE(SUM(DISTINCT pm.team_goals), 0) as team_goals,
           COALESCE(SUM(DISTINCT pm.opponent_goals), 0) as goals_conceded,
-          COUNT(DISTINCT CASE
-            WHEN 'mvp' = ANY(pr.tags)
-            THEN pr.id
-          END) as mvp_count
+          COUNT(DISTINCT emw.event_id) as mvp_count
         FROM users u
         INNER JOIN group_members gm ON u.id = gm.user_id AND gm.group_id = ${groupId}
         LEFT JOIN event_attendance ea ON u.id = ea.user_id
@@ -468,8 +513,7 @@ export async function GET(
         LEFT JOIN event_actions eact_og ON u.id = eact_og.subject_user_id
           AND eact_og.action_type = 'own_goal'
           AND eact_og.event_id IN (SELECT id FROM finished_events)
-        LEFT JOIN player_ratings pr ON u.id = pr.rated_user_id
-          AND pr.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN event_mvp_winners emw ON u.id = emw.user_id
         GROUP BY u.id, u.name, u.image, gm.base_rating
       )
       SELECT

@@ -81,7 +81,35 @@ export async function GET(
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals > opponent_goals)::int as wins,
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals < opponent_goals)::int as losses,
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals = opponent_goals)::int as draws,
-        (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
+        (
+          SELECT COUNT(DISTINCT mvp_event_id) FROM (
+            -- Vencedor claro: mais votos que todos os outros, sem tiebreaker
+            SELECT pv.event_id as mvp_event_id
+            FROM (
+              SELECT rated_user_id, event_id, COUNT(*) as vote_count
+              FROM player_ratings
+              WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM user_events)
+              GROUP BY rated_user_id, event_id
+            ) pv
+            WHERE pv.rated_user_id = ${user.id}
+              AND NOT EXISTS (
+                SELECT 1 FROM player_ratings pr_other
+                WHERE 'mvp' = ANY(pr_other.tags)
+                  AND pr_other.event_id = pv.event_id
+                  AND pr_other.rated_user_id != ${user.id}
+                GROUP BY pr_other.rated_user_id
+                HAVING COUNT(*) >= pv.vote_count
+              )
+              AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+            UNION
+            -- Vencedor do tiebreaker resolvido
+            SELECT event_id as mvp_event_id
+            FROM mvp_tiebreakers
+            WHERE event_id IN (SELECT id FROM user_events)
+              AND winner_user_id = ${user.id}
+              AND status IN ('completed', 'admin_decided')
+          ) wins
+        )::int as mvp_count
     `
       : await sql`
       WITH
@@ -116,7 +144,35 @@ export async function GET(
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals > opponent_goals)::int as wins,
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals < opponent_goals)::int as losses,
         (SELECT COUNT(*) FROM my_game_results WHERE team_goals = opponent_goals)::int as draws,
-        (SELECT COUNT(*) FROM player_ratings WHERE rated_user_id = ${user.id} AND event_id IN (SELECT id FROM user_events) AND 'mvp' = ANY(tags))::int as mvp_count
+        (
+          SELECT COUNT(DISTINCT mvp_event_id) FROM (
+            -- Vencedor claro: mais votos que todos os outros, sem tiebreaker
+            SELECT pv.event_id as mvp_event_id
+            FROM (
+              SELECT rated_user_id, event_id, COUNT(*) as vote_count
+              FROM player_ratings
+              WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM user_events)
+              GROUP BY rated_user_id, event_id
+            ) pv
+            WHERE pv.rated_user_id = ${user.id}
+              AND NOT EXISTS (
+                SELECT 1 FROM player_ratings pr_other
+                WHERE 'mvp' = ANY(pr_other.tags)
+                  AND pr_other.event_id = pv.event_id
+                  AND pr_other.rated_user_id != ${user.id}
+                GROUP BY pr_other.rated_user_id
+                HAVING COUNT(*) >= pv.vote_count
+              )
+              AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+            UNION
+            -- Vencedor do tiebreaker resolvido
+            SELECT event_id as mvp_event_id
+            FROM mvp_tiebreakers
+            WHERE event_id IN (SELECT id FROM user_events)
+              AND winner_user_id = ${user.id}
+              AND status IN ('completed', 'admin_decided')
+          ) wins
+        )::int as mvp_count
     `;
 
     if (!stats || stats.length === 0 || stats[0].games_played === "0") {

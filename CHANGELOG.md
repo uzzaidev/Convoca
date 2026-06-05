@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-05
+
+### feat
+- Atualizada a lógica de troca de jogadores para lidar com `currentTeamId` opcional e melhorar o gerenciamento de estado no componente TeamEditor
+  - Arquivos: `src/app/api/events/[eventId]/teams/swap/route.ts`, `src/components/events/team-editor.tsx`
+  - Evidência: alterações na validação, consulta e atualização de times e membros
+  - Confiança: alta
+
 ## 2026-05-28
 
 ### feat

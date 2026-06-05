@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,8 +26,6 @@ type TeamMember = {
   starter: boolean;
 };
 
-type TeamMemberWithTeamId = TeamMember & { teamId?: string };
-
 type Team = {
   id: string;
   name: string;
@@ -41,6 +40,7 @@ type TeamEditorProps = {
 };
 
 export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>(initialTeams);
@@ -99,53 +99,32 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
           throw new Error(error.error || "Erro ao trocar jogadores");
         }
 
+        const swapResult = await response.json();
+        const player1NewTeamId = swapResult.player1?.teamId || teamId;
+        const player2NewTeamId = swapResult.player2?.teamId || selectedPlayer.teamId;
+        const player1 = teams
+          .flatMap((team) => team.members || [])
+          .find((member) => member.userId === selectedPlayer.userId);
+        const player2 = teams
+          .flatMap((team) => team.members || [])
+          .find((member) => member.userId === userId);
+
         // Update local state to reflect the swap
         const newTeams = teams.map((team) => {
           if (!team.members) return team;
 
-          const members: TeamMemberWithTeamId[] = team.members.map((member) => {
-            // Swap player 1 to team 2
-            if (
-              member.userId === selectedPlayer.userId &&
-              team.id === selectedPlayer.teamId
-            ) {
-              return { ...member, teamId: teamId };
-            }
-            // Swap player 2 to team 1
-            if (member.userId === userId && team.id === teamId) {
-              return { ...member, teamId: selectedPlayer.teamId };
-            }
-            return member;
-          });
+          const finalMembers = team.members.filter(
+            (member) =>
+              member.userId !== selectedPlayer.userId && member.userId !== userId
+          );
 
-          // Filter out players that have been moved
-          const updatedMembers = members.filter((m) => {
-            if ("teamId" in m && m.teamId) {
-              return m.teamId === team.id;
-            }
-            return true;
-          });
+          if (player1 && team.id === player1NewTeamId) {
+            finalMembers.push(player1);
+          }
 
-          // Add players that have been moved here
-          const player1MovedHere =
-            selectedPlayer.teamId !== team.id &&
-            teamId === team.id &&
-            members.find((m) => m.userId === selectedPlayer.userId);
-
-          const player2MovedHere =
-            teamId !== team.id &&
-            selectedPlayer.teamId === team.id &&
-            members.find((m) => m.userId === userId);
-
-          // Clean up the temporary teamId property and return clean TeamMember objects
-          const finalMembers: TeamMember[] = [
-            ...updatedMembers,
-            ...(player1MovedHere ? [player1MovedHere] : []),
-            ...(player2MovedHere ? [player2MovedHere] : []),
-          ].map((m) => {
-            const { userId, userName, userImage, position, starter } = m;
-            return { userId, userName, userImage, position, starter };
-          });
+          if (player2 && team.id === player2NewTeamId) {
+            finalMembers.push(player2);
+          }
 
           return {
             ...team,
@@ -155,6 +134,7 @@ export function TeamEditor({ eventId, teams: initialTeams }: TeamEditorProps) {
 
         setTeams(newTeams);
         setSelectedPlayer(null);
+        router.refresh();
 
         toast({
           title: "Jogadores trocados!",

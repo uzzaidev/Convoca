@@ -11,12 +11,14 @@ type Params = Promise<{ eventId: string }>;
 const swapPlayersSchema = z.object({
   player1: z.object({
     userId: z.string().uuid(),
-    currentTeamId: z.string().uuid(),
+    currentTeamId: z.string().uuid().optional(),
   }),
   player2: z.object({
     userId: z.string().uuid(),
-    currentTeamId: z.string().uuid(),
+    currentTeamId: z.string().uuid().optional(),
   }),
+}).refine((data) => data.player1.userId !== data.player2.userId, {
+  message: "Selecione dois jogadores diferentes",
 });
 
 // POST /api/events/:eventId/teams/swap - Swap two players between teams
@@ -36,49 +38,50 @@ export async function POST(
       adminErrorMessage: "Apenas admins podem trocar jogadores",
     });
 
-    const teamsCheck = await sql`
-      SELECT t.id
-      FROM teams t
+    const memberships = await sql<{
+      user_id: string;
+      team_id: string;
+    }[]>`
+      SELECT tm.user_id, tm.team_id
+      FROM team_members tm
+      INNER JOIN teams t ON t.id = tm.team_id
       WHERE t.event_id = ${eventId}
-        AND t.id IN (${validatedData.player1.currentTeamId}, ${validatedData.player2.currentTeamId})
+        AND tm.user_id IN (${validatedData.player1.userId}, ${validatedData.player2.userId})
     `;
 
-    if (teamsCheck.length !== 2) {
+    const player1Info = memberships.find(
+      (membership) => membership.user_id === validatedData.player1.userId
+    );
+    const player2Info = memberships.find(
+      (membership) => membership.user_id === validatedData.player2.userId
+    );
+
+    if (!player1Info || !player2Info) {
       return NextResponse.json(
-        { error: "Um ou ambos os times nÃ£o pertencem a este evento" },
+        { error: "Um ou ambos os jogadores nao foram encontrados" },
         { status: 400 }
       );
     }
 
-    const [player1Info] = await sql`
-      SELECT position FROM team_members
-      WHERE team_id = ${validatedData.player1.currentTeamId}
-        AND user_id = ${validatedData.player1.userId}
-    `;
-
-    const [player2Info] = await sql`
-      SELECT position FROM team_members
-      WHERE team_id = ${validatedData.player2.currentTeamId}
-        AND user_id = ${validatedData.player2.userId}
-    `;
-
-    if (!player1Info || !player2Info) {
+    if (player1Info.team_id === player2Info.team_id) {
       return NextResponse.json(
-        { error: "Um ou ambos os jogadores nÃ£o foram encontrados" },
+        { error: "Selecione jogadores de times diferentes" },
         { status: 400 }
       );
     }
 
     await sql`
       UPDATE team_members
-      SET team_id = CASE
-        WHEN user_id = ${validatedData.player1.userId} AND team_id = ${validatedData.player1.currentTeamId}
-          THEN ${validatedData.player2.currentTeamId}
-        WHEN user_id = ${validatedData.player2.userId} AND team_id = ${validatedData.player2.currentTeamId}
-          THEN ${validatedData.player1.currentTeamId}
-      END
-      WHERE (user_id = ${validatedData.player1.userId} AND team_id = ${validatedData.player1.currentTeamId})
-         OR (user_id = ${validatedData.player2.userId} AND team_id = ${validatedData.player2.currentTeamId})
+      SET team_id = ${player2Info.team_id}
+      WHERE user_id = ${validatedData.player1.userId}
+        AND team_id = ${player1Info.team_id}
+    `;
+
+    await sql`
+      UPDATE team_members
+      SET team_id = ${player1Info.team_id}
+      WHERE user_id = ${validatedData.player2.userId}
+        AND team_id = ${player2Info.team_id}
     `;
 
     logger.info(
@@ -94,11 +97,19 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: "Jogadores trocados com sucesso",
+      player1: {
+        userId: validatedData.player1.userId,
+        teamId: player2Info.team_id,
+      },
+      player2: {
+        userId: validatedData.player2.userId,
+        teamId: player1Info.team_id,
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Dados invÃ¡lidos", details: error.errors },
+        { error: "Dados invalidos", details: error.errors },
         { status: 400 }
       );
     }

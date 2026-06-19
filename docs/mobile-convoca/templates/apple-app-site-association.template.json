@@ -1,0 +1,28 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAM_ID.com.convoca.app"],
+        "components": [
+          {
+            "/": "/groups/*",
+            "comment": "Abrir grupos no app"
+          },
+          {
+            "/": "/events/*",
+            "comment": "Abrir eventos no app"
+          },
+          {
+            "/": "/auth/*",
+            "comment": "Abrir fluxos de autenticacao no app"
+          },
+          {
+            "/": "/*",
+            "comment": "Fallback para demais rotas do Convoca"
+          }
+        ]
+      }
+    ]
+  }
+}

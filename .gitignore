@@ -3,6 +3,9 @@
 /.pnp
 .pnp.*
 
+# npm lockfile (this project uses pnpm)
+package-lock.json
+
 # Testing
 /coverage
 
@@ -28,6 +31,15 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Android release/Firebase secrets
+android/app/*.keystore
+android/app/*.jks
+android/release.properties
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
+ios/App/Pods/
+ios/App/Podfile.lock
 
 # Vercel
 .vercel

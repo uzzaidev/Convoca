@@ -1,0 +1,235 @@
+{
+  "checkpoint_metadata": {
+    "date": "2026-03-15",
+    "timezone": "UTC-3",
+    "timestamp_utc": "2026-03-15T12:51:31Z",
+    "purpose": "Complete code audit and documentation checkpoint for Convoca application"
+  },
+  "repository": {
+    "commit_hash": "dad0911079482b15ff5c43e9ef73a44b4c752699",
+    "branch": "main",
+    "last_commit_message": "feat: add cron jobs for monthly charges and recurring events generation"
+  },
+  "technology_stack": {
+    "framework": {
+      "name": "Next.js",
+      "version": "16.1.1",
+      "architecture": "App Router"
+    },
+    "runtime": {
+      "name": "Node.js",
+      "min_version": "18.17.0"
+    },
+    "package_manager": {
+      "name": "pnpm",
+      "version": "10.18.1"
+    },
+    "frontend": {
+      "react": "19.2.0",
+      "typescript": "5.x",
+      "tailwindcss": "3.4.1",
+      "ui_library": "shadcn/ui (Radix UI primitives)"
+    },
+    "backend": {
+      "database": "PostgreSQL (Neon Serverless)",
+      "database_client": "postgres@3.4.8",
+      "auth": "next-auth@5.0.0-beta.25",
+      "validation": "zod@3.24.1",
+      "logging": "pino@9.5.0",
+      "email": "resend@6.9.3"
+    },
+    "state_management": "zustand@5.0.8",
+    "deployment": "Vercel"
+  },
+  "project_structure": {
+    "total_pages": 16,
+    "total_api_routes": 61,
+    "total_database_tables": 18,
+    "total_components": 58,
+    "modules": [
+      "Authentication",
+      "Groups",
+      "Members",
+      "Events",
+      "RSVP",
+      "Teams",
+      "Match",
+      "Voting",
+      "Rankings",
+      "Payments",
+      "Invites",
+      "Venues",
+      "Recurrences"
+    ]
+  },
+  "generated_files": [
+    {
+      "filename": "00_MANIFEST.json",
+      "description": "This file - manifest of checkpoint contents",
+      "category": "meta"
+    },
+    {
+      "filename": "01_REPO_TREE.txt",
+      "description": "Complete file tree of repository",
+      "category": "inventory"
+    },
+    {
+      "filename": "02_BUILD_RUNBOOK.md",
+      "description": "Setup, development, build, and deployment guide",
+      "category": "operations"
+    },
+    {
+      "filename": "03_DEPENDENCIES.md",
+      "description": "Analysis of all dependencies and versions",
+      "category": "architecture"
+    },
+    {
+      "filename": "05_ROUTES_MAP.md",
+      "description": "Complete mapping of pages and API routes with navigation flow",
+      "category": "architecture"
+    },
+    {
+      "filename": "08_DATABASE_SCHEMA_COMPLETE.md",
+      "description": "Full database schema with ERD, tables, indexes, triggers, and materialized views",
+      "category": "data"
+    },
+    {
+      "filename": "10_AUTH_FLOW_COMPLETE.md",
+      "description": "Complete authentication flow including signup, signin, password reset, and session management",
+      "category": "security"
+    },
+    {
+      "filename": "99_AI_CONTEXT_PACK.md",
+      "description": "Executive summary for AI with open questions, critical risks, feature→routes→tables map, and prioritized recommendations",
+      "category": "summary"
+    }
+  ],
+  "audit_scope": {
+    "completed": [
+      "Repository file inventory",
+      "Dependencies analysis",
+      "Configuration files review",
+      "Database schema extraction",
+      "API routes mapping",
+      "Authentication flow analysis",
+      "UI pages cataloging",
+      "Component structure",
+      "Critical risks identification",
+      "Feature→Routes→Tables mapping",
+      "Recommendations prioritization"
+    ],
+    "partial": [
+      "Data access patterns (representative samples only)",
+      "Permissions enforcement (inference based on code patterns)",
+      "Module-by-module deep dive (core modules only)"
+    ],
+    "not_completed": [
+      "Individual module documentation files (MODULE_*.md)",
+      "Complete data access map per route",
+      "UI components dependency diagram",
+      "Test coverage analysis (no tests exist)",
+      "Git hotspots analysis",
+      "Code duplication detection",
+      "Cron jobs detailed verification"
+    ]
+  },
+  "key_findings": {
+    "strengths": [
+      "Modern tech stack (Next.js 16, React 19, PostgreSQL)",
+      "Raw SQL approach - maximum control and performance",
+      "Well-structured database schema with proper constraints",
+      "Consistent API route patterns",
+      "Type safety with TypeScript and Zod",
+      "Materialized views for performance"
+    ],
+    "critical_gaps": [
+      "Zero test coverage",
+      "No middleware.ts for centralized route protection",
+      "No rate limiting (vulnerable to brute force)",
+      "No email verification",
+      "Using NextAuth v5 beta (potential instability)",
+      "No pagination on list endpoints",
+      "Multi-step operations not wrapped in transactions"
+    ],
+    "security_risks": [
+      "No rate limiting on auth endpoints",
+      "Cron endpoints potentially unprotected",
+      "No account lockout mechanism",
+      "Missing middleware for route protection",
+      "No session revocation capability (JWT-only)"
+    ],
+    "performance_concerns": [
+      "No pagination implementation",
+      "Potential N+1 queries in rankings endpoints",
+      "Materialized view refresh overhead"
+    ]
+  },
+  "recommendations_summary": {
+    "p0_critical": [
+      "Create middleware.ts for route protection",
+      "Add rate limiting to auth endpoints",
+      "Validate/protect cron endpoints",
+      "Wrap multi-step operations in transactions",
+      "Add monitoring (Sentry or similar)"
+    ],
+    "p1_high": [
+      "Implement testing suite",
+      "Add pagination to list endpoints",
+      "Email verification flow",
+      "Account lockout after failed attempts",
+      "Database migration tooling",
+      "Audit SQL injection risks",
+      "Fix wallets FK issue"
+    ],
+    "p2_medium": [
+      "Plan NextAuth v5 stable upgrade",
+      "Implement soft delete",
+      "Session management UI",
+      "Optimize rankings queries",
+      "Add MFA (optional)",
+      "CSP headers",
+      "Input sanitization"
+    ]
+  },
+  "statistics": {
+    "total_dependencies": 30,
+    "total_dev_dependencies": 10,
+    "total_tables": 18,
+    "total_indexes": 14,
+    "total_triggers": 1,
+    "total_materialized_views": 1,
+    "total_api_endpoints": 61,
+    "total_ui_routes": 16,
+    "estimated_lines_of_code": "~10,000-15,000 (not counted)"
+  },
+  "contact_info": {
+    "for_ai_assistants": "Read 99_AI_CONTEXT_PACK.md first for quick context",
+    "for_developers": "Read 02_BUILD_RUNBOOK.md to get started",
+    "for_architects": "Read 08_DATABASE_SCHEMA_COMPLETE.md and 05_ROUTES_MAP.md",
+    "for_security": "Read 10_AUTH_FLOW_COMPLETE.md and section 2 of 99_AI_CONTEXT_PACK.md"
+  },
+  "audit_metadata": {
+    "conducted_by": "Claude Code (Sonnet 4.5)",
+    "methodology": "Static code analysis, schema extraction, pattern recognition",
+    "scope": "Complete codebase snapshot as of commit dad0911",
+    "limitations": [
+      "No runtime testing performed",
+      "No actual database inspection (schema only)",
+      "No git history analysis (hotspots)",
+      "No performance profiling",
+      "Some inferences marked with 🔍 symbol"
+    ],
+    "confidence_level": {
+      "facts": "100% (marked with ✅)",
+      "inferences": "85% (marked with 🔍)",
+      "recommendations": "Based on industry best practices"
+    }
+  },
+  "next_checkpoint_triggers": [
+    "Major version upgrades (Next.js, React, NextAuth)",
+    "Schema changes (new tables, significant refactoring)",
+    "Architecture changes (new integrations, auth changes)",
+    "Before major releases/deployments",
+    "Every 90 days for regular audit"
+  ]
+}

@@ -2,6 +2,18 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-19
+
+### feat
+- Estruturou o app mobile híbrido usando Capacitor para Android, incluindo configuração do projeto Android, scripts de build, e organização de arquivos.
+  - Arquivos: `capacitor.config.ts`, `package.json`, `android/`, `src/lib/mobile/`, `scripts/build-mobile.js`
+  - Confiança: alta
+
+### feat
+- Criou plano detalhado de desenvolvimento para adaptação do Convoca em app Android, incluindo etapas de setup, configuração visual, navegação e funcionalidades nativas.
+  - Arquivos: `MOBILE_ANDROID_PLAN.md`
+  - Confiança: alta
+
 ## 2026-06-05
 
 ### feat

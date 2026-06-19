@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-19
 
 ### feat
+- Implementado backend para envio de push notifications via FCM HTTP v1.
+  - Arquivos: `src/app/api/mobile/push/send/route.ts`, `src/lib/mobile/fcm.ts`
+  - Confiança: alta
+
+## 2026-06-19
+
+### feat
 - Estruturou o app mobile híbrido usando Capacitor para Android, incluindo configuração do projeto Android, scripts de build, e organização de arquivos.
   - Arquivos: `capacitor.config.ts`, `package.json`, `android/`, `src/lib/mobile/`, `scripts/build-mobile.js`
   - Confiança: alta

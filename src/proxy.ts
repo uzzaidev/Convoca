@@ -5,8 +5,23 @@ import { auth } from "@/lib/auth";
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Páginas públicas (acessíveis sem login). As páginas legais/compliance
+  // PRECISAM ser públicas para a validação das lojas (Google Play / App Store).
+  const PUBLIC_PATHS = [
+    "/",
+    "/simple-test",
+    "/privacidade",
+    "/termos",
+    "/lgpd",
+    "/suporte",
+    "/excluir-conta",
+    "/produto-convoca",
+  ];
+
   // Fast path checks before auth call
-  const isPublicPage = pathname === "/" || pathname === "/simple-test";
+  const isPublicPage =
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_PATHS.some((p) => p !== "/" && pathname.startsWith(`${p}/`));
   const isApiRoute = pathname.startsWith("/api");
   const isAuthPage = pathname.startsWith("/auth");
   const isErrorPage = pathname === "/auth/error";

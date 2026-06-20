@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-20
+
+### chore
+- Alterado nomes de pacotes, IDs de aplicativos e configurações relacionadas para refletir a mudança de domínio para "com.uzzai.convoca". Inclui atualizações em arquivos Android (`build.gradle`, `strings.xml`, `release.properties`), Capacitor (`capacitor.config.ts`), templates de configuração de deep links (`apple-app-site-association.template.json`, `assetlinks.template.json`), iOS (`project.pbxproj`, `Info.plist`) e código (`proxy.ts`).  
+  - Arquivos: `android/app/build.gradle`, `android/app/src/main/res/values/strings.xml`, `android/release.properties.example`, `capacitor.config.ts`, `docs/mobile-convoca/templates/*.json`, `ios/App/App.xcodeproj/project.pbxproj`, `ios/App/App/Info.plist`, `src/proxy.ts`  
+  - Confiança: alta
+
 ## 2026-06-19
 
 ### feat

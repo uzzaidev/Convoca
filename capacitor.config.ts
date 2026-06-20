@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.convoca.app",
+  appId: "com.uzzai.convoca",
   appName: "Convoca",
   webDir: "out",
   server: {

@@ -12,18 +12,26 @@ jobs:
   bootstrap:
     name: Gerar certificados via fastlane match
     runs-on: macos-26
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Sem bundler-cache aqui: Gemfile.lock não existe ainda no repo.
+      # O ruby/setup-ruby com bundler-cache:false apenas instala Ruby/Bundler,
+      # e o passo seguinte faz bundle install manualmente.
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: true
+          bundler-cache: false
 
+      - name: Instalar fastlane via bundle install
+        run: bundle install --jobs 4 --retry 3
+
+      # Node/pnpm não são necessários para o bootstrap de certs,
+      # mas estão aqui para paridade caso o Fastfile precise.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -34,11 +42,12 @@ jobs:
         with:
           version: "10.18.1"
 
-      - name: fastlane match appstore (gera e salva certs)
+      - name: fastlane match appstore — gerar e salvar certs
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-        run: bundle exec fastlane setup_certs
+        # --verbose mostra o erro real do fastlane (autenticação, portal, etc.)
+        run: bundle exec fastlane setup_certs --verbose

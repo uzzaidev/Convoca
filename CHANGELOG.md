@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Ajustado workflow de CI para chamar `fastlane beta` ao invés de `xcodebuild` direto, incluindo a instalação do xcpretty no Gemfile.
+  - Arquivos: `.github/workflows/ios-release.yml`
+  - Evidência: alteração na configuração do workflow e comentários indicando o uso de `fastlane beta`.
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Adicionado a gem "xcpretty" ao Gemfile para melhorar a saída do Fastlane.
 - Atualizado o Fastfile para definir constantes de ID do bundle, ID da equipe e nome do perfil de provisionamento.
 - Alterada a configuração do Fastlane para usar variáveis constantes em vez de valores hardcoded, facilitando manutenção.

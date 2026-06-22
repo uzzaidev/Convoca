@@ -15,7 +15,7 @@
 ```
 iOS-S1 (1–2h)    Contas no Apple Developer + Firebase iOS  [manual: browser]  ✅ CONCLUÍDO 2026-06-22
 iOS-S2 (1h)      fastlane match — certificados + provisioning  [GitHub Actions]  ✅ CONCLUÍDO 2026-06-22
-iOS-S3 (30min)   GitHub secrets + disparar CI  [gh CLI automatizado]              ✅ secrets OK; build pendente
+iOS-S3 (30min)   GitHub secrets + disparar CI + TestFlight  ✅ BUILD + LOGIN OK (2026-06-22)
 iOS-S4 (1–2h)    App Store Connect — screenshots + listing + submit  [manual]
 ```
 
@@ -520,6 +520,82 @@ Com caching de CocoaPods e derivedData: **12–20 minutos**.
 2. Instalar no iPhone via TestFlight (link de teste interno)
 3. Testar: login, push, deep link, biometria
 
+> **Login validado em 2026-06-22** (build 2, TestFlight). Ver seção **Login NextAuth — Android vs iOS** abaixo.
+
+---
+
+## Login NextAuth — Android vs iOS (obrigatório ler)
+
+O Convoca usa **NextAuth v5 com credentials + cookies JWT** (`src/lib/auth.ts`).
+O app mobile carrega `https://convoca.uzzai.com.br` via `server.url` no Capacitor — não é export estático.
+
+### Fluxo de login (igual em todas as plataformas)
+
+```
+Usuário preenche email/senha em /auth/signin
+    → signIn("credentials") (next-auth/react)
+    → GET /api/auth/csrf  (cookie CSRF)
+    → POST /api/auth/callback/credentials  (valida no Neon, seta session cookie)
+    → redirect /dashboard
+```
+
+A sessão fica no cookie `__Secure-next-auth.session-token` (produção).
+
+### Configuração por plataforma — NÃO é igual
+
+| Plugin | Android | iOS | Motivo |
+|--------|---------|-----|--------|
+| `CapacitorHttp` | ✅ **ligado** | ❌ **desligado** | No iOS, intercepta `fetch` e grava cookies no `HTTPCookieStorage`, separado da `WKWebView` |
+| `CapacitorCookies` | ✅ **ligado** | ❌ **desligado** | Sync nativo ↔ WebView quebra CSRF/sessão do NextAuth no iOS |
+
+**Sintoma se iOS estiver errado:** login mostra *"Email ou senha incorretos"* mesmo com credenciais corretas (Android e browser funcionam).
+
+### Como está implementado
+
+`capacitor.config.ts` lê `CAPACITOR_PLATFORM` no momento do sync/copy:
+
+```typescript
+const isIosBuild = process.env.CAPACITOR_PLATFORM === "ios";
+
+plugins: {
+  CapacitorCookies: { enabled: !isIosBuild },
+  CapacitorHttp:    { enabled: !isIosBuild },
+}
+```
+
+**Scripts corretos:**
+
+```powershell
+# Android (plugins ligados)
+pnpm cap:sync:android
+# ou: cross-env CAPACITOR_PLATFORM=android cap sync android
+
+# iOS (plugins desligados — login na WKWebView pura)
+pnpm cap:sync:ios
+# ou: cross-env CAPACITOR_PLATFORM=ios cap sync ios
+```
+
+**CI iOS** (`fastlane/Fastfile`):
+
+```ruby
+sh("cd #{ROOT} && CAPACITOR_PLATFORM=ios pnpm cap copy ios")
+```
+
+> ⚠️ **Nunca** rode `pnpm cap sync ios` sem `CAPACITOR_PLATFORM=ios` — o default deixa os plugins ligados e quebra o login no TestFlight.
+
+### Checklist rápido — login mobile
+
+- [x] Android Play Store / APK: login OK com `CapacitorHttp` + `CapacitorCookies` ligados
+- [x] iOS TestFlight build ≥ 2: login OK com plugins **desligados** (`CAPACITOR_PLATFORM=ios`)
+- [ ] Push no iOS após login
+- [ ] Deep link `convoca://` no iOS
+
+### Referências
+
+- [Capacitor #7262 — NextAuth cookie state iOS](https://github.com/ionic-team/capacitor/issues/7262)
+- [Capacitor Discussion #7085 — NextAuth session on device/TestFlight](https://github.com/ionic-team/capacitor/discussions/7085)
+- Cookies NextAuth: `src/lib/auth.ts` (`sameSite: lax`, prefixos `__Secure-` / `__Host-`)
+
 ---
 
 ### Checklist S3
@@ -527,10 +603,10 @@ Com caching de CocoaPods e derivedData: **12–20 minutos**.
 - [x] 6 secrets configurados no GitHub Actions via `gh secret set` (2026-06-22)
 - [x] `.github/workflows/ios-release.yml` commitado (estrutura final com pod install separado)
 - [x] `.github/workflows/ios-match-bootstrap.yml` commitado e executado ✅ (1m14s)
-- [x] Workflow `ios-release` disparado e **BUILD VERDE ✅ — 4m06s (2026-06-22)**
-- [ ] Build aparecendo no App Store Connect → TestFlight  ← **PRÓXIMO PASSO**
-- [ ] App instalado no iPhone via TestFlight
-- [ ] Login funcionando na WebView (cookie NextAuth)
+- [x] Workflow `ios-release` disparado — **BUILD VERDE ✅** (build 1: 4m06s; build 2: login fix)
+- [x] Build no App Store Connect → TestFlight ✅ v1.0.0 build 2
+- [x] App instalado no iPhone via TestFlight ✅
+- [x] Login funcionando na WebView (NextAuth + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
 - [ ] Push notification recebida no device
 - [ ] Deep link `convoca://` abrindo o app
 

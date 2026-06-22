@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### chore
+- Atualizado status do checklist do iOS para "TestFlight build 2 + login OK"
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### fix
 - Ajustado o workflow de build iOS para usar o `run_number` do CI como `build_number` quando este estiver vazio, evitando duplicação do `CFBundleVersion`.
   - Arquivos: `.github/workflows/ios-release.yml`

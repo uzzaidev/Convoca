@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### docs
+- Atualizado o playbook de CI para iOS sem Mac, incluindo lições aprendidas em 2026-06-22, como a não instalação do Ruby no Windows e execução do fastlane via GitHub Actions.
+  - Arquivos: `docs/playbooks/ios-ci-sem-mac/README.md`
+  - Evidência: comentários e alterações no texto do playbook
+  - Confiança: alta
+
+## 2026-06-22
+
 ### chore
 - Concluído o bootstrap do fastlane match para iOS, gerando certificados e profiles de provisionamento
   - Arquivos: `docs/mobile-convoca/CHECKLIST.md`

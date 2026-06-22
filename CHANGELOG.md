@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Ajustado o Podfile do iOS para usar paths hoisted padrão do pnpm e Firebase
+  - Arquivos: `ios/App/Podfile`, `.github/workflows/ios-release.yml`, `scripts/fix-ios-podfile-paths.mjs`, `package.json`
+  - Evidência: alteração na requisição do Podfile e na execução do script de normalização de paths
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Removido stub do Firebase Messaging para builds web no Vercel, garantindo que o app iOS carregue o JS da Vercel corretamente.
   - Arquivos: `next.config.ts`, `src/lib/mobile/stubs/capacitor-firebase-messaging.ts`
   - Evidência: exclusão do arquivo de stub e ajuste na configuração do Next.js

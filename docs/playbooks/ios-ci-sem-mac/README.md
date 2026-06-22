@@ -13,13 +13,16 @@
 ## Visão Geral dos Sprints
 
 ```
-iOS-S1 (1–2h)    Contas no Apple Developer + Firebase iOS  [manual: browser]
-iOS-S2 (1–2h)    fastlane match — certificados + provisioning  [WSL/terminal]
-iOS-S3 (30min)   GitHub secrets + disparar CI  ← AUTOMATIZADO via script
+iOS-S1 (1–2h)    Contas no Apple Developer + Firebase iOS  [manual: browser]  ✅ CONCLUÍDO 2026-06-22
+iOS-S2 (1h)      fastlane match — certificados + provisioning  [GitHub Actions]  ✅ CONCLUÍDO 2026-06-22
+iOS-S3 (30min)   GitHub secrets + disparar CI  [gh CLI automatizado]              ✅ secrets OK; build pendente
 iOS-S4 (1–2h)    App Store Connect — screenshots + listing + submit  [manual]
 ```
 
 Cada sprint pode ser executado **inteiro no Windows**, sem abrir o Xcode.
+
+> **Lição aprendida (2026-06-22):** Ruby não está instalado no Windows por padrão.
+> O S2 foi executado diretamente no GitHub Actions via workflow `ios-match-bootstrap.yml` — sem WSL, sem instalar Ruby localmente.
 
 ### Playbooks de apoio
 
@@ -97,16 +100,31 @@ URL: https://appstoreconnect.apple.com/access/integrations/api → **Generate AP
 
 | Campo | Valor |
 |---|---|
-| Name | `convoca-ci` |
-| Access | **Developer** |
+| Name | `convoca-ci-admin` |
+| Access | **Admin** ⚠️ |
+
+> ⚠️ **CRÍTICO:** a role precisa ser **Admin**, não Developer.
+> Somente Admin pode criar Distribution Certificates via API.
+> Se criar com role inferior, o fastlane match vai falhar com:
+> `You do not have permission to create this certificate. Only Team Admins can create Distribution certificates.`
 
 Após criar, **baixe imediatamente** o arquivo `.p8` — só aparece uma vez.
 
+> ⚠️ **Segurança:** nunca coloque o `.p8` na pasta do repo. Salve em:
+> `C:\Users\pedro\convoca-ios-setup\AuthKey_KEYID.admin.p8`
+> O `.gitignore` raiz já tem `*.p8` para evitar commits acidentais.
+
 Anote os três valores que vão para os secrets do GitHub:
 ```
-APP_STORE_CONNECT_API_KEY_ID       → Key ID (ex.: ABCD1234EF)
+APP_STORE_CONNECT_API_KEY_ID       → Key ID (ex.: Z9L9Q375UP)
 APP_STORE_CONNECT_API_ISSUER_ID    → Issuer ID (UUID na parte de cima da página)
 APP_STORE_CONNECT_API_KEY_CONTENT  → conteúdo do arquivo .p8 (todo, incluindo -----BEGIN...)
+```
+
+**Valores atuais do projeto (2026-06-22):**
+```
+APP_STORE_CONNECT_API_KEY_ID      = Z9L9Q375UP   (key "convoca-ci-admin", role Admin)
+APP_STORE_CONNECT_API_ISSUER_ID   = 6d969582-c629-4d55-8fa1-66423afb1d88
 ```
 
 ---
@@ -155,15 +173,15 @@ ios/App/App/GoogleService-Info.plist
 
 ### Checklist S1
 
-- [ ] Team ID anotado (`XXXXXXXXXX`)
-- [ ] App ID `com.uzzai.convoca` registrado no Apple Developer
-- [ ] Push Notifications + Associated Domains habilitados no App ID
-- [ ] App criado no App Store Connect
-- [ ] API Key `.p8` baixada + Key ID + Issuer ID anotados
-- [ ] App iOS registrado no Firebase
-- [ ] `GoogleService-Info.plist` baixado e salvo em `ios/App/App/`
-- [ ] APNs Auth Key criada + uploadada no Firebase
-- [ ] `GoogleService-Info.plist` em base64 pronto para secret
+- [x] Team ID anotado: `2YRXNXGL8K` (Uzz.Ai Ltda)
+- [x] App ID `com.uzzai.convoca` registrado no Apple Developer
+- [x] Push Notifications + Associated Domains habilitados no App ID
+- [x] App criado no App Store Connect
+- [x] API Key Admin `.p8` baixada — Key ID `Z9L9Q375UP`, Issuer ID `6d969582-c629-4d55-8fa1-66423afb1d88`
+- [x] App iOS `com.uzzai.convoca` registrado no Firebase (`convoca-app-uzzai-2b530`)
+- [x] `GoogleService-Info.plist` baixado e salvo em `ios/App/App/` (gitignored)
+- [x] APNs Auth Key `45G7QADN8Q` criada + uploadada no Firebase (Cloud Messaging)
+- [x] `GoogleService-Info.plist` convertido para base64 e configurado como GitHub secret
 
 ---
 
@@ -173,189 +191,165 @@ ios/App/App/GoogleService-Info.plist
 Gerar o Distribution Certificate e o Provisioning Profile de App Store,
 armazenar criptografados num repo Git privado, e disponibilizá-los ao CI.
 
-> fastlane match roda em qualquer máquina com Ruby — incluindo Windows com WSL,
-> ou diretamente no próprio GitHub Actions pela 1ª vez.
+> **Abordagem adotada (2026-06-22):** Ruby não existe no Windows sem WSL.
+> Todo o S2 foi executado via GitHub Actions (`ios-match-bootstrap.yml`) — sem instalar nada localmente.
 
 ---
 
 ### S2-1 · Criar repo privado para os certs
 
-No GitHub: **New repository → Private** → nome: `convoca-certs`
+```powershell
+# Criar via gh CLI (automatico)
+gh repo create convoca-certs --private --add-readme
+```
+
+Ou no browser: **github.com/new → Private → nome `convoca-certs`**.
 
 > Nunca commite a senha (`MATCH_PASSWORD`) junto com os certs.
+> Os arquivos no repo são criptografados pelo match — a senha fica só nos secrets.
 
 ---
 
-### S2-2 · Instalar fastlane (WSL ou GitHub Actions)
+### S2-2 · Arquivos fastlane (já criados no repo)
 
-**Opção A — WSL no Windows (recomendado para 1ª vez interativa):**
+Os arquivos abaixo já existem no repo e estão corretos. Não é necessário rodar `fastlane init`.
 
-```bash
-# No WSL (Ubuntu)
-sudo apt-get update && sudo apt-get install -y ruby ruby-dev build-essential
-gem install bundler
-```
-
-**Opção B — diretamente no GitHub Actions** (ver S3 — workflow de bootstrap).
-
----
-
-### S2-3 · Inicializar fastlane no projeto
-
-No WSL, dentro do repo do Convoca:
-
-```bash
-cd /mnt/c/Projetos\ Uzz.Ai/Convoca/Convoca
-bundle init
-bundle add fastlane
-bundle exec fastlane init
-# Escolher: 4 (manual setup)
-```
-
-Isso cria `fastlane/Appfile` e `fastlane/Fastfile`.
-
----
-
-### S2-4 · Configurar fastlane/Appfile
-
+**`Gemfile`** (raiz do projeto):
 ```ruby
-# fastlane/Appfile
+source "https://rubygems.org"
+gem "fastlane", "~> 2.225"
+```
+
+**`fastlane/Appfile`:**
+```ruby
 app_identifier "com.uzzai.convoca"
-apple_id "SEU_EMAIL@DOMINIO.COM"         # email da conta Apple Developer
-itc_team_id "XXXXXXXXXX"                 # Team ID de S1-1
-team_id "XXXXXXXXXX"
+team_id "2YRXNXGL8K"
+# Sem apple_id — autenticação é via API Key (.p8), não Apple ID/senha
 ```
 
----
-
-### S2-5 · Inicializar fastlane match
-
-```bash
-bundle exec fastlane match init
-# Storage mode: git
-# URL do repo: https://github.com/uzzaidev/convoca-certs.git
-```
-
-Isso cria `fastlane/Matchfile`:
-
+**`fastlane/Matchfile`:**
 ```ruby
-# fastlane/Matchfile
 git_url "https://github.com/uzzaidev/convoca-certs.git"
 storage_mode "git"
 type "appstore"
 app_identifier "com.uzzai.convoca"
-username "SEU_EMAIL@DOMINIO.COM"
+team_id "2YRXNXGL8K"
+# Sem username — autenticação é via git_basic_authorization (token)
 ```
+
+> ⚠️ **Importante:** não adicione `apple_id` nem `username` nos arquivos.
+> Com API Key, o fastlane não usa senha da Apple — apenas o token `.p8`.
+> Adicionar `username` causa o erro `Missing username in non-interactive shell`.
 
 ---
 
-### S2-6 · Gerar certificado e provisioning profile
+### S2-3 · Fastfile com lanes setup_certs e beta
 
-```bash
-# Defina a senha que vai criptografar os certs (guarde no Doppler/1Password)
-export MATCH_PASSWORD="uma-senha-forte-aqui"
+O `fastlane/Fastfile` tem duas lanes:
 
-bundle exec fastlane match appstore
-```
-
-O match vai:
-1. Criar um Distribution Certificate no Apple Developer Portal
-2. Criar um Provisioning Profile (App Store) para `com.uzzai.convoca`
-3. Criptografar e commitar no repo `convoca-certs`
-
-> ⚠️ Se der erro de autenticação no Apple Developer, use App Store Connect API:
-> ```bash
-> bundle exec fastlane match appstore \
->   --api_key_path path/to/AuthKey_KEYID.p8 \
->   --api_key_issuer_id "ISSUER-UUID" \
->   --skip_confirmation
-> ```
-
----
-
-### S2-7 · Configurar Fastfile para release
-
+**`setup_certs`** — roda UMA VEZ para gerar e salvar os certs:
 ```ruby
-# fastlane/Fastfile
+lane :setup_certs do
+  # CI não tem keychain interativo — cria um temporário
+  create_keychain(
+    name: "CI_KEYCHAIN", password: ENV["MATCH_PASSWORD"],
+    default_keychain: true, unlock: true, timeout: 3600
+  )
 
-default_platform(:ios)
+  # Autentica via .p8 (sem Apple ID/senha)
+  api_key = app_store_connect_api_key(
+    key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+    in_house:    false
+  )
 
-platform :ios do
+  match(
+    type: "appstore", readonly: false,
+    api_key: api_key,
+    git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+    app_identifier: "com.uzzai.convoca", team_id: "2YRXNXGL8K",
+    keychain_name: "CI_KEYCHAIN", keychain_password: ENV["MATCH_PASSWORD"]
+  )
+end
+```
 
-  desc "Build e upload para TestFlight"
-  lane :beta do
-    # Instala certificado + provisioning profile do repo certs
-    match(
-      type: "appstore",
-      readonly: true,
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"]
-    )
+**`beta`** — build + TestFlight (roda em cada release):
+```ruby
+lane :beta do
+  create_keychain(name: "CI_KEYCHAIN", password: ENV["MATCH_PASSWORD"],
+    default_keychain: true, unlock: true, timeout: 3600)
 
-    # Build mobile fallback (gera out/)
-    sh("cd ../.. && pnpm build:mobile")
+  api_key = app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"], in_house: false
+  )
 
-    # Sync Capacitor
-    sh("cd ../.. && pnpm cap sync ios")
+  match(type: "appstore", readonly: true, api_key: api_key,
+    git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+    app_identifier: "com.uzzai.convoca", team_id: "2YRXNXGL8K",
+    keychain_name: "CI_KEYCHAIN", keychain_password: ENV["MATCH_PASSWORD"])
 
-    # Instalar pods
-    cocoapods(
-      clean_install: true,
-      podfile: "ios/App/Podfile",
-      use_bundle_exec: false
-    )
+  sh("cd ../.. && pnpm build:mobile")
+  sh("cd ../.. && pnpm cap sync ios")
+  cocoapods(clean_install: true, podfile: "../../ios/App/Podfile", use_bundle_exec: false)
 
-    # Archive
-    gym(
-      workspace: "ios/App/App.xcworkspace",
-      scheme: "App",
-      configuration: "Release",
-      export_method: "app-store",
-      output_directory: "./build",
-      output_name: "Convoca.ipa",
-      xcargs: "MARKETING_VERSION=#{ENV['APP_VERSION'] || '1.0.0'} CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER'] || '1'}"
-    )
+  gym(workspace: "../../ios/App/App.xcworkspace", scheme: "App",
+    configuration: "Release", export_method: "app-store",
+    output_directory: "../../build", output_name: "Convoca.ipa")
 
-    # Upload para TestFlight
-    pilot(
-      skip_waiting_for_build_processing: true,
-      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
-    )
-  end
-
+  pilot(api_key: api_key, skip_waiting_for_build_processing: true)
 end
 ```
 
 ---
 
-### S2-8 · Gerar MATCH_GIT_BASIC_AUTHORIZATION
+### S2-4 · Gerar MATCH_GIT_BASIC_AUTHORIZATION
 
-O CI precisa clonar `convoca-certs` sem interação. Use um Personal Access Token do GitHub:
+O CI precisa clonar `convoca-certs` sem interação. Use o token do `gh` CLI atual:
 
-1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained
-2. Repository access: apenas `convoca-certs`
-3. Permissions: **Contents: Read-only**
-4. Gerar → copiar o token
-
-```bash
-# Gerar o base64 para o secret
-echo -n "SEU_GITHUB_USER:ghp_SEU_TOKEN" | base64
-# Resultado vai para o secret MATCH_GIT_BASIC_AUTHORIZATION
+```powershell
+# Extrair token do gh CLI e gerar o base64
+$token = gh auth token
+$b64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("uzzaidev:$token"))
+# Setar direto como secret
+gh secret set MATCH_GIT_BASIC_AUTHORIZATION --repo uzzaidev/Convoca --body $b64
 ```
+
+> O token precisa ter acesso de leitura ao repo `convoca-certs`.
+> O token do `gh` CLI (autenticado com `gh auth login`) já tem escopo `repo` suficiente.
+
+---
+
+### S2-5 · Workflow de bootstrap (roda 1x)
+
+O arquivo `.github/workflows/ios-match-bootstrap.yml` dispara o `fastlane setup_certs`
+no runner `macos-26`, sem precisar de Ruby local.
+
+```
+GitHub Actions → iOS Match Bootstrap (roda 1x) → Run workflow
+```
+
+Resultado: Distribution Certificate + `AppStore_com.uzzai.convoca.mobileprovision`
+aparecem criptografados no repo `uzzaidev/convoca-certs`.
+
+> **Status atual:** ✅ Executado com sucesso em 2026-06-22 (1m14s).
 
 ---
 
 ### Checklist S2
 
-- [ ] Repo `convoca-certs` criado no GitHub (privado)
-- [ ] `Gemfile` criado com fastlane
-- [ ] `fastlane/Appfile` configurado
-- [ ] `fastlane/Matchfile` configurado apontando para `convoca-certs`
-- [ ] `fastlane match appstore` executado com sucesso
-- [ ] Distribution Certificate criado no Apple Developer Portal
-- [ ] Provisioning Profile `AppStore_com.uzzai.convoca.mobileprovision` no `convoca-certs`
-- [ ] `fastlane/Fastfile` com lane `beta` criado
-- [ ] `MATCH_PASSWORD` guardado no Doppler/1Password
-- [ ] `MATCH_GIT_BASIC_AUTHORIZATION` (base64 user:token) pronto para secret
+- [x] Repo `convoca-certs` criado no GitHub (privado) — `uzzaidev/convoca-certs`
+- [x] `Gemfile` criado com fastlane
+- [x] `fastlane/Appfile` configurado (sem apple_id — usa API Key)
+- [x] `fastlane/Matchfile` configurado (sem username — usa git_basic_authorization)
+- [x] `fastlane match appstore` executado via `ios-match-bootstrap.yml` ✅ 2026-06-22
+- [x] Distribution Certificate criado no Apple Developer Portal
+- [x] Provisioning Profile `AppStore_com.uzzai.convoca.mobileprovision` no `convoca-certs`
+- [x] `fastlane/Fastfile` com lanes `setup_certs` + `beta` criadas
+- [x] `MATCH_PASSWORD` configurado como GitHub secret
+- [x] `MATCH_GIT_BASIC_AUTHORIZATION` configurado como GitHub secret
 
 ---
 
@@ -439,9 +433,10 @@ Com caching de CocoaPods e derivedData: **12–20 minutos**.
 
 ### Checklist S3
 
-- [ ] 6 secrets criados no GitHub Actions
-- [ ] `.github/workflows/ios-release.yml` commitado
-- [ ] Workflow disparado manualmente (Run workflow)
+- [x] 6 secrets configurados no GitHub Actions via `gh secret set` (2026-06-22)
+- [x] `.github/workflows/ios-release.yml` commitado
+- [x] `.github/workflows/ios-match-bootstrap.yml` commitado (bootstrap executado ✅)
+- [ ] Workflow `ios-release` disparado manualmente (Run workflow)  ← **PRÓXIMO PASSO**
 - [ ] Build verde no GitHub Actions (sem erro de signing)
 - [ ] Build aparecendo no App Store Connect → TestFlight
 - [ ] App instalado no iPhone via TestFlight
@@ -460,13 +455,12 @@ Preencher o listing, screenshots, compliance e submeter para revisão da Apple.
 
 ### S4-1 · Corrigir entitlements para produção
 
-No arquivo `ios/App/App/App.entitlements`, mudar:
+> ✅ **Já feito em 2026-06-22.** O arquivo `ios/App/App/App.entitlements` já está com `production`.
 
+Verificar que está correto:
 ```xml
-<!-- DE -->
-<string>development</string>
-<!-- PARA -->
-<string>production</string>
+<key>aps-environment</key>
+<string>production</string>   <!-- ← deve ser production, nunca development -->
 ```
 
 > A Apple rejeita apps com `aps-environment: development` em produção.
@@ -590,7 +584,7 @@ Prazo de revisão Apple: **24h–7 dias** (nova conta = pode demorar mais).
 
 ### Checklist S4
 
-- [ ] `App.entitlements` com `aps-environment: production`
+- [x] `App.entitlements` com `aps-environment: production` ✅ 2026-06-22
 - [ ] `apple-app-site-association` publicado e acessível sem autenticação
 - [ ] Screenshots iPhone 6.9" (1320×2868) preparadas
 - [ ] App Store Connect — todos os campos obrigatórios preenchidos
@@ -604,17 +598,23 @@ Prazo de revisão Apple: **24h–7 dias** (nova conta = pode demorar mais).
 
 ## Secrets consolidados (referência rápida)
 
-> **Todos os 6 são configurados automaticamente** por `scripts/setup-ios-ci-secrets.mjs`.
-> Ver playbook `docs/playbooks/github-secrets-via-cli/README.md`.
+> **Todos os 6 foram configurados via `gh secret set` em 2026-06-22** — ver playbook `docs/playbooks/github-secrets-via-cli/README.md`.
+> Para reconfigurar: `node scripts/setup-ios-ci-secrets.mjs` ou `gh secret set` diretamente.
 
-| Secret | Fonte | Sprint |
+| Secret | Valor / Fonte | Status |
 |---|---|---|
-| `APP_STORE_CONNECT_API_KEY_ID` | Key ID do `.p8` | S1-3 |
-| `APP_STORE_CONNECT_API_ISSUER_ID` | Issuer ID (UUID) | S1-3 |
-| `APP_STORE_CONNECT_API_KEY_CONTENT` | conteúdo do `.p8` (script lê o arquivo) | S1-3 |
-| `MATCH_PASSWORD` | senha escolhida | S2-6 |
-| `MATCH_GIT_BASIC_AUTHORIZATION` | base64 de `user:ghp_TOKEN` (script gera) | S2-8 |
-| `GOOGLE_SERVICE_INFO_PLIST_BASE64` | base64 do `.plist` (script lê e converte) | S1-5 |
+| `APP_STORE_CONNECT_API_KEY_ID` | `Z9L9Q375UP` (API Key Admin "convoca-ci-admin") | ✅ |
+| `APP_STORE_CONNECT_API_ISSUER_ID` | `6d969582-c629-4d55-8fa1-66423afb1d88` | ✅ |
+| `APP_STORE_CONNECT_API_KEY_CONTENT` | conteúdo de `AuthKey_Z9L9Q375UP.admin.p8` | ✅ |
+| `MATCH_PASSWORD` | `Uzzai2025@` (criptografia dos certs no convoca-certs) | ✅ |
+| `MATCH_GIT_BASIC_AUTHORIZATION` | base64 de `uzzaidev:gh_token` | ✅ |
+| `GOOGLE_SERVICE_INFO_PLIST_BASE64` | base64 do `GoogleService-Info.plist` iOS | ✅ |
+
+> ⚠️ **Arquivos locais sensíveis** (fora do repo, em `C:\Users\pedro\convoca-ios-setup\`):
+> - `AuthKey_Z9L9Q375UP.admin.p8` — API Key Admin (App Store Connect)
+> - `AuthKey_45G7QADN8Q.apns.p8` — APNs Auth Key (Firebase)
+> - `match-git-auth.txt` — MATCH_GIT_BASIC_AUTHORIZATION em texto claro
+> - `GoogleService-Info.plist` — plist iOS do Firebase
 
 ---
 

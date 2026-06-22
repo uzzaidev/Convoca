@@ -5,6 +5,7 @@ import logger from "@/lib/logger";
 import { createSeasonSchema } from "@/lib/validations";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { normalizeSeasonDateInput } from "@/lib/season-dates";
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
@@ -77,7 +78,16 @@ export async function POST(
       );
     }
 
-    const { name, startsAt, endsAt } = parsed.data;
+    const { name } = parsed.data;
+    const startsAt = normalizeSeasonDateInput(parsed.data.startsAt, "start");
+    const endsAt = normalizeSeasonDateInput(parsed.data.endsAt, "end");
+
+    if (new Date(endsAt) <= new Date(startsAt)) {
+      return NextResponse.json(
+        { error: "A data final deve ser depois da data inicial" },
+        { status: 400 }
+      );
+    }
 
     const overlap = await sql`
       SELECT id, name FROM seasons
@@ -94,12 +104,10 @@ export async function POST(
       );
     }
 
-    const now = new Date().toISOString();
-    let status: "active" | "upcoming" | "finished" = "upcoming";
-    if (startsAt <= now && endsAt >= now) {
+    const now = new Date();
+    let status: "active" | "upcoming" = "upcoming";
+    if (new Date(startsAt) <= now && new Date(endsAt) >= now) {
       status = "active";
-    } else if (endsAt < now) {
-      status = "finished";
     }
 
     if (status === "active") {

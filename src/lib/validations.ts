@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { groupStatusValues } from "@/lib/group-status";
+import { isSeasonDateInput } from "@/lib/season-dates";
 
 export const createGroupSchema = z.object({
   name: z.string().min(3, "Nome deve ter no minimo 3 caracteres"),
@@ -67,14 +68,14 @@ export const playerRatingSchema = z.object({
 
 export const createSeasonSchema = z.object({
   name: z.string().min(1, "Nome e obrigatorio").max(100),
-  startsAt: z.string().datetime(),
-  endsAt: z.string().datetime(),
+  startsAt: z.string().refine(isSeasonDateInput, "Data de inicio invalida"),
+  endsAt: z.string().refine(isSeasonDateInput, "Data de fim invalida"),
 });
 
 export const updateSeasonSchema = z.object({
   name: z.string().min(1, "Nome e obrigatorio").max(100).optional(),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
+  startsAt: z.string().refine(isSeasonDateInput, "Data de inicio invalida").optional(),
+  endsAt: z.string().refine(isSeasonDateInput, "Data de fim invalida").optional(),
 });
 
 export const updateGroupStatusSchema = z.object({

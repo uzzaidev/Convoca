@@ -1,0 +1,1 @@
+The document details curated factual statements about the SeasonManager's implementation and updates, including date handling and season management features.

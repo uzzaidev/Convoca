@@ -1,0 +1,7 @@
+- Curated facts are organized by subject for durable knowledge.
+- Key project details and factual statements are highlighted.
+- SeasonManager handles season date fixes and input normalization.
+- src/lib/season-dates.ts accepts valid YYYY-MM-DD inputs.
+- Season creation logic prevents automatic marking of finished historical seasons.
+- Finished status is reserved for the finish endpoint creating season_snapshots.
+- Retroactive seasons are labeled as Aberta.

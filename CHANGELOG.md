@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### fix
+- Ajustado o comando de instalação do bundle para ser explícito e com verbose, devido à ausência de Gemfile.lock.
+  - Arquivos: `.github/workflows/ios-match-bootstrap.yml`
+  - Evidência: alteração na linha de comando `bundle install --jobs 4 --retry 3` e uso de `--verbose` na execução do fastlane
+  - Confiança: alta
+
+## 2026-06-22
+
 ### chore
 - Atualizado o CHECKLIST iOS com o progresso de 2026-06-22, incluindo configurações de secrets, workflows de CI e etapas de bootstrap do fastlane match.
   - Arquivos: `docs/mobile-convoca/CHECKLIST.md`

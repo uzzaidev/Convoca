@@ -587,10 +587,51 @@ sh("cd #{ROOT} && CAPACITOR_PLATFORM=ios pnpm cap copy ios")
 
 - [x] Android Play Store / APK: login OK com `CapacitorHttp` + `CapacitorCookies` ligados
 - [x] iOS TestFlight build ≥ 2: login OK com plugins **desligados** (`CAPACITOR_PLATFORM=ios`)
-- [ ] Push no iOS após login
+- [ ] Push no iOS após login — ver seção **Push iOS (FCM token)** abaixo
 - [ ] Deep link `convoca://` no iOS
 
-### Referências
+---
+
+## Push iOS — token FCM (não APNs)
+
+### Problema (descoberto 2026-06-22)
+
+| Plataforma | Plugin antigo | Token salvo | Backend FCM |
+|------------|---------------|-------------|-------------|
+| Android | `@capacitor/push-notifications` | **FCM** ✅ | funciona |
+| iOS (antes) | `@capacitor/push-notifications` | **APNs** ❌ | `sent: 0`, tokens apagados |
+
+Sintomas:
+- `devices: 2, sent: 0` → tokens inválidos para FCM (eram APNs)
+- `devices: 0` → tokens apagados + `AppDelegate.swift` sem callbacks de push (token nem registrava)
+
+Firebase **produção** APNs key no console é necessária, mas **não basta** — o app precisa salvar **token FCM**.
+
+### Solução implementada
+
+1. **`@capacitor-firebase/messaging`** — retorna token FCM no iOS e Android
+2. **`AppDelegate.swift`** — `FirebaseApp.configure()` + callbacks APNs obrigatórios
+3. Removido `@capacitor/push-notifications` (conflita com Firebase Messaging no iOS)
+4. APNs **dev + produção** no Firebase (`45G7QADN8Q`)
+
+### Testar push após novo build TestFlight
+
+1. Instalar build **≥ 3** (com fix FCM)
+2. Login + permitir notificações
+3. Chrome (mesma conta):
+
+```javascript
+fetch("/api/mobile/push/send", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify({ title: "Teste iOS", body: "FCM OK" })
+}).then(r => r.json()).then(d => console.log(JSON.stringify(d, null, 2)));
+```
+
+Esperado: `devices: 1`, `sent: 1` + notificação no iPhone.
+
+### Referências push
 
 - [Capacitor #7262 — NextAuth cookie state iOS](https://github.com/ionic-team/capacitor/issues/7262)
 - [Capacitor Discussion #7085 — NextAuth session on device/TestFlight](https://github.com/ionic-team/capacitor/discussions/7085)

@@ -164,10 +164,10 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] `.github/workflows/ios-release.yml` commitado e no ar
 - [x] `.github/workflows/ios-match-bootstrap.yml` commitado (workflow de setup 1x)
 - [x] Bootstrap disparado e concluído com sucesso (2026-06-22 ✅)
-- [ ] Workflow `ios-release` disparado manualmente (Run workflow)  ← PROXIMO PASSO
-- [ ] Build verde no GitHub Actions (signing OK)
-- [ ] Build aparecendo no App Store Connect → TestFlight
-- [ ] App instalado no iPhone via TestFlight
+- [x] Workflow `ios-release` disparado manualmente — **BUILD VERDE ✅ 4m06s (2026-06-22)**
+- [x] Build verde no GitHub Actions (signing OK) ✅ 4m06s
+- [x] Build aparecendo no App Store Connect → TestFlight ✅ v1.0.0 build 1 "Pronta para envio"
+- [ ] App instalado no iPhone via TestFlight  ← **PRÓXIMO PASSO**
 - [ ] Login na WebView funcionando (cookie NextAuth)
 - [ ] Push notification recebida no device iOS
 - [ ] Deep link `convoca://` abrindo o app
@@ -183,7 +183,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: Android EM ANALISE na Google (enviado 2026-06-19) | iOS: certs gerados ✅ — proximo: rodar ios-release para primeiro build TestFlight
+## Status: Android EM ANALISE na Google | iOS: build 1.0.0 no TestFlight ✅ — próximo: instalar no iPhone e validar
 
 Proximos passos enquanto aguarda / apos aprovacao:
 

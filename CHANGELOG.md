@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Ajustado o workflow de build iOS para usar o `run_number` do CI como `build_number` quando este estiver vazio, evitando duplicação do `CFBundleVersion`.
+  - Arquivos: `.github/workflows/ios-release.yml`
+  - Evidência: alteração na lógica de definição do `BUILD_NUMBER` para usar `github.run_number` se `build_number` não for fornecido
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Desabilitado CapacitorHttp e CapacitorCookies no iOS para login NextAuth na WKWebView, evitando conflito com o cookie jar nativo (`HTTPCookieStorage`). Essa alteração garante que o login funcione corretamente no iOS usando a WebView pura.
   - Arquivos: `capacitor.config.ts`, `fastlane/Fastfile`, `package.json`
   - Evidência: alteração na configuração de plugins e comandos de build

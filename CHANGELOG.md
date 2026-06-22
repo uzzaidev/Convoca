@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### feat
+- Melhorada a gestão de temporadas com normalização e validação de datas
+  - Arquivos: `src/lib/season-dates.ts`, `src/app/api/groups/[groupId]/seasons/[seasonId]/route.ts`, `src/app/api/groups/[groupId]/seasons/route.ts`, `src/components/seasons/season-manager.tsx`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### chore
 - Removidos os arquivos de documentação desatualizados sobre configuração do Capacitor e recursos nativos.
   - Arquivos: `docs/universal-mobile-app/01-CAPACITOR-SETUP.md`, `docs/universal-mobile-app/04-NATIVE-FEATURES.md`

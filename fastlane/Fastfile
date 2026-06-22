@@ -104,7 +104,9 @@ platform :ios do
     #    Usa "cap copy" (sem pod install) para evitar conflito de Ruby entre
     #    o setup-ruby 3.3 (nosso bundler) e o Homebrew Ruby 3.4 do runner.
     #    O pod install acontece no passo 7, usando diretamente o pod do sistema.
-    sh("cd #{ROOT} && pnpm cap copy ios")
+    # CAPACITOR_PLATFORM=ios gera capacitor.config.json sem CapacitorHttp/Cookies
+    # (login NextAuth na WKWebView — ver capacitor.config.ts).
+    sh("cd #{ROOT} && CAPACITOR_PLATFORM=ios pnpm cap copy ios")
 
     # 7. Pod install e feito como step separado no workflow (ios-release.yml)
     #    ANTES de chamar "fastlane beta", para evitar o conflito de Ruby entre

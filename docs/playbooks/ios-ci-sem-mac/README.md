@@ -296,6 +296,13 @@ end
 >
 > 5. **API Key Admin obrigatória**: role "Developer" não pode criar Distribution Certificates.
 >    Só "Admin" funciona no fastlane match.
+>
+> 6. **Login iOS — desligar CapacitorHttp/CapacitorCookies**: no Android os dois plugins
+>    são necessários para NextAuth (cookie na WebView). No iOS, `CapacitorHttp` manda o
+>    `fetch` para o cookie jar nativo (`HTTPCookieStorage`), separado da `WKWebView` —
+>    o CSRF/sessão do NextAuth não sincroniza e o login falha com "email ou senha incorretos".
+>    Use `CAPACITOR_PLATFORM=ios` ao rodar `cap copy ios` (já no Fastfile). Android mantém
+>    os plugins ligados com `CAPACITOR_PLATFORM=android`.
 
 ```ruby
 require "fileutils"
@@ -339,7 +346,8 @@ lane :beta do
   sh("cd #{ROOT} && pnpm build:mobile")
 
   # cap COPY (sem pod install) — cap sync causaria conflito de Ruby (ver nota 3)
-  sh("cd #{ROOT} && pnpm cap copy ios")
+  # cap COPY com CAPACITOR_PLATFORM=ios (sem CapacitorHttp — login NextAuth na WKWebView)
+  sh("cd #{ROOT} && CAPACITOR_PLATFORM=ios pnpm cap copy ios")
 
   # Pod install e feito como step separado no workflow ANTES deste lane (ver nota 4)
 

@@ -610,9 +610,10 @@ Firebase **produção** APNs key no console é necessária, mas **não basta** �
 ### Solução implementada
 
 1. **`@capacitor-firebase/messaging`** — retorna token FCM no iOS e Android
-2. **`AppDelegate.swift`** — `FirebaseApp.configure()` + callbacks APNs obrigatórios
-3. Removido `@capacitor/push-notifications` (conflita com Firebase Messaging no iOS)
-4. APNs **dev + produção** no Firebase (`45G7QADN8Q`)
+2. **`GoogleService-Info.plist` no bundle Xcode** — referenciado em `project.pbxproj` (Copy Bundle Resources). Sem isso, `FirebaseApp.configure()` crasha ao abrir.
+3. **`AppDelegate.swift`** — callbacks APNs obrigatórios; **nao** chamar `FirebaseApp.configure()` no launch (plugin `@capacitor-firebase/app` faz isso quando o bridge carrega)
+4. Removido `@capacitor/push-notifications` (conflita com Firebase Messaging no iOS)
+5. APNs **dev + produção** no Firebase (`45G7QADN8Q`)
 
 ### Testar push após novo build TestFlight
 

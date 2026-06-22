@@ -18,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       app_version:
-        description: "Versão do app (ex: 1.0.1)"
+        description: "Versão do app (ex: 2.0.0)"
         required: true
-        default: "1.0.0"
+        default: "2.0.0"
       build_number:
         description: "CFBundleVersion — deve ser MAIOR que o último no TestFlight (ex: 2, 3...). Vazio = usa run_number do CI."
         required: false
@@ -89,6 +89,9 @@ jobs:
           echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode \
             > ios/App/App/GoogleService-Info.plist
           echo "✅ GoogleService-Info.plist restaurado"
+          test -f ios/App/App/GoogleService-Info.plist
+          grep -q "GoogleService-Info.plist" ios/App/App.xcodeproj/project.pbxproj
+          echo "✅ GoogleService-Info.plist referenciado no Xcode project"
 
       # 10. Determinar versão e build number (dispatch manual ou tag)
       - name: Determinar APP_VERSION e BUILD_NUMBER

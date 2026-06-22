@@ -42,23 +42,28 @@ export async function initPushNotifications() {
 
   initialized = true;
 
-  const currentPermission = await FirebaseMessaging.checkPermissions();
-  const permission =
-    currentPermission.receive === "granted"
-      ? currentPermission
-      : await FirebaseMessaging.requestPermissions();
+  try {
+    const currentPermission = await FirebaseMessaging.checkPermissions();
+    const permission =
+      currentPermission.receive === "granted"
+        ? currentPermission
+        : await FirebaseMessaging.requestPermissions();
 
-  if (permission.receive !== "granted") {
-    return;
-  }
+    if (permission.receive !== "granted") {
+      return;
+    }
 
-  // Token pode rotacionar — escuta atualizacoes
-  await FirebaseMessaging.addListener("tokenReceived", (event) => {
-    void savePushToken(event.token);
-  });
+    // Token pode rotacionar — escuta atualizacoes
+    await FirebaseMessaging.addListener("tokenReceived", (event) => {
+      void savePushToken(event.token);
+    });
 
-  const { token } = await FirebaseMessaging.getToken();
-  if (token) {
-    await savePushToken(token);
+    const { token } = await FirebaseMessaging.getToken();
+    if (token) {
+      await savePushToken(token);
+    }
+  } catch (error) {
+    console.error("[mobile] Falha ao inicializar push notifications", error);
+    initialized = false;
   }
 }

@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 2,
+  "curationsSinceDream": 6,
   "lastDreamAt": "2026-05-16T16:18:42.349Z",
   "lastDreamLogId": "drm-1778948262900",
   "pendingMerges": [],
@@ -7,6 +7,22 @@
     {
       "enqueuedAt": 1782132683234,
       "path": "facts/project/curated_project_facts.md"
+    },
+    {
+      "enqueuedAt": 1782133001667,
+      "path": "convoca/season_management/season_management.md"
+    },
+    {
+      "enqueuedAt": 1782133001667,
+      "path": "mobile/architecture/convoca_mobile_architecture.md"
+    },
+    {
+      "enqueuedAt": 1782133221160,
+      "path": "facts/project/project_facts_extraction.md"
+    },
+    {
+      "enqueuedAt": 1782133939654,
+      "path": "curated/rlm_approach/rlm_approach_facts.md"
     }
   ],
   "totalDreams": 1,

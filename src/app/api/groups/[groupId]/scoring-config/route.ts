@@ -5,27 +5,15 @@ import logger from "@/lib/logger";
 import { z } from "zod";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
+import {
+  DEFAULT_TIEBREAKERS,
+  TIEBREAKER_KEYS,
+  normalizeTiebreakers,
+} from "@/lib/scoring-tiebreakers";
 
 type Params = Promise<{ groupId: string }>;
 
-export const TIEBREAKER_KEYS = [
-  "wins",
-  "goal_difference",
-  "goals",
-  "games_played",
-  "games_played_asc",
-  "assists",
-  "mvp_count",
-] as const;
-
 export type TiebreakerKey = (typeof TIEBREAKER_KEYS)[number];
-
-const DEFAULT_TIEBREAKERS: TiebreakerKey[] = [
-  "wins",
-  "goal_difference",
-  "goals",
-  "games_played",
-];
 
 const DEFAULT_CONFIG = {
   pointsWin: 3,
@@ -36,7 +24,7 @@ const DEFAULT_CONFIG = {
   pointsMvp: 0,
   pointsPresence: 0,
   rankingMode: "standard" as const,
-  tiebreakers: DEFAULT_TIEBREAKERS,
+  tiebreakers: [...DEFAULT_TIEBREAKERS],
 };
 
 const scoringConfigSchema = z.object({
@@ -62,20 +50,6 @@ const scoringConfigSchema = z.object({
 });
 
 export type ScoringConfig = z.infer<typeof scoringConfigSchema>;
-
-function normalizeTiebreakers(raw: unknown): TiebreakerKey[] {
-  if (!Array.isArray(raw)) return DEFAULT_TIEBREAKERS;
-  const seen = new Set<string>();
-  const out: TiebreakerKey[] = [];
-  for (const item of raw) {
-    if (typeof item !== "string") continue;
-    if (!(TIEBREAKER_KEYS as readonly string[]).includes(item)) continue;
-    if (seen.has(item)) continue;
-    seen.add(item);
-    out.push(item as TiebreakerKey);
-  }
-  return out;
-}
 
 // GET /api/groups/:groupId/scoring-config - Get scoring configuration for group
 export async function GET(

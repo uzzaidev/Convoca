@@ -1,0 +1,6 @@
+- Document focuses on explicit season rows and ranking behavior in Convoca.
+- Clarifies season row storage and specifies ranking defaults.
+- Outlines datetime validation in SeasonManager.
+- SeasonManager handles explicit season rows without virtual/current-season fallback.
+- Rankings default to active season; aggregates finished events otherwise.
+- HTML date inputs used for season creation; date validation normalizes to timestamps.

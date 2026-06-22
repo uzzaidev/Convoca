@@ -108,6 +108,27 @@ Android app
 
 Motivo: o Convoca depende de Next.js SSR/API routes/NextAuth/cookies. Nao e seguro transformar o app inteiro em export estatico. O fallback local existe so como rede de seguranca; o uso normal do app carrega o dominio de producao.
 
+## Politica de atualizacao
+
+Como o app Android usa `server.url` apontando para `https://convoca.uzzai.com.br`, mudancas comuns de produto entram pelo deploy web/backend. Nao e necessario publicar uma nova versao na Google Play para:
+
+- alteracoes em API routes do Next.js;
+- alteracoes em componentes React, telas e estilos carregados pelo dominio de producao;
+- correcoes de regras de negocio, validacoes, queries e conteudo do site;
+- migrations de banco, desde que aplicadas pelo fluxo oficial em `src/db/migrations/`.
+
+E necessario gerar novo AAB e publicar nova versao na Google Play quando a mudanca altera o pacote nativo instalado no aparelho, por exemplo:
+
+- `capacitor.config.ts`, especialmente `server.url`, `appId`, plugins ou configuracoes nativas;
+- arquivos em `android/` ou `ios/`;
+- permissoes no `AndroidManifest.xml`;
+- icone, splash, nome do app, versionCode/versionName ou signing;
+- deep links/App Links/URL schemes;
+- plugins nativos, push notifications, camera, biometria, share ou outras capacidades nativas;
+- fallback local em `out/` quando for importante atualizar a experiencia sem conexao.
+
+Resumo operacional: para mudancas web/API, fazer deploy em `convoca.uzzai.com.br`; para mudancas nativas/Capacitor, fazer build, sync, AAB assinado e release na loja.
+
 ## Atualizacoes feitas no app
 
 ### Config mobile

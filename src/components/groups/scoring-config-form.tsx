@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { normalizeTiebreakers } from "@/lib/scoring-tiebreakers";
 
 type TiebreakerKey =
   | "wins"
@@ -147,13 +148,7 @@ export function ScoringConfigForm({ groupId }: ScoringConfigFormProps) {
         const data = await res.json();
         const normalized: ScoringConfig = {
           ...data.config,
-          tiebreakers:
-            Array.isArray(data.config?.tiebreakers) &&
-            data.config.tiebreakers.length > 0
-              ? data.config.tiebreakers.filter((k: string) =>
-                  ALL_TIEBREAKERS.includes(k as TiebreakerKey)
-                )
-              : [...DEFAULT_TIEBREAKERS],
+          tiebreakers: normalizeTiebreakers(data.config?.tiebreakers),
         };
         setConfig(normalized);
         setOriginalConfig(normalized);

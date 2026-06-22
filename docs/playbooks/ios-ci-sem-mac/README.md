@@ -275,31 +275,95 @@ end
 ```
 
 **`beta`** — build + TestFlight (roda em cada release):
+
+> ⚠️ **Lições aprendidas (2026-06-22) — leia antes de editar este Fastfile:**
+>
+> 1. **Caminhos absolutos**: use `ROOT = File.expand_path("..", __dir__)` e `"#{ROOT}/ios/App/..."`.
+>    Caminhos relativos como `"../../ios/App"` são ambíguos — actions rodam da raiz do repo,
+>    mas `sh()` roda da pasta `fastlane/`. O ROOT elimina toda ambiguidade.
+>
+> 2. **Signing manual obrigatório**: sem `update_code_signing_settings`, o Xcode usa "Automatic"
+>    e falha em CI com `"Signing requires a development team"`. O action grava no `.pbxproj`.
+>    Depois disso, xcargs só precisa de `MARKETING_VERSION` e `CURRENT_PROJECT_VERSION`.
+>
+> 3. **`cap copy` em vez de `cap sync`**: `pnpm cap sync ios` chama `pod install` internamente
+>    via `bundle exec pod`, herdando o ambiente do Ruby 3.3 do `bundle exec fastlane` e
+>    conflitando com o CocoaPods do Homebrew (Ruby 3.4). Use `cap copy ios` + pod install separado.
+>
+> 4. **Pod install fora do fastlane**: `sh("pod install")` dentro do Fastfile herda as variáveis
+>    `BUNDLE_GEMFILE`, `RUBYOPT` e `GEM_HOME` do `bundle exec fastlane`, contaminando o pod.
+>    O pod install deve ser um **step separado no workflow**, ANTES de chamar `fastlane beta`.
+>
+> 5. **API Key Admin obrigatória**: role "Developer" não pode criar Distribution Certificates.
+>    Só "Admin" funciona no fastlane match.
+
 ```ruby
+require "fileutils"
+
+ROOT         = File.expand_path("..", __dir__)   # raiz do repo
+BUNDLE_ID    = "com.uzzai.convoca"
+TEAM_ID      = "2YRXNXGL8K"
+PROFILE_NAME = "match AppStore #{BUNDLE_ID}"
+
 lane :beta do
+  # CI_KEYCHAIN temporario — runner macOS não tem keychain interativo
   create_keychain(name: "CI_KEYCHAIN", password: ENV["MATCH_PASSWORD"],
-    default_keychain: true, unlock: true, timeout: 3600)
+    default_keychain: true, unlock: true, timeout: 3600, lock_when_sleeps: false)
 
   api_key = app_store_connect_api_key(
-    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-    issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
-    key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"], in_house: false
+    key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+    in_house:    false
   )
 
+  # Instala certs + profile do repo convoca-certs (readonly=true: nao gera novos)
   match(type: "appstore", readonly: true, api_key: api_key,
     git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-    app_identifier: "com.uzzai.convoca", team_id: "2YRXNXGL8K",
+    app_identifier: BUNDLE_ID, team_id: TEAM_ID,
     keychain_name: "CI_KEYCHAIN", keychain_password: ENV["MATCH_PASSWORD"])
 
-  sh("cd ../.. && pnpm build:mobile")
-  sh("cd ../.. && pnpm cap sync ios")
-  cocoapods(clean_install: true, podfile: "../../ios/App/Podfile", use_bundle_exec: false)
+  # Grava Manual Signing no .pbxproj — sem isso xcodebuild falha em CI
+  update_code_signing_settings(
+    use_automatic_signing: false,
+    path:               "#{ROOT}/ios/App/App.xcodeproj",   # caminho absoluto
+    team_id:            TEAM_ID,
+    bundle_identifier:  BUNDLE_ID,
+    code_sign_identity: "iPhone Distribution",
+    profile_name:       PROFILE_NAME
+  )
 
-  gym(workspace: "../../ios/App/App.xcworkspace", scheme: "App",
-    configuration: "Release", export_method: "app-store",
-    output_directory: "../../build", output_name: "Convoca.ipa")
+  app_version = ENV["APP_VERSION"] || "1.0.0"
+  build_num   = ENV["BUILD_NUMBER"] || "1"
+
+  sh("cd #{ROOT} && pnpm build:mobile")
+
+  # cap COPY (sem pod install) — cap sync causaria conflito de Ruby (ver nota 3)
+  sh("cd #{ROOT} && pnpm cap copy ios")
+
+  # Pod install e feito como step separado no workflow ANTES deste lane (ver nota 4)
+
+  FileUtils.mkdir_p("#{ROOT}/build")  # garante que a pasta de saida existe
+
+  gym(
+    workspace:        "#{ROOT}/ios/App/App.xcworkspace",
+    scheme:           "App",
+    configuration:    "Release",
+    export_method:    "app-store",
+    output_directory: "#{ROOT}/build",
+    output_name:      "Convoca.ipa",
+    # Signing ja gravado no .pbxproj — xcargs so precisa das versoes
+    xcargs: "MARKETING_VERSION=#{app_version} CURRENT_PROJECT_VERSION=#{build_num}",
+    export_options: {
+      method:               "app-store",
+      teamID:               TEAM_ID,
+      provisioningProfiles: { BUNDLE_ID => PROFILE_NAME }
+    }
+  )
 
   pilot(api_key: api_key, skip_waiting_for_build_processing: true)
+
+  UI.success "TestFlight ✅ v#{app_version} (#{build_num})"
 end
 ```
 
@@ -392,17 +456,36 @@ E vai setar automaticamente:
 
 ---
 
-### S3-2 · Criar o workflow
+### S3-2 · Estrutura do workflow
 
-Arquivo: `.github/workflows/ios-release.yml` (criado automaticamente neste playbook).
+Arquivo: `.github/workflows/ios-release.yml`
 
-O workflow:
-1. Roda em `macos-26` (Xcode 26.5, Sequoia)
-2. Instala pnpm + node + ruby + bundler
-3. Restaura `GoogleService-Info.plist` via secret (base64)
-4. Escreve a App Store Connect API Key em disco (temporário)
-5. Executa `bundle exec fastlane beta`
-6. Limpa arquivos sensíveis
+> ⚠️ **Prática correta:** o workflow chama `bundle exec fastlane beta` — não roda
+> `xcodebuild` diretamente. Todo o orquestramento de signing, build e upload fica no Fastfile.
+
+**Ordem dos steps (crítico):**
+
+```
+1.  checkout
+2.  xcode-select -s /Applications/Xcode_26.5.app
+3.  setup node + pnpm
+4.  pnpm install --frozen-lockfile
+5.  setup ruby 3.3  (bundler-cache: false — sem Gemfile.lock no repo)
+6.  bundle install --jobs 4 --retry 3
+7.  restaurar GoogleService-Info.plist (base64 decode do secret)
+8.  determinar APP_VERSION e BUILD_NUMBER
+9.  cache CocoaPods
+10. pod install --repo-update          ← FORA do bundle exec (ambiente limpo)
+11. bundle exec fastlane beta          ← faz tudo: match, signing, gym, pilot
+12. limpar GoogleService-Info.plist    ← sempre, mesmo em falha
+```
+
+> **Por que pod install vem ANTES do `fastlane beta`?**
+> O `bundle exec fastlane beta` injeta `BUNDLE_GEMFILE`, `RUBYOPT` e `GEM_HOME` do Ruby 3.3
+> no ambiente de todos os processos filhos. Se o `pod install` rodar dentro do fastlane
+> (via `sh()`), ele herda essas variáveis e conflita com o CocoaPods do Homebrew (Ruby 3.4),
+> gerando `already initialized constant Gem::Platform::JAVA`. A solução: pod install
+> como step do workflow, antes do fastlane, com ambiente limpo.
 
 ---
 
@@ -434,11 +517,10 @@ Com caching de CocoaPods e derivedData: **12–20 minutos**.
 ### Checklist S3
 
 - [x] 6 secrets configurados no GitHub Actions via `gh secret set` (2026-06-22)
-- [x] `.github/workflows/ios-release.yml` commitado
-- [x] `.github/workflows/ios-match-bootstrap.yml` commitado (bootstrap executado ✅)
-- [ ] Workflow `ios-release` disparado manualmente (Run workflow)  ← **PRÓXIMO PASSO**
-- [ ] Build verde no GitHub Actions (sem erro de signing)
-- [ ] Build aparecendo no App Store Connect → TestFlight
+- [x] `.github/workflows/ios-release.yml` commitado (estrutura final com pod install separado)
+- [x] `.github/workflows/ios-match-bootstrap.yml` commitado e executado ✅ (1m14s)
+- [x] Workflow `ios-release` disparado e **BUILD VERDE ✅ — 4m06s (2026-06-22)**
+- [ ] Build aparecendo no App Store Connect → TestFlight  ← **PRÓXIMO PASSO**
 - [ ] App instalado no iPhone via TestFlight
 - [ ] Login funcionando na WebView (cookie NextAuth)
 - [ ] Push notification recebida no device

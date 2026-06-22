@@ -1,6 +1,7 @@
 # iOS Release — Build + Archive + Upload to TestFlight
 #
 # Roda no runner macos-26 (Xcode 26.5) do GitHub Actions.
+# O build é orquestrado pelo `fastlane beta` (fastlane/Fastfile).
 # Disparo: manual (workflow_dispatch) ou push de tag vX.Y.Z
 #
 # Secrets necessários (Settings → Secrets and variables → Actions):
@@ -14,7 +15,6 @@
 name: iOS Release
 
 on:
-  # Disparo manual com campo para versão
   workflow_dispatch:
     inputs:
       app_version:
@@ -26,21 +26,9 @@ on:
         required: true
         default: "1"
 
-  # Disparo automático em tags de release
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-
-env:
-  BUNDLE_ID: com.uzzai.convoca
-  XCODE_PROJECT: ios/App/App.xcodeproj
-  XCODE_WORKSPACE: ios/App/App.xcworkspace
-  XCODE_SCHEME: App
-  # pnpm requer Node 18+
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.18.1"
-  # Ruby para fastlane
-  RUBY_VERSION: "3.3"
 
 jobs:
   build-and-upload:
@@ -49,33 +37,29 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      # ──────────────────────────────────────────
       # 1. Checkout
-      # ──────────────────────────────────────────
       - name: Checkout código
         uses: actions/checkout@v4
 
-      # ──────────────────────────────────────────
       # 2. Selecionar Xcode 26.5 explicitamente
-      # ──────────────────────────────────────────
       - name: Selecionar Xcode 26.5
         run: |
           sudo xcode-select -s /Applications/Xcode_26.5.app
           xcodebuild -version
 
-      # ──────────────────────────────────────────
-      # 3. Setup Node + pnpm
-      # ──────────────────────────────────────────
-      - name: Setup Node ${{ env.NODE_VERSION }}
+      # 3. Setup Node
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: "22"
 
-      - name: Setup pnpm ${{ env.PNPM_VERSION }}
+      # 4. Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: "10.18.1"
 
+      # 5. Cache pnpm
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
@@ -83,21 +67,22 @@ jobs:
           key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: pnpm-${{ runner.os }}-
 
+      # 6. Instalar dependências Node
       - name: Instalar dependências Node
         run: pnpm install --frozen-lockfile
 
-      # ──────────────────────────────────────────
-      # 4. Setup Ruby + fastlane
-      # ──────────────────────────────────────────
-      - name: Setup Ruby ${{ env.RUBY_VERSION }}
+      # 7. Setup Ruby (sem bundler-cache — sem Gemfile.lock no repo)
+      - name: Setup Ruby 3.3
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ env.RUBY_VERSION }}
-          bundler-cache: true
+          ruby-version: "3.3"
+          bundler-cache: false
 
-      # ──────────────────────────────────────────
-      # 5. Restaurar GoogleService-Info.plist via secret
-      # ──────────────────────────────────────────
+      # 8. Instalar fastlane + xcpretty via bundle install
+      - name: Instalar fastlane (bundle install)
+        run: bundle install --jobs 4 --retry 3
+
+      # 9. Restaurar GoogleService-Info.plist a partir do secret (base64)
       - name: Restaurar GoogleService-Info.plist
         env:
           GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
@@ -106,36 +91,19 @@ jobs:
             > ios/App/App/GoogleService-Info.plist
           echo "✅ GoogleService-Info.plist restaurado"
 
-      # ──────────────────────────────────────────
-      # 6. Criar App Store Connect API Key em disco
-      # ──────────────────────────────────────────
-      - name: Criar ASC API Key em disco
-        env:
-          ASC_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      # 10. Determinar versão e build number (dispatch manual ou tag)
+      - name: Determinar APP_VERSION e BUILD_NUMBER
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
-          echo "$ASC_KEY_CONTENT" > "$KEY_PATH"
-          chmod 600 "$KEY_PATH"
-          echo "ASC_KEY_PATH=$KEY_PATH" >> $GITHUB_ENV
-          echo "✅ API Key criada em $KEY_PATH"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "APP_VERSION=${{ github.event.inputs.app_version }}" >> $GITHUB_ENV
+            echo "BUILD_NUMBER=${{ github.event.inputs.build_number }}" >> $GITHUB_ENV
+          else
+            TAG="${{ github.ref_name }}"
+            echo "APP_VERSION=${TAG#v}" >> $GITHUB_ENV
+            echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+          fi
 
-      # ──────────────────────────────────────────
-      # 7. Build mobile (gera out/ para Capacitor)
-      # ──────────────────────────────────────────
-      - name: Build mobile (Next.js export)
-        run: pnpm build:mobile
-
-      # ──────────────────────────────────────────
-      # 8. Capacitor sync iOS
-      # ──────────────────────────────────────────
-      - name: Capacitor sync iOS
-        run: pnpm cap sync ios
-
-      # ──────────────────────────────────────────
-      # 9. Cache CocoaPods
-      # ──────────────────────────────────────────
+      # 11. Cache CocoaPods
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
@@ -143,119 +111,23 @@ jobs:
           key: pods-${{ runner.os }}-${{ hashFiles('ios/App/Podfile.lock') }}
           restore-keys: pods-${{ runner.os }}-
 
-      # ──────────────────────────────────────────
-      # 10. Instalar CocoaPods
-      # ──────────────────────────────────────────
-      - name: Instalar CocoaPods
-        run: |
-          cd ios/App
-          pod install --repo-update
-
-      # ──────────────────────────────────────────
-      # 11. fastlane match — instalar certs + profiles
-      # ──────────────────────────────────────────
-      - name: fastlane match (appstore)
+      # 12. fastlane beta — orquestra tudo: match, build, archive, upload
+      #     O Fastfile cuida de: create_keychain, match, update_code_signing_settings,
+      #     pnpm build:mobile, pnpm cap sync ios, pod install, gym, pilot.
+      - name: fastlane beta → TestFlight
         env:
+          APP_VERSION: ${{ env.APP_VERSION }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-        run: |
-          bundle exec fastlane match appstore \
-            --readonly true \
-            --app_identifier ${{ env.BUNDLE_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: bundle exec fastlane beta
 
-      # ──────────────────────────────────────────
-      # 12. Determinar versão e build number
-      # ──────────────────────────────────────────
-      - name: Determinar APP_VERSION e BUILD_NUMBER
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "APP_VERSION=${{ github.event.inputs.app_version }}" >> $GITHUB_ENV
-            echo "BUILD_NUMBER=${{ github.event.inputs.build_number }}" >> $GITHUB_ENV
-          else
-            # tag v1.2.3 → version=1.2.3, build=número sequencial
-            TAG="${{ github.ref_name }}"
-            VERSION="${TAG#v}"
-            BUILD="${{ github.run_number }}"
-            echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
-            echo "BUILD_NUMBER=$BUILD" >> $GITHUB_ENV
-          fi
-          echo "Versão: $APP_VERSION  Build: $BUILD_NUMBER"
-
-      # ──────────────────────────────────────────
-      # 13. xcodebuild archive
-      # ──────────────────────────────────────────
-      - name: Archive (xcodebuild)
-        run: |
-          xcodebuild archive \
-            -workspace "${{ env.XCODE_WORKSPACE }}" \
-            -scheme "${{ env.XCODE_SCHEME }}" \
-            -configuration Release \
-            -archivePath "${{ runner.temp }}/Convoca.xcarchive" \
-            -destination "generic/platform=iOS" \
-            MARKETING_VERSION="${{ env.APP_VERSION }}" \
-            CURRENT_PROJECT_VERSION="${{ env.BUILD_NUMBER }}" \
-            CODE_SIGN_STYLE="Manual" \
-            DEVELOPMENT_TEAM="$(security find-certificate -a -c 'Apple Distribution' | grep -o 'OU=[A-Z0-9]*' | head -1 | cut -d= -f2)" \
-            | xcpretty --color || xcodebuild archive \
-            -workspace "${{ env.XCODE_WORKSPACE }}" \
-            -scheme "${{ env.XCODE_SCHEME }}" \
-            -configuration Release \
-            -archivePath "${{ runner.temp }}/Convoca.xcarchive" \
-            -destination "generic/platform=iOS" \
-            MARKETING_VERSION="${{ env.APP_VERSION }}" \
-            CURRENT_PROJECT_VERSION="${{ env.BUILD_NUMBER }}"
-
-      # ──────────────────────────────────────────
-      # 14. Export IPA
-      # ──────────────────────────────────────────
-      - name: Export IPA
-        run: |
-          cat > /tmp/ExportOptions.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>destination</key>
-            <string>upload</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath "${{ runner.temp }}/Convoca.xcarchive" \
-            -exportPath "${{ runner.temp }}/ipa" \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates
-
-      # ──────────────────────────────────────────
-      # 15. Upload para App Store Connect / TestFlight
-      # ──────────────────────────────────────────
-      - name: Upload para TestFlight (xcrun altool / notarytool)
-        env:
-          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-        run: |
-          IPA_PATH=$(find "${{ runner.temp }}/ipa" -name "*.ipa" | head -1)
-          echo "Enviando: $IPA_PATH"
-
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_PATH" \
-            --apiKey "$ASC_KEY_ID" \
-            --apiIssuer "$ASC_ISSUER_ID"
-
-      # ──────────────────────────────────────────
-      # 16. Limpar arquivos sensíveis
-      # ──────────────────────────────────────────
+      # 13. Limpar arquivos sensíveis (sempre, mesmo em falha)
       - name: Limpar arquivos sensíveis
         if: always()
         run: |
           rm -f ios/App/App/GoogleService-Info.plist
-          rm -f ~/.appstoreconnect/private_keys/AuthKey_*.p8
           echo "✅ Arquivos sensíveis removidos"

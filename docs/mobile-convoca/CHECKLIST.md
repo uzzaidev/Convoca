@@ -41,7 +41,7 @@ Identidade:
 - [x] Dev deps instaladas (`@capacitor/cli`, `@capacitor/assets`, `cross-env`)
 - [x] `capacitor.config.ts` criado (appId `com.uzzai.convoca`)
 - [x] `capacitor.config.ts` com `appId`, `appName`, `webDir` e `server.url`
-- [x] `CapacitorCookies` e `CapacitorHttp` habilitados
+- [x] `CapacitorCookies` e `CapacitorHttp` habilitados no **Android**; desligados no **iOS** (`CAPACITOR_PLATFORM=ios`) — ver playbook iOS login
 - [x] Splash/status bar configurados com verde Convoca
 - [x] `next.config.ts` com `output: "export"` condicional via `CAPACITOR_BUILD=true`
 - [x] `images.unoptimized` condicional ao build mobile
@@ -167,8 +167,8 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] Workflow `ios-release` disparado manualmente — **BUILD VERDE ✅ 4m06s (2026-06-22)**
 - [x] Build verde no GitHub Actions (signing OK) ✅ 4m06s
 - [x] Build aparecendo no App Store Connect → TestFlight ✅ v1.0.0 build 1 "Pronta para envio"
-- [ ] App instalado no iPhone via TestFlight  ← **PRÓXIMO PASSO**
-- [ ] Login na WebView funcionando (cookie NextAuth) — fix `CAPACITOR_PLATFORM=ios` commitado; **precisa build 2 no TestFlight**
+- [x] App instalado no iPhone via TestFlight ✅
+- [x] Login na WebView funcionando (NextAuth, build 2 + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
 - [ ] Push notification recebida no device iOS
 - [ ] Deep link `convoca://` abrindo o app
 

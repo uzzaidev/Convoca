@@ -5,6 +5,19 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Stub do Firebase Messaging foi configurado para evitar resolução no deploy Vercel, afetando arquivos `next.config.ts` e `webpack`.  
+  - Arquivos: `next.config.ts`  
+  - Evidência: adição de alias de stub para Firebase Messaging  
+  - Confiança: alta
+
+### feat
+- Inclusão da dependência `firebase` na versão `11.10.0` no `package.json` e lockfile, preparando o projeto para uso do Firebase Messaging.  
+  - Arquivos: `package.json`, `pnpm-lock.yaml`  
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Implementado uso do Firebase Messaging para obter o token FCM no iOS, substituindo o plugin antigo `@capacitor/push-notifications`.
   - Arquivos: `ios/App/App/AppDelegate.swift`, `capacitor.config.ts`, `src/lib/mobile/push-notifications.ts`
   - Evidência: alterações no AppDelegate.swift para configurar Firebase e passar o token ao Capacitor, além da remoção do plugin de push antigo.

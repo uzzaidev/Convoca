@@ -4,6 +4,24 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### fix
+- Implementado uso do Firebase Messaging para obter o token FCM no iOS, substituindo o plugin antigo `@capacitor/push-notifications`.
+  - Arquivos: `ios/App/App/AppDelegate.swift`, `capacitor.config.ts`, `src/lib/mobile/push-notifications.ts`
+  - Evidência: alterações no AppDelegate.swift para configurar Firebase e passar o token ao Capacitor, além da remoção do plugin de push antigo.
+  - Confiança: alta
+
+### feat
+- Atualizado o projeto para remover o plugin de push notifications antigo e incluir o Firebase Messaging para suporte a tokens FCM no iOS.
+  - Arquivos: `android/app/capacitor.build.gradle`, `android/capacitor.settings.gradle`, `capacitor.config.ts`, `package.json`, `pnpm-lock.yaml`
+  - Confiança: alta
+
+### docs
+- Incluído no checklist a necessidade de testar push no iOS após o fix do token FCM, com build ≥ 3.
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### chore
 - Atualizado status do checklist do iOS para "TestFlight build 2 + login OK"
   - Arquivos: `docs/mobile-convoca/CHECKLIST.md`

@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### chore
+- Atualizado o checklist de build iOS para o release 1.0.0 no TestFlight
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### docs
 - Documentadas lições aprendidas ao configurar o Fastfile para iOS CI, incluindo uso de caminhos absolutos, assinatura manual, separação de pod install, e requisitos de API Key.
   - Arquivos: `docs/playbooks/ios-ci-sem-mac/README.md`

@@ -22,9 +22,8 @@ on:
         required: true
         default: "1.0.0"
       build_number:
-        description: "Build number (inteiro crescente)"
-        required: true
-        default: "1"
+        description: "CFBundleVersion — deve ser MAIOR que o último no TestFlight (ex: 2, 3...). Vazio = usa run_number do CI."
+        required: false
 
   push:
     tags:
@@ -96,12 +95,18 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "APP_VERSION=${{ github.event.inputs.app_version }}" >> $GITHUB_ENV
-            echo "BUILD_NUMBER=${{ github.event.inputs.build_number }}" >> $GITHUB_ENV
+            INPUT_BUILD="${{ github.event.inputs.build_number }}"
+            if [ -n "$INPUT_BUILD" ]; then
+              echo "BUILD_NUMBER=$INPUT_BUILD" >> $GITHUB_ENV
+            else
+              echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+            fi
           else
             TAG="${{ github.ref_name }}"
             echo "APP_VERSION=${TAG#v}" >> $GITHUB_ENV
             echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
           fi
+          echo "Versão: $APP_VERSION  Build: $BUILD_NUMBER"
 
       # 11. Cache CocoaPods
       - name: Cache CocoaPods

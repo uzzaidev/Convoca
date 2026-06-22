@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Alterado comando de sincronização de assets e plugins nativos iOS de `cap sync ios` para `cap copy ios` para evitar conflito de Ruby no pod install.
+  - Arquivos: `fastlane/Fastfile`
+  - Evidência: mudança na linha de comando e comentários explicativos
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Corrigido uso de caminhos relativos no arquivo `fastlane/Fastfile` para evitar erro de path em CI, usando `File.expand_path` com caminho absoluto.
   - Arquivos: `fastlane/Fastfile`
   - Evidência: alteração de variáveis ROOT e paths relativos para caminhos absolutos

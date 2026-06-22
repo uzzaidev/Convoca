@@ -1,0 +1,5 @@
+git_url "https://github.com/uzzaidev/convoca-certs.git"
+storage_mode "git"
+type "appstore"
+app_identifier "com.uzzai.convoca"
+team_id "2YRXNXGL8K"

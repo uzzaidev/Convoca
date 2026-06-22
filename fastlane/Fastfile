@@ -1,0 +1,71 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Gerar e armazenar certificados (roda uma vez para setup)"
+  lane :setup_certs do
+    match(
+      type: "appstore",
+      readonly: false,
+      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+      app_identifier: "com.uzzai.convoca",
+      team_id: "2YRXNXGL8K"
+    )
+    UI.success "Certificados gerados e salvos em convoca-certs ✅"
+  end
+
+  desc "Build e upload para TestFlight"
+  lane :beta do
+    # Instala certificado + provisioning profile
+    match(
+      type: "appstore",
+      readonly: true,
+      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+      app_identifier: "com.uzzai.convoca",
+      team_id: "2YRXNXGL8K"
+    )
+
+    # Build mobile (Next.js export → out/)
+    sh("cd ../.. && pnpm build:mobile")
+
+    # Sync Capacitor iOS
+    sh("cd ../.. && pnpm cap sync ios")
+
+    # Instalar pods
+    cocoapods(
+      clean_install: true,
+      podfile: "../../ios/App/Podfile",
+      use_bundle_exec: false
+    )
+
+    app_version = ENV["APP_VERSION"] || "1.0.0"
+    build_num   = ENV["BUILD_NUMBER"] || "1"
+
+    # Archive
+    gym(
+      workspace:        "../../ios/App/App.xcworkspace",
+      scheme:           "App",
+      configuration:    "Release",
+      export_method:    "app-store",
+      output_directory: "../../build",
+      output_name:      "Convoca.ipa",
+      xcargs:           "MARKETING_VERSION=#{app_version} CURRENT_PROJECT_VERSION=#{build_num}"
+    )
+
+    # Upload para TestFlight via API Key (sem senha)
+    api_key = app_store_connect_api_key(
+      key_id:        ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id:     ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content:   ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      in_house:      false
+    )
+
+    pilot(
+      api_key:                          api_key,
+      skip_waiting_for_build_processing: true
+    )
+
+    UI.success "Upload para TestFlight concluído ✅ v#{app_version} (#{build_num})"
+  end
+
+end

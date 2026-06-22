@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Adicionada configuração de `api_key` nas lanes `setup_certs` e `beta` para autenticação no Apple Developer Portal e App Store Connect usando API Key (.p8). Também foi criado um keychain temporário não interativo para CI.
+  - Arquivos: `fastlane/Fastfile`
+  - Evidência: adição de `api_key` e `create_keychain` nas lanes
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Ajustado o comando de instalação do bundle para ser explícito e com verbose, devido à ausência de Gemfile.lock.
   - Arquivos: `.github/workflows/ios-match-bootstrap.yml`
   - Evidência: alteração na linha de comando `bundle install --jobs 4 --retry 3` e uso de `--verbose` na execução do fastlane

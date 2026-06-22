@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Separou o comando `pod install` como etapa distinta no workflow do iOS para evitar conflito entre Ruby 3.3 e Ruby 3.4. Essa mudança previne contaminação do ambiente do CocoaPods pelo Ruby utilizado pelo fastlane.
+  - Arquivos: `.github/workflows/ios-release.yml`, `fastlane/Fastfile`
+  - Evidência: adição de etapa específica para `pod install` no workflow e comentários explicativos
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Automatizado o processo de instalação de pods via shell no Fastfile, incluindo a criação da pasta build e a instalação do pod com repositórios atualizados.
   - Arquivos: `fastlane/Fastfile`
   - Evidência: adição do comando `pod install --repo-update` e ajustes na sequência de passos

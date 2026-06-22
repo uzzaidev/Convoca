@@ -1,8 +1,8 @@
 # Checklist - Convoca Android / Play Store primeiro
 
-Ultima atualizacao: 2026-06-19.
+Ultima atualizacao: 2026-06-22.
 
-Escopo atual: app Android publicado na Google Play (em revisao). iOS fica planejado, mas bloqueado por macOS/Xcode.
+Escopo atual: Android em analise na Google Play (enviado 2026-06-19). iOS em progresso via GitHub Actions (sem Mac) — secrets configurados, aguardando bootstrap do fastlane match.
 
 Status geral: ENVIADO PARA ANALISE da Google em 2026-06-19 (release ConvocaR01). Push validado de ponta a ponta, paginas legais publicas, formularios de compliance preenchidos. Aguardando aprovacao (1-3 dias).
 
@@ -136,30 +136,34 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] `Info.plist` configurado com URL scheme e permissoes
 - [x] `App.entitlements` com Push Notifications + Associated Domains + `aps-environment: production`
 - [x] Assets iOS atualizados
-- [ ] Team ID anotado (Apple Developer → Membership)
-- [ ] App ID `com.uzzai.convoca` registrado no Apple Developer Portal
-- [ ] Push Notifications + Associated Domains habilitados no App ID
-- [ ] App criado no App Store Connect
-- [ ] API Key `.p8` baixada + Key ID + Issuer ID anotados
-- [ ] App iOS `com.uzzai.convoca` registrado no Firebase
-- [ ] `GoogleService-Info.plist` baixado e salvo em `ios/App/App/` (gitignored)
-- [ ] APNs Auth Key `.p8` criada e uploadada no Firebase
-- [ ] `GoogleService-Info.plist` convertido para base64 (pronto para secret)
+- [x] Team ID anotado: `2YRXNXGL8K` (Uzz.Ai Ltda — Apple Developer → Membership)
+- [x] App ID `com.uzzai.convoca` registrado no Apple Developer Portal
+- [x] Push Notifications + Associated Domains habilitados no App ID
+- [x] App criado no App Store Connect
+- [x] API Key `.p8` baixada — Key ID `F2L7RBKMZ7`, Issuer ID `6d969582-c629-4d55-8fa1-66423afb1d88`
+- [x] App iOS `com.uzzai.convoca` registrado no Firebase (projeto `convoca-app-uzzai-2b530`)
+- [x] `GoogleService-Info.plist` baixado e salvo em `ios/App/App/` (gitignored)
+- [x] APNs Auth Key `.p8` criada (`45G7QADN8Q`) e uploadada no Firebase (Cloud Messaging)
+- [x] `GoogleService-Info.plist` convertido para base64 e salvo como GitHub secret
 
 ### Sprint iOS-S2 — fastlane match
 
-- [ ] Repo `convoca-certs` criado no GitHub (privado)
-- [ ] `Gemfile` com fastlane criado no projeto
-- [ ] `fastlane/Appfile` configurado (`com.uzzai.convoca`, Team ID)
-- [ ] `fastlane/Matchfile` configurado (tipo `appstore`, url `convoca-certs`)
-- [ ] `fastlane match appstore` executado — Distribution Cert + Provisioning Profile gerados
-- [ ] `MATCH_PASSWORD` guardado no Doppler
-- [ ] `MATCH_GIT_BASIC_AUTHORIZATION` (base64 user:token) pronto para secret
+- [x] Repo `convoca-certs` criado no GitHub (privado) — `uzzaidev/convoca-certs`
+- [x] `Gemfile` com fastlane criado no projeto
+- [x] `fastlane/Appfile` configurado (`com.uzzai.convoca`, Team ID `2YRXNXGL8K`)
+- [x] `fastlane/Matchfile` configurado (tipo `appstore`, url `uzzaidev/convoca-certs`)
+- [ ] `fastlane match appstore` executado — Distribution Cert + Provisioning Profile gerados  ← PROXIMO PASSO: rodar workflow `ios-match-bootstrap`
+- [x] `MATCH_PASSWORD` definido como GitHub secret (`Uzzai2025@`)
+- [x] `MATCH_GIT_BASIC_AUTHORIZATION` (base64 user:token) configurado como GitHub secret
 
 ### Sprint iOS-S3 — CI GitHub Actions
 
-- [ ] 6 secrets configurados no GitHub Actions (ver playbook S3-1)
-- [ ] `.github/workflows/ios-release.yml` commitado
+- [x] 6 secrets configurados no GitHub Actions via `gh secret set` (2026-06-22):
+  - `APP_STORE_CONNECT_API_KEY_ID` / `APP_STORE_CONNECT_API_ISSUER_ID` / `APP_STORE_CONNECT_API_KEY_CONTENT`
+  - `MATCH_PASSWORD` / `MATCH_GIT_BASIC_AUTHORIZATION` / `GOOGLE_SERVICE_INFO_PLIST_BASE64`
+- [x] `.github/workflows/ios-release.yml` commitado e no ar
+- [x] `.github/workflows/ios-match-bootstrap.yml` commitado (workflow de setup 1x)
+- [ ] Bootstrap disparado: ir em Actions → `iOS Match Bootstrap` → Run workflow  ← PROXIMO PASSO
 - [ ] Workflow disparado manualmente (Run workflow)
 - [ ] Build verde no GitHub Actions (signing OK)
 - [ ] Build aparecendo no App Store Connect → TestFlight
@@ -179,7 +183,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: EM ANALISE na Google (enviado 2026-06-19)
+## Status: Android EM ANALISE na Google (enviado 2026-06-19) | iOS: secrets OK, aguardando bootstrap fastlane match
 
 Proximos passos enquanto aguarda / apos aprovacao:
 
@@ -195,6 +199,7 @@ Proximos passos enquanto aguarda / apos aprovacao:
 - `ec59bae` feat: estruturar app mobile (Capacitor) + paginas de loja
 - `f5e0f16` feat: backend de envio de push via FCM HTTP v1
 - `72ec718` fix: paginas legais publicas + rename para com.uzzai.convoca
+- `77ba861` feat(ios): fastlane match + CI workflows para build sem Mac (2026-06-22)
 
 ## Comandos ja validados
 

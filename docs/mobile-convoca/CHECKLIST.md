@@ -183,7 +183,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: Android EM ANALISE na Google | iOS: build 1.0.0 no TestFlight ✅ — próximo: instalar no iPhone e validar
+## Status: Android EM ANALISE na Google | iOS: TestFlight build 2 + login OK — proximo: push/deep link + S4 App Store
 
 Proximos passos enquanto aguarda / apos aprovacao:
 

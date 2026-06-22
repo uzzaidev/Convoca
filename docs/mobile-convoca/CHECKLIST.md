@@ -12,6 +12,7 @@ Identidade:
 - Nome: `Convoca`
 - WebView de producao: `https://convoca.uzzai.com.br`
 - Estrategia: Capacitor com `server.url` ao vivo e `webDir: out` como fallback
+- Atualizacoes web/API: deploy em `convoca.uzzai.com.br`; nova Play Store release so para mudancas nativas/Capacitor/Android/iOS.
 
 ## Fase 0 - Contas e decisoes
 

@@ -1,0 +1,6 @@
+- Convoca mobile architecture uses Capacitor with server.url for web and fallback strategies.
+- Routine changes are deployed to web, not via store updates.
+- Capacitor uses server.url and webDir out as fallback.
+- WebView loads from server.url; fallback to local assets as needed.
+- Mobile app relies on live server for web content with local fallback.
+- Web app updates are pushed live, store updates for native changes.

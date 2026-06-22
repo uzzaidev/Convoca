@@ -1,0 +1,6 @@
+- Curated factual statements from the project domain.
+- Documented mobile update policy in specific files.
+- Android uses Capacitor server.url for loading.
+- Routine changes require only web/backend deployment.
+- New Google Play release needed for native package changes.
+- Native package changes include various technical modifications.

@@ -1,0 +1,1 @@
+Convoca mobile architecture utilizes Capacitor with server.url for web content and deploys routine changes via web updates.

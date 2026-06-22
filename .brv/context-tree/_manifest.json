@@ -55,15 +55,25 @@
       "type": "context"
     },
     {
+      "abstractPath": "convoca/season_management/season_management.abstract.md",
+      "abstractTokens": 26,
       "importance": 50,
-      "path": "facts/context.md",
-      "tokens": 120,
+      "path": "convoca/season_management/season_management.md",
+      "tokens": 26,
       "type": "context"
     },
     {
       "importance": 50,
-      "path": "facts/project/context.md",
-      "tokens": 125,
+      "path": "curated/rlm_approach/rlm_approach_facts.md",
+      "tokens": 375,
+      "type": "context"
+    },
+    {
+      "abstractPath": "facts/project/curated_project_facts.abstract.md",
+      "abstractTokens": 39,
+      "importance": 50,
+      "path": "facts/project/curated_project_facts.md",
+      "tokens": 39,
       "type": "context"
     },
     {
@@ -73,37 +83,15 @@
       "path": "facts/project/curate_workflow_rlm_approach.md",
       "tokens": 43,
       "type": "context"
-    },
-    {
-      "abstractPath": "facts/project/project_facts.abstract.md",
-      "abstractTokens": 50,
-      "importance": 50,
-      "path": "facts/project/project_facts.md",
-      "tokens": 50,
-      "type": "context"
-    },
-    {
-      "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
-      "abstractTokens": 35,
-      "importance": 50,
-      "path": "facts/project/rlm_curate_workflow_facts.md",
-      "tokens": 35,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "security/context.md",
-      "tokens": 136,
-      "type": "context"
     }
   ],
-  "generated_at": "2026-06-22T12:51:23.252Z",
+  "generated_at": "2026-06-22T13:12:19.667Z",
   "lane_tokens": {
-    "contexts": 3999,
+    "contexts": 3973,
     "stubs": 0,
     "summaries": 1978
   },
-  "source_fingerprint": "88ac6f76b113e7c15f0b8c0ea744813d48e409ca8d6b9dcf8589da71a2c65e3b",
-  "total_tokens": 5977,
+  "source_fingerprint": "0c665fc60599db4345fe9ada1639acf273ec9c14b996bb4efa6eb97e318bbfcb",
+  "total_tokens": 5951,
   "version": 1
 }

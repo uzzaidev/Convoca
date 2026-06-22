@@ -1,0 +1,1 @@
+Season management in Convoca involves explicit season rows, ranking defaults, and datetime validation.

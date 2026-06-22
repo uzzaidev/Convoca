@@ -1,0 +1,1 @@
+The document details the RLM approach for curating factual statements, focusing on scoring tiebreaker configurations and API updates.

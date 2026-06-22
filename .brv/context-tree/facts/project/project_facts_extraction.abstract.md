@@ -1,0 +1,1 @@
+This document details the extraction and curation of project facts, including mobile update policies and deployment requirements.

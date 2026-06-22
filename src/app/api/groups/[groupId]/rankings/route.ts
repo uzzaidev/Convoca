@@ -4,15 +4,12 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
+import {
+  DEFAULT_TIEBREAKERS,
+  normalizeTiebreakers,
+} from "@/lib/scoring-tiebreakers";
 
 type Params = Promise<{ groupId: string }>;
-
-const DEFAULT_TIEBREAKERS = [
-  "wins",
-  "goal_difference",
-  "goals",
-  "games_played",
-] as const;
 
 const DEFAULT_SCORING = {
   pointsWin: 3,
@@ -23,7 +20,7 @@ const DEFAULT_SCORING = {
   pointsMvp: 0,
   pointsPresence: 0,
   rankingMode: "standard",
-  tiebreakers: DEFAULT_TIEBREAKERS,
+  tiebreakers: [...DEFAULT_TIEBREAKERS],
 };
 
 type RankingRow = Record<string, unknown> & {
@@ -68,9 +65,7 @@ function sortRankings<T extends RankingRow>(
   rows: T[],
   rawTiebreakers: unknown
 ): T[] {
-  const tb: string[] = Array.isArray(rawTiebreakers)
-    ? rawTiebreakers.filter((k): k is string => typeof k === "string")
-    : [...DEFAULT_TIEBREAKERS];
+  const tb = normalizeTiebreakers(rawTiebreakers);
   return [...rows].sort((a, b) => {
     const dp = toNum(b.points) - toNum(a.points);
     if (dp !== 0) return dp;
@@ -178,11 +173,7 @@ export async function GET(
           })),
           scoringConfig: {
             ...(scoringConfig || DEFAULT_SCORING),
-            tiebreakers: Array.isArray(scoringConfig?.tiebreakers)
-              ? (scoringConfig.tiebreakers as unknown[]).filter(
-                  (k): k is string => typeof k === "string"
-                )
-              : [...DEFAULT_TIEBREAKERS],
+            tiebreakers: normalizeTiebreakers(scoringConfig?.tiebreakers),
           },
           season: { id: season.id, name: season.name, status: season.status },
         });
@@ -557,11 +548,7 @@ export async function GET(
 
     const normalizedConfig = {
       ...config,
-      tiebreakers: Array.isArray(rawTiebreakers)
-        ? (rawTiebreakers as unknown[]).filter(
-            (k): k is string => typeof k === "string"
-          )
-        : [...DEFAULT_TIEBREAKERS],
+      tiebreakers: normalizeTiebreakers(rawTiebreakers),
     };
 
     return NextResponse.json({

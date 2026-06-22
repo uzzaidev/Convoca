@@ -14,6 +14,11 @@ import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
 import { PaymentButton } from "@/components/groups/payment-button";
 import { PitchBackground } from "@/components/ui/pitch-background";
+import {
+  DEFAULT_TIEBREAKERS,
+  type TiebreakerKey,
+  normalizeTiebreakers,
+} from "@/lib/scoring-tiebreakers";
 
 const WEEKDAY_PT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -111,7 +116,30 @@ type ScoringConfig = {
   pointsMvp: number;
   pointsPresence: number;
   rankingMode: "standard" | "complete";
+  tiebreakers: TiebreakerKey[];
 };
+
+const TIEBREAKER_FIELD: Record<TiebreakerKey, { field: keyof GeneralRanking; dir: "asc" | "desc" }> = {
+  wins: { field: "wins", dir: "desc" },
+  goal_difference: { field: "goal_difference", dir: "desc" },
+  goals: { field: "goals", dir: "desc" },
+  games_played: { field: "games", dir: "desc" },
+  games_played_asc: { field: "games", dir: "asc" },
+  assists: { field: "assists", dir: "desc" },
+  mvp_count: { field: "mvps", dir: "desc" },
+};
+
+function compareGeneralRankingTiebreakers(a: GeneralRanking, b: GeneralRanking, tiebreakers: TiebreakerKey[]) {
+  for (const key of tiebreakers) {
+    const entry = TIEBREAKER_FIELD[key];
+    const av = a[entry.field] as number;
+    const bv = b[entry.field] as number;
+    const delta = entry.dir === "asc" ? av - bv : bv - av;
+    if (delta !== 0) return delta;
+  }
+
+  return 0;
+}
 
 export default async function GroupPage({ params, searchParams }: RouteParams) {
   const user = await getCurrentUser();
@@ -255,7 +283,8 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
       points_assist as "pointsAssist",
       points_mvp as "pointsMvp",
       points_presence as "pointsPresence",
-      ranking_mode as "rankingMode"
+      ranking_mode as "rankingMode",
+      tiebreakers
     FROM scoring_configs
     WHERE group_id = ${groupId}
   `;
@@ -270,7 +299,11 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
     pointsMvp: 0,
     pointsPresence: 0,
     rankingMode: "standard" as const,
+    tiebreakers: [...DEFAULT_TIEBREAKERS],
   };
+  scoringConfig.tiebreakers = normalizeTiebreakers(
+    (scoringConfigResult as { tiebreakers?: unknown } | undefined)?.tiebreakers
+  );
 
   // Inicializar estruturas vazias
   const stats: Stats = {
@@ -631,11 +664,8 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           (player.games * scoringConfig.pointsPresence),
       }))
       .sort((a, b) => {
-        // Ordenar por score, depois wins, depois goal_difference, depois goals
         if (b.score !== a.score) return b.score - a.score;
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
-        return b.goals - a.goals;
+        return compareGeneralRankingTiebreakers(a, b, scoringConfig.tiebreakers);
       }) as unknown as GeneralRanking[];
 
     } catch (error) {

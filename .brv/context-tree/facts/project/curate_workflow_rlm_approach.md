@@ -1,6 +1,7 @@
 ---
 consolidated_at: '2026-05-16T16:17:53.103Z'
 consolidated_from: [{date: '2026-05-16T16:17:53.103Z', path: facts/project/rlm_curation_workflow_facts.md, reason: 'These two files document the same RLM curation workflow constraints and are largely overlapping in flow, verification rules, and execution mode. They should be merged into a single canonical workflow entry to eliminate duplication.'}]
+related: [facts/project/rlm_curate_workflow_facts.md]
 ---
 ## Reason
 Document the RLM curation workflow requirements and verification steps from the provided context, including the precomputed single-pass execution constraints.

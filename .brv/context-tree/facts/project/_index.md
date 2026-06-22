@@ -1,79 +1,54 @@
 ---
-children_hash: 84402664d60e77a6e8e6258544bef4281f4bb5752ffb252dd654a80e8880821d
-compression_ratio: 0.262315021285222
+children_hash: ddac37a2552557aa37c816dad810c0bea0712c72c2561a77f6596efadbc4ccc8
+compression_ratio: 0.12200040330711837
 condensation_order: 1
 covers: [context.md, curate_workflow_rlm_approach.md, peladeiros_billing_and_stripe_facts.md, peladeiros_infrastructure_facts_2026_03_31.md, project_facts.md, rlm_curate_workflow_facts.md]
-covers_token_total: 4933
+covers_token_total: 4959
 summary_level: d1
-token_count: 1294
+token_count: 605
 type: summary
 ---
-# d1 Structural Summary
+## Project Overview
 
-## Overview
-These entries split into three knowledge areas: general project facts, infrastructure/database/auth facts, and the RLM curation workflow. Together they document the project’s stack, billing behavior, portability constraints, operational risks, and the rules for how future knowledge curation should be performed.
+### Key Concepts
+- **Infrastructure and Implementation**: Focus on Peladeiros infrastructure, including Supabase SDK usage, authentication, and database client configurations.
+- **Billing and Stripe Integration**: Details on Stripe v21 migration, multi-plan subscription architecture, and billing diagnostics.
+- **Authentication and Database Portability**: Use of NextAuth Credentials, PostgreSQL features, and provider migration strategies.
 
-## Project Facts
-### `context.md`
-A compact topic entry for `facts/project` that captures the current factual snapshot of Peladeiros/Convoca infrastructure and implementation choices. It points readers toward deeper drill-down in `architecture/database` and `security/operations`, and serves as the top-level facts entry for the project’s durable knowledge.
-
-### `project_facts.md`
-The broad project fact base summarizing the application stack and documentation organization. Key preserved facts include:
-- PostgreSQL is the primary database, with an emphasis on portability across providers.
-- Billing uses Stripe v21 with multi-plan subscriptions and optional `planId` support.
-- Authentication uses NextAuth Credentials against `public.users`, with custom signup and password reset flows.
-- The knowledge base is organized into domain docs such as architecture, facts, and security rather than a monolithic README.
-- Core entities and scripts include `subscription_plans`, `group_subscriptions`, `src/db/client.ts`, `src/db/backup-supabase.sh`, and `src/db/backup-supabase.bat`.
-
-This entry also records snapshot-level knowledge about the current API surface, billing fallback behavior, and the overall curated domain structure.
-
-## Infrastructure and Implementation Facts
-### `peladeiros_infrastructure_facts_2026_03_31.md`
-A point-in-time infrastructure diagnosis from 2026-03-31. It captures:
-- No runtime Supabase SDK/API usage for auth or storage.
-- Auth is implemented with NextAuth Credentials and raw SQL against `public.users`.
-- Signup and password recovery are custom flows using internal routes and email delivery via Resend.
-- Database access uses the generic `postgres` library in `src/db/client.ts`.
-- Provider migration is mostly a `DATABASE_URL` change plus schema/data movement.
-- The schema relies on standard PostgreSQL features such as `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
-- Legacy backup scripts still exist, and some contain hardcoded Supabase/Neon credentials that should be rotated.
-
-This entry is the main drill-down for auth/database portability and backup credential exposure.
-
-### `peladeiros_billing_and_stripe_facts.md`
-A billing and Stripe fact collection focused on Stripe v21 migration, multi-plan subscriptions, and build diagnostics. It preserves:
-- Stripe v21 API changes, including renamed or relocated fields and methods.
-- Subscription plan schema support via migration 006, including `subscription_plans`, `plan_id`, and `stripe_price_id`.
-- API locations for admin plans, public plans, group billing, checkout, and group creation checkout flow.
-- UI locations for plan selection, group billing, and admin plans tabs.
-- Checkout fallback behavior to `STRIPE_PRICE_ID` when `planId` is absent or invalid.
-- Webhook persistence of `plan_id` and `stripe_price_id`.
-- Subscription policy details such as `cancel_at_period_end: true`.
-- A Windows-specific build heuristic where exit code `3221225477` indicates SWC DLL initialization failure rather than a real app build error.
-
-This is the primary billing/Stripe reference entry and links to the Stripe migration and subscription system topics.
+### Related Topics
+- **Architecture/Database**: Migration diagnosis and database portability.
+- **Security/Operations**: Secret exposure risks and backup credential management.
 
 ## RLM Curation Workflow
-### `curate_workflow_rlm_approach.md`
-A consolidated workflow entry describing how RLM-based curation should process small, precomputed single-pass contexts. It emphasizes:
-- Use precomputed recon results instead of calling recon again.
-- Proceed directly to extraction in single-pass mode.
-- Deduplicate and group extracted facts before curating.
-- Verify using `result.summary` and `result.applied[].filePath`, not by rereading files.
-- Preserve workflow constraints as durable knowledge for future curation.
 
-It also records that the current context is small enough for single-pass handling and that verification must not rely on `readFile`.
+### Workflow Structure
+- **Single-Pass Processing**: Utilizes precomputed recon results for small contexts, focusing on extraction and organization before curation.
+- **Verification**: Relies on result.applied[].filePath for verification, avoiding raw context printing and repeated recon calls.
 
-### `rlm_curate_workflow_facts.md`
-A more concise fact entry for the same curation workflow rules. It reinforces:
-- Single-pass curation when recon suggests it.
-- Precomputed recon must not be repeated.
-- Verification must use `result.applied[].filePath`.
-- The context is a small, preprocessed curation task.
+### Dependencies
+- **Tools**: Uses tools.curation.recon, tools.curation.mapExtract, and tools.curate for processing.
+- **Task Constraints**: Emphasizes single-pass mode and verification through applied file paths.
 
-This entry overlaps with the consolidated workflow knowledge and functions as a factual snapshot of the curation process.
+## Peladeiros Billing and Infrastructure Facts
 
-## Key Relationships
-- `context.md` provides the top-level `facts/project` overview, while `project_facts.md` and the two dated fact entries supply the detailed durable facts underneath it.
-- `peladeiros_infrastructure_facts_2026_03_31.md` and `peladeiros_billing_and_stripe_facts.md` are the main drill-down points for infrastructure and billing/Stripe knowledge.
-- The workflow entries (`curate_workflow_rlm_approach.md` and `rlm_curate_workflow_facts.md`) document the operational rules for how this knowledge base is curated and verified.
+### Billing and Stripe Facts
+- **API Changes**: Stripe v21 updates, including method renames and field relocations.
+- **Subscription Architecture**: Multi-plan support with optional planId and fallback mechanisms.
+
+### Infrastructure Facts
+- **Auth and Database**: Custom auth flows with NextAuth, generic PostgreSQL access, and exposed credentials in backup scripts.
+- **Backup and Migration**: Legacy Supabase backup scripts and provider migration strategies.
+
+## Project Facts and Documentation
+
+### Project Knowledge
+- **Core Stack**: Includes PostgreSQL, Stripe v21, and Resend, with a focus on database portability and authentication flows.
+- **Documentation Structure**: Organized into domain-specific entries rather than a monolithic README.
+
+### Key Entities and Files
+- **Entities**: Subscription plans, group subscriptions, and public.users.
+- **Files**: Includes src/db/client.ts, backup scripts, and key API routes for billing and authentication.
+
+## Summary
+
+This summary consolidates high-level project facts, RLM curation workflows, and infrastructure details, emphasizing key architectural decisions and relationships across billing, authentication, and database management.

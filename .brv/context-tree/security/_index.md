@@ -1,58 +1,43 @@
 ---
-children_hash: e0ed199d224dd29e5f47a3b2f854a295a9fef3303b9a38a85807a1abc1fee0c7
-compression_ratio: 0.4688995215311005
+children_hash: e1e96a496bace7219d55038cb2b22edfdd405911f29f29f5dafad62f36fa8b00
+compression_ratio: 0.2942227516378797
 condensation_order: 2
-covers: [context.md, operations/_index.md, provider-portability-depends-on-secrets-hygiene.md]
-covers_token_total: 1254
+covers: [context.md, operational-security-in-backup-tooling.md, operations/_index.md, provider-portability-and-secrets-hygiene.md, provider-portability-depends-on-secrets-hygiene.md]
+covers_token_total: 1679
 summary_level: d2
-token_count: 588
+token_count: 494
 type: summary
 ---
-# d2 Structural Summary
+## Security Domain Overview
 
-## Security / Operations
-This branch centers on **operational security risks** tied to provider migration and maintenance scripts. The key concern is not application-layer authorization, but **exposed credentials in backup tooling** and the resulting need for rotation and cleanup.
+### Purpose
+The security domain focuses on operational security, particularly in managing credentials, secret rotation, and exposure remediation. It excludes user-facing security guidance and feature authorization logic. The domain is managed by Peladeiros engineering.
 
-### `context.md`
-Defines the **security domain** as a place for:
-- credential management risks
-- secret rotation requirements
-- operational script security
-- exposure remediation notes
+### Key Topics
 
-It explicitly excludes:
-- feature authorization logic
-- user-facing security guidance
+#### Operational Security in Backup Tooling
+- **Summary**: Backup scripts with hardcoded credentials pose security risks, necessitating credential rotation and cleanup during provider migration.
+- **Key Points**: 
+  - Hardcoded credentials in backup scripts are a security risk.
+  - Credential rotation is crucial after provider migration.
+  - Scripts should transition to environment-based secret management.
 
-Ownership is **Peladeiros engineering**, and the domain is meant for security-relevant operational findings and remediation constraints.
+#### Backup Credential Exposure
+- **Summary**: Identified risks in backup scripts during infrastructure review, highlighting the need for credential rotation.
+- **Key Points**:
+  - Hardcoded credentials found in Supabase and Neon backup scripts.
+  - Remediation involves rotating credentials post-migration.
+  - Security concerns extend across providers, not just the active environment.
 
-### `operations/_index.md`
-Provides the main operational security topic: **hardcoded secrets in backup scripts**.
+#### Provider Portability and Secrets Hygiene
+- **Summary**: Provider migration involves more than schema/data changes; it requires maintaining secret hygiene.
+- **Key Points**:
+  - Migration safety is limited by hardcoded credentials.
+  - Backup scripts must be cleaned up to ensure security.
+  - DATABASE_URL and local configurations need updating to remove provider-specific dependencies.
 
-Key points:
-- Backup scripts for **Supabase** and **Neon** contain embedded credentials.
-- Risk is documented across:
-  - `src/db/backup-supabase.sh`
-  - `src/db/backup-supabase.bat`
-- The flow is:
-  **infrastructure review -> inspect backup scripts -> detect embedded credentials -> treat as exposure risk -> rotate credentials after migration**
-- Mitigation depends on:
-  - finding every script with embedded credentials
-  - replacing static secrets with environment injection or secret management
-  - rotating affected database users/passwords
-- The rule is explicit: **hardcoded credentials in operational scripts must be treated as exposed secrets and rotated after migration or audit discovery.**
+### Relationships
+- **Credential Management**: Central to all topics, emphasizing the importance of rotating and managing secrets properly.
+- **Migration and Portability**: Linked to secret hygiene, highlighting the operational aspects of provider migration beyond just data movement.
 
-Drill down to `backup_credential_exposure.md` for the concrete exposure finding and remediation constraint.
-
-## Cross-cutting synthesis
-### `provider-portability-depends-on-secrets-hygiene.md`
-This synthesis ties architecture, facts, and security together:
-
-- The application is **largely PostgreSQL-portable** at runtime.
-- Migration risk is not just schema/data portability; it also includes **secret hygiene**.
-- Residual coupling remains in:
-  - local `.env` values pointing `DATABASE_URL` at a **Supabase host**
-  - legacy backup scripts with **hardcoded Supabase/Neon credentials**
-- The conclusion is that **provider portability depends on secrets cleanup and rotation**, not only on database abstraction.
-
-Use this entry as the bridge between architectural portability and operational security remediation.
+This structural summary provides a condensed view of the security domain, focusing on key risks and remediation strategies related to credential management and provider migration.

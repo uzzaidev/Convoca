@@ -1,15 +1,15 @@
 {
   "active_context": [
     {
-      "order": 2,
-      "path": "architecture/_index.md",
-      "tokens": 1022,
+      "order": 3,
+      "path": "_index.md",
+      "tokens": 593,
       "type": "summary"
     },
     {
       "order": 2,
-      "path": "facts/_index.md",
-      "tokens": 956,
+      "path": "architecture/_index.md",
+      "tokens": 1022,
       "type": "summary"
     },
     {
@@ -55,25 +55,15 @@
       "type": "context"
     },
     {
-      "abstractPath": "convoca/season_management/season_management.abstract.md",
-      "abstractTokens": 26,
       "importance": 50,
-      "path": "convoca/season_management/season_management.md",
-      "tokens": 26,
+      "path": "facts/context.md",
+      "tokens": 120,
       "type": "context"
     },
     {
       "importance": 50,
-      "path": "curated/rlm_approach/rlm_approach_facts.md",
-      "tokens": 375,
-      "type": "context"
-    },
-    {
-      "abstractPath": "facts/project/curated_project_facts.abstract.md",
-      "abstractTokens": 39,
-      "importance": 50,
-      "path": "facts/project/curated_project_facts.md",
-      "tokens": 39,
+      "path": "facts/project/context.md",
+      "tokens": 125,
       "type": "context"
     },
     {
@@ -83,15 +73,37 @@
       "path": "facts/project/curate_workflow_rlm_approach.md",
       "tokens": 43,
       "type": "context"
+    },
+    {
+      "abstractPath": "facts/project/project_facts.abstract.md",
+      "abstractTokens": 50,
+      "importance": 50,
+      "path": "facts/project/project_facts.md",
+      "tokens": 50,
+      "type": "context"
+    },
+    {
+      "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
+      "abstractTokens": 35,
+      "importance": 50,
+      "path": "facts/project/rlm_curate_workflow_facts.md",
+      "tokens": 35,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/context.md",
+      "tokens": 136,
+      "type": "context"
     }
   ],
-  "generated_at": "2026-06-22T13:12:19.667Z",
+  "generated_at": "2026-06-22T13:33:26.571Z",
   "lane_tokens": {
-    "contexts": 3973,
+    "contexts": 3999,
     "stubs": 0,
-    "summaries": 1978
+    "summaries": 1615
   },
-  "source_fingerprint": "0c665fc60599db4345fe9ada1639acf273ec9c14b996bb4efa6eb97e318bbfcb",
-  "total_tokens": 5951,
+  "source_fingerprint": "c3dec7172ce5967731ea0b71380b468aa46622011b73a5b9d95048aaff0d0296",
+  "total_tokens": 5614,
   "version": 1
 }

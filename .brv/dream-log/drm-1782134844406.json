@@ -1,0 +1,271 @@
+{
+  "completedAt": 1782135206572,
+  "id": "drm-1782134844406",
+  "operations": [
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "curated/rlm_approach/rlm_approach_facts.md",
+        "curated\\rlm_approach\\rlm_approach_facts.md"
+      ],
+      "needsReview": true,
+      "outputFile": "curated/rlm_approach/rlm_approach_facts.md",
+      "previousTexts": {
+        "curated/rlm_approach/rlm_approach_facts.md": "---\ntitle: RLM Approach Facts\nsummary: Curated factual statements from RLM context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T13:12:16.854Z'\nupdatedAt: '2026-06-22T13:12:16.854Z'\n---\n## Reason\nCurate extracted facts using RLM approach\n\n## Raw Concept\n**Task:**\nCurate RLM factual statements\n\n**Changes:**\n- Extracted and curated new facts\n\n**Timestamp:** 2026-06-22T13:12:16.853Z\n\n## Narrative\n### Structure\nOrganized factual statements by subject after deduplication.\n\n## Facts\n- **scoring tiebreaker**: Fixed scoring tiebreaker persistence display bug.\n- **scoring_configs.tiebreakers**: scoring_configs.tiebreakers JSONB was saved correctly in Postgres.\n- **Postgres client**: Postgres client returned scoring_configs.tiebreakers as a JSON string in this environment.\n- **existing code**: Existing code only accepted arrays.\n- **GET /api/groups/[groupId]/scoring-config**: GET /api/groups/[groupId]/scoring-config and rankings/page code normalized the string to default tiebreakers after refresh.\n- **normalizeTiebreakers function**: Added src/lib/scoring-tiebreakers.ts normalizeTiebreakers(raw) to parse string JSON, validate allowed keys, dedupe, enforce games_played vs games_played_asc exclusivity, and fallback to defaults.\n- **scoring-config API**: Updated scoring-config API, rankings API, group page, and scoring config form to use normalizeTiebreakers.\n- **group page**: Group page now selects tiebreakers and applies configured order when sorting general ranking ties.\n",
+        "curated\\rlm_approach\\rlm_approach_facts.md": "---\ntitle: RLM Approach Facts\nsummary: Curated factual statements from RLM context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T13:12:16.854Z'\nupdatedAt: '2026-06-22T13:12:16.854Z'\n---\n## Reason\nCurate extracted facts using RLM approach\n\n## Raw Concept\n**Task:**\nCurate RLM factual statements\n\n**Changes:**\n- Extracted and curated new facts\n\n**Timestamp:** 2026-06-22T13:12:16.853Z\n\n## Narrative\n### Structure\nOrganized factual statements by subject after deduplication.\n\n## Facts\n- **scoring tiebreaker**: Fixed scoring tiebreaker persistence display bug.\n- **scoring_configs.tiebreakers**: scoring_configs.tiebreakers JSONB was saved correctly in Postgres.\n- **Postgres client**: Postgres client returned scoring_configs.tiebreakers as a JSON string in this environment.\n- **existing code**: Existing code only accepted arrays.\n- **GET /api/groups/[groupId]/scoring-config**: GET /api/groups/[groupId]/scoring-config and rankings/page code normalized the string to default tiebreakers after refresh.\n- **normalizeTiebreakers function**: Added src/lib/scoring-tiebreakers.ts normalizeTiebreakers(raw) to parse string JSON, validate allowed keys, dedupe, enforce games_played vs games_played_asc exclusivity, and fallback to defaults.\n- **scoring-config API**: Updated scoring-config API, rankings API, group page, and scoring config form to use normalizeTiebreakers.\n- **group page**: Group page now selects tiebreakers and applies configured order when sorting general ranking ties.\n"
+      },
+      "reason": "Files are identical and contain the same factual statements.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "curated\\rlm_approach\\rlm_approach_facts.abstract.md",
+        "curated\\rlm_approach\\rlm_approach_facts.overview.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "curated\\rlm_approach\\rlm_approach_facts.abstract.md": "The document details the RLM approach for curating factual statements, focusing on scoring tiebreaker configurations and API updates.",
+        "curated\\rlm_approach\\rlm_approach_facts.overview.md": "- Fixed scoring tiebreaker persistence display bug.\n- scoring_configs.tiebreakers JSONB saved correctly in Postgres.\n- Postgres client returned scoring_configs.tiebreakers as a JSON string.\n- Existing code only accepted arrays.\n- GET /api/groups/[groupId]/scoring-config normalized string to default tiebreakers.\n- Added normalizeTiebreakers function to parse and validate JSON strings.\n- Updated APIs and group page to use normalizeTiebreakers.\n\n<structure>\n- Reason: Curate extracted facts using RLM approach.\n- Raw Concept: Task and changes related to RLM factual statements.\n- Narrative: Organized factual statements by subject.\n- Facts: Detailed factual statements regarding scoring tiebreakers and API updates.\n</structure>\n\n<entities>\n- scoring tiebreaker\n- scoring_configs.tiebreakers\n- Postgres client\n- GET /api/groups/[groupId]/scoring-config\n- normalizeTiebreakers function\n- scoring-config API\n- group page\n</entities>"
+      },
+      "reason": "Files provide additional context and summaries complementing the facts.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "facts/project/project_facts_extraction.md",
+        "facts\\project\\project_facts_extraction.md"
+      ],
+      "needsReview": true,
+      "outputFile": "facts/project/project_facts_extraction.md",
+      "previousTexts": {
+        "facts/project/project_facts_extraction.md": "---\ntitle: Project Facts Extraction\nsummary: Extracted and curated project facts.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T13:00:12.772Z'\nupdatedAt: '2026-06-22T13:00:12.772Z'\n---\n## Reason\nCurate extracted facts into project domain\n\n## Raw Concept\n**Task:**\nExtract factual statements\n\n**Timestamp:** 2026-06-22T13:00:12.771Z\n\n## Narrative\n### Highlights\nCurated factual statements from project.\n\n## Facts\n- **Mobile update policy**: Documented mobile update policy in docs/mobile-convoca/PLANO.md and CHECKLIST.md.\n- **Android**: Android uses Capacitor server.url to load https://convoca.uzzai.com.br.\n- **Routine changes**: Routine API/React/web/business-rule/database migration changes only require web/backend deploy.\n- **Google Play release**: New Google Play release/AAB is required only for native package changes.\n- **Native package changes**: Native package changes include capacitor.config.ts, Android/iOS files, permissions, icons/splash/app name/version/signing, deep links/App Links, native plugins/capabilities, or important local fallback changes.\n",
+        "facts\\project\\project_facts_extraction.md": "---\ntitle: Project Facts Extraction\nsummary: Extracted and curated project facts.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T13:00:12.772Z'\nupdatedAt: '2026-06-22T13:00:12.772Z'\n---\n## Reason\nCurate extracted facts into project domain\n\n## Raw Concept\n**Task:**\nExtract factual statements\n\n**Timestamp:** 2026-06-22T13:00:12.771Z\n\n## Narrative\n### Highlights\nCurated factual statements from project.\n\n## Facts\n- **Mobile update policy**: Documented mobile update policy in docs/mobile-convoca/PLANO.md and CHECKLIST.md.\n- **Android**: Android uses Capacitor server.url to load https://convoca.uzzai.com.br.\n- **Routine changes**: Routine API/React/web/business-rule/database migration changes only require web/backend deploy.\n- **Google Play release**: New Google Play release/AAB is required only for native package changes.\n- **Native package changes**: Native package changes include capacitor.config.ts, Android/iOS files, permissions, icons/splash/app name/version/signing, deep links/App Links, native plugins/capabilities, or important local fallback changes.\n"
+      },
+      "reason": "Both files contain identical content about project facts extraction.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "facts/project/curated_project_facts.md",
+        "facts\\project\\curated_project_facts.md"
+      ],
+      "needsReview": true,
+      "outputFile": "facts/project/curated_project_facts.md",
+      "previousTexts": {
+        "facts/project/curated_project_facts.md": "---\ntitle: Curated Project Facts\nsummary: Curated factual statements extracted from project context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:51:19.464Z'\nupdatedAt: '2026-06-22T12:51:19.464Z'\n---\n## Reason\nCurate extracted facts for durable knowledge\n\n## Raw Concept\n**Task:**\nCurate project facts\n\n**Timestamp:** 2026-06-22T12:51:19.459Z\n\n**Author:** Auto-curate\n\n## Narrative\n### Structure\nCurated facts extracted and organized by subject.\n\n### Highlights\nIncludes key project details and factual statements.\n\n## Facts\n- **SeasonManager**: Implemented season date handling fix.\n- **SeasonManager**: Added src/lib/season-dates.ts to accept valid YYYY-MM-DD inputs from SeasonManager HTML date fields.\n- **SeasonManager**: Normalize inputs to start/end-of-day timestamps in POST/PATCH season routes.\n- **SeasonManager**: Changed season creation so ended historical seasons are not marked finished automatically.\n- **SeasonManager**: Finished now remains reserved for the finish endpoint that creates season_snapshots.\n- **SeasonManager**: SeasonManager now allows finishing any non-finished season whose start date has passed.\n- **SeasonManager**: Labels such retroactive seasons as Aberta.\n",
+        "facts\\project\\curated_project_facts.md": "---\ntitle: Curated Project Facts\nsummary: Curated factual statements extracted from project context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:51:19.464Z'\nupdatedAt: '2026-06-22T12:51:19.464Z'\n---\n## Reason\nCurate extracted facts for durable knowledge\n\n## Raw Concept\n**Task:**\nCurate project facts\n\n**Timestamp:** 2026-06-22T12:51:19.459Z\n\n**Author:** Auto-curate\n\n## Narrative\n### Structure\nCurated facts extracted and organized by subject.\n\n### Highlights\nIncludes key project details and factual statements.\n\n## Facts\n- **SeasonManager**: Implemented season date handling fix.\n- **SeasonManager**: Added src/lib/season-dates.ts to accept valid YYYY-MM-DD inputs from SeasonManager HTML date fields.\n- **SeasonManager**: Normalize inputs to start/end-of-day timestamps in POST/PATCH season routes.\n- **SeasonManager**: Changed season creation so ended historical seasons are not marked finished automatically.\n- **SeasonManager**: Finished now remains reserved for the finish endpoint that creates season_snapshots.\n- **SeasonManager**: SeasonManager now allows finishing any non-finished season whose start date has passed.\n- **SeasonManager**: Labels such retroactive seasons as Aberta.\n"
+      },
+      "reason": "Both files contain identical content about curated project facts.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "facts/project/project_facts_extraction.md",
+        "facts/project/curated_project_facts.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "facts/project/project_facts_extraction.md": "---\ntitle: Project Facts Extraction\nsummary: Extracted and curated project facts.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T13:00:12.772Z'\nupdatedAt: '2026-06-22T13:00:12.772Z'\n---\n## Reason\nCurate extracted facts into project domain\n\n## Raw Concept\n**Task:**\nExtract factual statements\n\n**Timestamp:** 2026-06-22T13:00:12.771Z\n\n## Narrative\n### Highlights\nCurated factual statements from project.\n\n## Facts\n- **Mobile update policy**: Documented mobile update policy in docs/mobile-convoca/PLANO.md and CHECKLIST.md.\n- **Android**: Android uses Capacitor server.url to load https://convoca.uzzai.com.br.\n- **Routine changes**: Routine API/React/web/business-rule/database migration changes only require web/backend deploy.\n- **Google Play release**: New Google Play release/AAB is required only for native package changes.\n- **Native package changes**: Native package changes include capacitor.config.ts, Android/iOS files, permissions, icons/splash/app name/version/signing, deep links/App Links, native plugins/capabilities, or important local fallback changes.\n",
+        "facts/project/curated_project_facts.md": "---\ntitle: Curated Project Facts\nsummary: Curated factual statements extracted from project context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:51:19.464Z'\nupdatedAt: '2026-06-22T12:51:19.464Z'\n---\n## Reason\nCurate extracted facts for durable knowledge\n\n## Raw Concept\n**Task:**\nCurate project facts\n\n**Timestamp:** 2026-06-22T12:51:19.459Z\n\n**Author:** Auto-curate\n\n## Narrative\n### Structure\nCurated facts extracted and organized by subject.\n\n### Highlights\nIncludes key project details and factual statements.\n\n## Facts\n- **SeasonManager**: Implemented season date handling fix.\n- **SeasonManager**: Added src/lib/season-dates.ts to accept valid YYYY-MM-DD inputs from SeasonManager HTML date fields.\n- **SeasonManager**: Normalize inputs to start/end-of-day timestamps in POST/PATCH season routes.\n- **SeasonManager**: Changed season creation so ended historical seasons are not marked finished automatically.\n- **SeasonManager**: Finished now remains reserved for the finish endpoint that creates season_snapshots.\n- **SeasonManager**: SeasonManager now allows finishing any non-finished season whose start date has passed.\n- **SeasonManager**: Labels such retroactive seasons as Aberta.\n"
+      },
+      "reason": "Files cover complementary aspects of project facts extraction and curation.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "facts/project/curate_workflow_rlm_approach.md",
+        "facts/project/rlm_curate_workflow_facts.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {},
+      "reason": "Documents detail complementary aspects of the RLM curation workflow.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "mobile/architecture/convoca_mobile_architecture.md",
+        "mobile\\architecture\\convoca_mobile_architecture.md"
+      ],
+      "needsReview": true,
+      "outputFile": "mobile/architecture/convoca_mobile_architecture.md",
+      "previousTexts": {
+        "mobile/architecture/convoca_mobile_architecture.md": "---\ntitle: Convoca Mobile Architecture\nsummary: Convoca mobile architecture uses Capacitor with server.url for web and fallback strategies. Routine changes are deployed to web, not via store updates.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:56:18.184Z'\nupdatedAt: '2026-06-22T12:56:18.184Z'\n---\n## Reason\nDocumenting mobile architecture strategy and deployment workflow.\n\n## Raw Concept\n**Task:**\nDocument Convoca mobile architecture and deployment strategy\n\n**Changes:**\n- Capacitor uses server.url and webDir out as fallback\n- Routine changes delivered by deploying web app\n- Store updates needed for native/Capacitor changes\n\n**Files:**\n- docs/mobile-convoca/CHECKLIST.md\n- package.json\n- scripts/build-mobile-fallback.mjs\n\n**Flow:**\nWebView loads from server.url; fallback to local assets as needed\n\n**Timestamp:** 2026-06-22\n\n## Narrative\n### Structure\nMobile app relies on live server for web content with local fallback\n\n### Dependencies\nCapacitor config and server.url setup in capacitor.config.ts\n\n### Highlights\nWeb app updates are pushed live, store updates for native changes\n",
+        "mobile\\architecture\\convoca_mobile_architecture.md": "---\ntitle: Convoca Mobile Architecture\nsummary: Convoca mobile architecture uses Capacitor with server.url for web and fallback strategies. Routine changes are deployed to web, not via store updates.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:56:18.184Z'\nupdatedAt: '2026-06-22T12:56:18.184Z'\n---\n## Reason\nDocumenting mobile architecture strategy and deployment workflow.\n\n## Raw Concept\n**Task:**\nDocument Convoca mobile architecture and deployment strategy\n\n**Changes:**\n- Capacitor uses server.url and webDir out as fallback\n- Routine changes delivered by deploying web app\n- Store updates needed for native/Capacitor changes\n\n**Files:**\n- docs/mobile-convoca/CHECKLIST.md\n- package.json\n- scripts/build-mobile-fallback.mjs\n\n**Flow:**\nWebView loads from server.url; fallback to local assets as needed\n\n**Timestamp:** 2026-06-22\n\n## Narrative\n### Structure\nMobile app relies on live server for web content with local fallback\n\n### Dependencies\nCapacitor config and server.url setup in capacitor.config.ts\n\n### Highlights\nWeb app updates are pushed live, store updates for native changes\n"
+      },
+      "reason": "These files are identical and cover the same content. They should be merged to avoid duplication.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "mobile/architecture/convoca_mobile_architecture.abstract.md",
+        "mobile/architecture/convoca_mobile_architecture.overview.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {},
+      "reason": "The abstract and overview provide complementary summaries and should be cross-referenced for a complete view of the architecture.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "convoca/season_management/season_management.md",
+        "convoca\\season_management\\season_management.md"
+      ],
+      "needsReview": true,
+      "outputFile": "convoca/season_management/season_management.md",
+      "previousTexts": {
+        "convoca/season_management/season_management.md": "---\ntitle: Season Management\nsummary: Details on explicit season rows, ranking defaults, and validation in Convoca.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:55:29.492Z'\nupdatedAt: '2026-06-22T12:55:29.492Z'\n---\n## Reason\nDocument season management in Convoca focusing on explicit season rows and ranking behavior.\n\n## Raw Concept\n**Task:**\nExplain season management in Convoca\n\n**Changes:**\n- Clarified season row storage\n- Specified ranking defaults\n- Outlined datetime validation in SeasonManager\n\n**Flow:**\nstore explicit season rows -> check active season -> process rankings -> validate dates\n\n**Timestamp:** 2026-06-22\n\n## Narrative\n### Structure\nSeasonManager handles explicit season rows without virtual/current-season fallback.\n\n### Dependencies\nDepends on accurate season row status to determine rankings.\n\n### Highlights\nRankings default to active season; aggregates finished events otherwise.\n\n### Rules\nHTML date inputs used for season creation; date validation normalizes to timestamps.\n",
+        "convoca\\season_management\\season_management.md": "---\ntitle: Season Management\nsummary: Details on explicit season rows, ranking defaults, and validation in Convoca.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:55:29.492Z'\nupdatedAt: '2026-06-22T12:55:29.492Z'\n---\n## Reason\nDocument season management in Convoca focusing on explicit season rows and ranking behavior.\n\n## Raw Concept\n**Task:**\nExplain season management in Convoca\n\n**Changes:**\n- Clarified season row storage\n- Specified ranking defaults\n- Outlined datetime validation in SeasonManager\n\n**Flow:**\nstore explicit season rows -> check active season -> process rankings -> validate dates\n\n**Timestamp:** 2026-06-22\n\n## Narrative\n### Structure\nSeasonManager handles explicit season rows without virtual/current-season fallback.\n\n### Dependencies\nDepends on accurate season row status to determine rankings.\n\n### Highlights\nRankings default to active season; aggregates finished events otherwise.\n\n### Rules\nHTML date inputs used for season creation; date validation normalizes to timestamps.\n"
+      },
+      "reason": "Files are identical and cover the same topic, making them redundant.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "convoca/season_management/season_management.md",
+        "convoca\\season_management\\season_management.abstract.md",
+        "convoca\\season_management\\season_management.overview.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "convoca/season_management/season_management.md": "---\ntitle: Season Management\nsummary: Details on explicit season rows, ranking defaults, and validation in Convoca.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-22T12:55:29.492Z'\nupdatedAt: '2026-06-22T12:55:29.492Z'\n---\n## Reason\nDocument season management in Convoca focusing on explicit season rows and ranking behavior.\n\n## Raw Concept\n**Task:**\nExplain season management in Convoca\n\n**Changes:**\n- Clarified season row storage\n- Specified ranking defaults\n- Outlined datetime validation in SeasonManager\n\n**Flow:**\nstore explicit season rows -> check active season -> process rankings -> validate dates\n\n**Timestamp:** 2026-06-22\n\n## Narrative\n### Structure\nSeasonManager handles explicit season rows without virtual/current-season fallback.\n\n### Dependencies\nDepends on accurate season row status to determine rankings.\n\n### Highlights\nRankings default to active season; aggregates finished events otherwise.\n\n### Rules\nHTML date inputs used for season creation; date validation normalizes to timestamps.\n",
+        "convoca\\season_management\\season_management.abstract.md": "Season management in Convoca involves explicit season rows, ranking defaults, and datetime validation.",
+        "convoca\\season_management\\season_management.overview.md": "- Document focuses on explicit season rows and ranking behavior in Convoca.\n- Clarifies season row storage and specifies ranking defaults.\n- Outlines datetime validation in SeasonManager.\n- SeasonManager handles explicit season rows without virtual/current-season fallback.\n- Rankings default to active season; aggregates finished events otherwise.\n- HTML date inputs used for season creation; date validation normalizes to timestamps."
+      },
+      "reason": "Files provide complementary views and details on season management. Cross-referencing enhances understanding.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.9,
+      "needsReview": false,
+      "outputFile": "security/provider-portability-and-secrets-hygiene.md",
+      "sources": [
+        "architecture/_index.md",
+        "security/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.85,
+      "needsReview": false,
+      "outputFile": "security/operational-security-in-backup-tooling.md",
+      "sources": [
+        "facts/_index.md",
+        "security/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/multi_plan_subscription_system.md",
+      "needsReview": false,
+      "reason": "Contains detailed information about the multi-plan subscription system implementation, which is actionable and relevant.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/stripe_v21_api_migration.md",
+      "needsReview": false,
+      "reason": "Documents critical changes in Stripe API relevant to billing, which is important for ongoing maintenance and integration.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/context.md",
+      "needsReview": false,
+      "reason": "Provides an overview of Stripe API changes impacting billing, essential for understanding related files.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/context.md",
+      "needsReview": false,
+      "reason": "Contains architectural guidance and scope that remain relevant for infrastructure and operational decisions.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/database/provider_migration_diagnosis.md",
+      "needsReview": false,
+      "reason": "Records critical findings regarding database provider migration and security risks, still pertinent for infrastructure planning.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/database/context.md",
+      "needsReview": false,
+      "reason": "Offers an overview of database architecture and migration readiness, crucial for operational risk assessment.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/context.md",
+      "needsReview": false,
+      "reason": "Serves as a repository for high-signal factual recall, which is inherently useful for project understanding.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_billing_and_stripe_facts.md",
+      "needsReview": false,
+      "reason": "Consolidates billing and Stripe implementation facts, useful for debugging and architectural recall.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/context.md",
+      "needsReview": false,
+      "reason": "Captures important project infrastructure facts, which are key to understanding implementation choices.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_infrastructure_facts_2026_03_31.md",
+      "needsReview": false,
+      "reason": "Documents infrastructure and security facts from a specific diagnosis date, essential for historical reference.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/context.md",
+      "needsReview": false,
+      "reason": "Contains security domain context important for managing operational security and mitigation actions.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/operations/backup_credential_exposure.md",
+      "needsReview": false,
+      "reason": "Documents security risks associated with credential exposure in backup scripts, critical for maintaining security posture.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/operations/context.md",
+      "needsReview": false,
+      "reason": "Provides an overview of operational security findings, crucial for managing credential and script security.",
+      "type": "PRUNE"
+    }
+  ],
+  "startedAt": 1782134844406,
+  "status": "completed",
+  "summary": {
+    "consolidated": 10,
+    "errors": 0,
+    "flaggedForReview": 5,
+    "pruned": 13,
+    "synthesized": 2
+  },
+  "taskId": "b37d8516-c6e6-4889-a393-db9339b513aa",
+  "trigger": "agent-idle"
+}

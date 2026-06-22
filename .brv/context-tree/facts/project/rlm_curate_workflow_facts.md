@@ -2,7 +2,7 @@
 title: RLM Curate Workflow Facts
 summary: RLM curation workflow facts covering single-pass processing, precomputed recon, and verification requirements.
 tags: []
-related: [facts/project/project_facts_snapshot_2026_05_16.md]
+related: [facts/project/project_facts_snapshot_2026_05_16.md, facts/project/curate_workflow_rlm_approach.md]
 keywords: []
 createdAt: '2026-05-16T16:01:36.991Z'
 updatedAt: '2026-05-16T16:01:36.991Z'

@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Corrigido crash ao abrir o app iOS devido à ausência do arquivo GoogleService-Info.plist no bundle. Agora, o arquivo é referenciado corretamente em `project.pbxproj`, evitando o crash na configuração do Firebase.  
+  - Arquivos: `ios/App/App.xcodeproj/project.pbxproj`, `ios/App/App/AppDelegate.swift`, `src/lib/mobile/push-notifications.ts`  
+  - Evidência: inclusão do arquivo no projeto Xcode e remoção do `FirebaseApp.configure()` no código  
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Ajustado o Podfile do iOS para usar paths hoisted padrão do pnpm e Firebase
   - Arquivos: `ios/App/Podfile`, `.github/workflows/ios-release.yml`, `scripts/fix-ios-podfile-paths.mjs`, `package.json`
   - Evidência: alteração na requisição do Podfile e na execução do script de normalização de paths

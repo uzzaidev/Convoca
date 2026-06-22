@@ -1,25 +1,38 @@
-import { PushNotifications, type Token } from "@capacitor/push-notifications";
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
 import { getMobilePlatform, isNativePlatform } from "./platform-detector";
 
 let initialized = false;
 
-async function savePushToken(token: Token) {
+/**
+ * Salva o token FCM no backend (tabela push_tokens).
+ * Android e iOS usam Firebase Messaging — o token e sempre FCM (nao APNs raw).
+ */
+async function savePushToken(token: string) {
   const platform = getMobilePlatform();
 
   if (platform !== "android" && platform !== "ios") {
     return;
   }
 
-  await fetch("/api/mobile/push-token", {
+  const response = await fetch("/api/mobile/push-token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify({
-      token: token.value,
+      token,
       platform,
     }),
   });
+
+  if (!response.ok) {
+    console.error(
+      "[mobile] Falha ao salvar token push",
+      response.status,
+      await response.text()
+    );
+  }
 }
 
 export async function initPushNotifications() {
@@ -29,20 +42,23 @@ export async function initPushNotifications() {
 
   initialized = true;
 
-  const currentPermission = await PushNotifications.checkPermissions();
+  const currentPermission = await FirebaseMessaging.checkPermissions();
   const permission =
     currentPermission.receive === "granted"
       ? currentPermission
-      : await PushNotifications.requestPermissions();
+      : await FirebaseMessaging.requestPermissions();
 
   if (permission.receive !== "granted") {
     return;
   }
 
-  await PushNotifications.addListener("registration", savePushToken);
-  await PushNotifications.addListener("registrationError", (error) => {
-    console.error("[mobile] Push registration failed", error);
+  // Token pode rotacionar — escuta atualizacoes
+  await FirebaseMessaging.addListener("tokenReceived", (event) => {
+    void savePushToken(event.token);
   });
 
-  await PushNotifications.register();
+  const { token } = await FirebaseMessaging.getToken();
+  if (token) {
+    await savePushToken(token);
+  }
 }

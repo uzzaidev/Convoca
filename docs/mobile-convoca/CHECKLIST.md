@@ -169,7 +169,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] Build aparecendo no App Store Connect → TestFlight ✅ v1.0.0 build 1 "Pronta para envio"
 - [x] App instalado no iPhone via TestFlight ✅
 - [x] Login na WebView funcionando (NextAuth, build 2 + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
-- [ ] Push notification recebida no device iOS
+- [ ] Push notification recebida no device iOS — fix FCM token (build ≥ 3 necessário)
 - [ ] Deep link `convoca://` abrindo o app
 
 ### Sprint iOS-S4 — App Store Connect e Submissao

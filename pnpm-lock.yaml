@@ -14,6 +14,12 @@ importers:
       '@auth/pg-adapter':
         specifier: ^1.7.4
         version: 1.11.0(pg@8.16.3)
+      '@capacitor-firebase/app':
+        specifier: 7.3.1
+        version: 7.3.1(@capacitor/core@7.6.6)
+      '@capacitor-firebase/messaging':
+        specifier: 7.3.1
+        version: 7.3.1(@capacitor/core@7.6.6)
       '@capacitor/android':
         specifier: ^7.6.6
         version: 7.6.6(@capacitor/core@7.6.6)
@@ -32,9 +38,6 @@ importers:
       '@capacitor/network':
         specifier: ^7.0.4
         version: 7.0.4(@capacitor/core@7.6.6)
-      '@capacitor/push-notifications':
-        specifier: ^7.0.6
-        version: 7.0.6(@capacitor/core@7.6.6)
       '@capacitor/share':
         specifier: ^7.0.4
         version: 7.0.4(@capacitor/core@7.6.6)
@@ -313,6 +316,24 @@ packages:
     resolution: {integrity: sha512-0ZrskXVEHSWIqZM/sQZ4EV3jZJXRkio/WCxaqKZP1g//CEWEPSfeZFcms4XeKBCHU0ZKnIkdJeU/kF+eRp5lBg==}
     engines: {node: '>=6.9.0'}
 
+  '@capacitor-firebase/app@7.3.1':
+    resolution: {integrity: sha512-NvmGfxGfbK7Va9wumRVHKUMG7AIu+Z5aeQGwraCmPkJzVyN1nB5Ldd8Ba3aPJ44hVo5Ncv8EhMeUn1HVXZpgcQ==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: ^11.2.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
+  '@capacitor-firebase/messaging@7.3.1':
+    resolution: {integrity: sha512-LBc7zeOUNe96K+c8x+YE6AvWKLSrJPFy0ryQD82okZb540l8d6oT0LHJoN0PTHi+a91GFvnm+l3aEKS8l5+l/g==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: ^11.2.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
   '@capacitor/android@7.6.6':
     resolution: {integrity: sha512-PnO8NFjpJJmMINjQQicPwS+hTMWFReIYJcfj8dzb/rRPgElxj+PBJi+6p9X4LUHd2yin8O5FGuqjNOT5BrvWvw==}
     peerDependencies:
@@ -353,11 +374,6 @@ packages:
 
   '@capacitor/network@7.0.4':
     resolution: {integrity: sha512-fNhN3968AQWMnzasPJ0B8e+nyk7+R6V9PWIBQWSQRHrKndDgWRHpxkjEzJPgnJr3EjnKLjbwO+UYy+EwBlGs3A==}
-    peerDependencies:
-      '@capacitor/core': '>=7.0.0'
-
-  '@capacitor/push-notifications@7.0.6':
-    resolution: {integrity: sha512-zAhbHpdbc15ImuVGgoFwUZsKI+jjGxy/oO5mgfYKUx8Xl2OskndzhL79PYsCPjyGLbqUR9NRUZJthV9auVT3nw==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -4535,6 +4551,14 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@capacitor-firebase/app@7.3.1(@capacitor/core@7.6.6)':
+    dependencies:
+      '@capacitor/core': 7.6.6
+
+  '@capacitor-firebase/messaging@7.3.1(@capacitor/core@7.6.6)':
+    dependencies:
+      '@capacitor/core': 7.6.6
+
   '@capacitor/android@7.6.6(@capacitor/core@7.6.6)':
     dependencies:
       '@capacitor/core': 7.6.6
@@ -4625,10 +4649,6 @@ snapshots:
       '@capacitor/core': 7.6.6
 
   '@capacitor/network@7.0.4(@capacitor/core@7.6.6)':
-    dependencies:
-      '@capacitor/core': 7.6.6
-
-  '@capacitor/push-notifications@7.0.6(@capacitor/core@7.6.6)':
     dependencies:
       '@capacitor/core': 7.6.6
 

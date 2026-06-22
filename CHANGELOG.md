@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Corrigido uso de caminhos relativos no arquivo `fastlane/Fastfile` para evitar erro de path em CI, usando `File.expand_path` com caminho absoluto.
+  - Arquivos: `fastlane/Fastfile`
+  - Evidência: alteração de variáveis ROOT e paths relativos para caminhos absolutos
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Ajustado workflow de CI para chamar `fastlane beta` ao invés de `xcodebuild` direto, incluindo a instalação do xcpretty no Gemfile.
   - Arquivos: `.github/workflows/ios-release.yml`
   - Evidência: alteração na configuração do workflow e comentários indicando o uso de `fastlane beta`.

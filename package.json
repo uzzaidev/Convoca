@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "cap:sync": "cap sync",
-    "cap:sync:ios": "cross-env CAPACITOR_PLATFORM=ios cap sync ios",
+    "cap:sync:ios": "cross-env CAPACITOR_PLATFORM=ios cap sync ios && node scripts/fix-ios-podfile-paths.mjs",
     "cap:sync:android": "cross-env CAPACITOR_PLATFORM=android cap sync android",
     "cap:copy": "cap copy",
     "cap:copy:ios": "cross-env CAPACITOR_PLATFORM=ios cap copy ios",

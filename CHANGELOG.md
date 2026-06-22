@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### feat
+- Adiciona workflows para build e gerenciamento de certificados iOS usando Fastlane match e automação no GitHub Actions.
+  - Arquivos: `.github/workflows/ios-match-bootstrap.yml`, `.github/workflows/ios-release.yml`, `Gemfile`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### refactor
 - Reorganização e consolidação do conteúdo da documentação de arquitetura, banco de dados, fatos, segurança e contexto de fatos.
   - Arquivos: `.brv/context-tree/_index.md`, `.brv/context-tree/facts/_index.md`, `.brv/context-tree/_manifest.json`

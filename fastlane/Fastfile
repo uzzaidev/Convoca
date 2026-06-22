@@ -88,8 +88,11 @@ platform :ios do
     # Next.js export para Capacitor (gera out/)
     sh("cd #{ROOT} && pnpm build:mobile")
 
-    # Sincroniza assets e plugins nativos iOS
-    sh("cd #{ROOT} && pnpm cap sync ios")
+    # Copia assets e plugins nativos iOS (sem rodar pod install aqui).
+    # "cap copy" evita o conflito de Ruby entre setup-ruby 3.3 e Homebrew 3.4
+    # quando o Capacitor tentaria chamar "bundle exec pod" internamente.
+    # O pod install e feito logo abaixo pelo action cocoapods do fastlane.
+    sh("cd #{ROOT} && pnpm cap copy ios")
 
     # Instala dependencias nativas iOS via CocoaPods
     cocoapods(

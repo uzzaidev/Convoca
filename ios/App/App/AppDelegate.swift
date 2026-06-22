@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import FirebaseCore
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,8 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Firebase (FCM) — GoogleService-Info.plist no bundle
-        FirebaseApp.configure()
+        // FirebaseApp.configure() e feito pelo plugin CapacitorFirebaseApp quando o bridge carrega.
+        // Nao chamar aqui: sem GoogleService-Info.plist no bundle, o app crasha ao abrir.
         return true
     }
 

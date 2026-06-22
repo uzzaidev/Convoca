@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Removido stub do Firebase Messaging para builds web no Vercel, garantindo que o app iOS carregue o JS da Vercel corretamente.
+  - Arquivos: `next.config.ts`, `src/lib/mobile/stubs/capacitor-firebase-messaging.ts`
+  - Evidência: exclusão do arquivo de stub e ajuste na configuração do Next.js
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Stub do Firebase Messaging foi configurado para evitar resolução no deploy Vercel, afetando arquivos `next.config.ts` e `webpack`.  
   - Arquivos: `next.config.ts`  
   - Evidência: adição de alias de stub para Firebase Messaging  

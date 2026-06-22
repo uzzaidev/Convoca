@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### chore
+- Atualizado o CHECKLIST iOS com o progresso de 2026-06-22, incluindo configurações de secrets, workflows de CI e etapas de bootstrap do fastlane match.
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### feat
 - Adiciona workflows para build e gerenciamento de certificados iOS usando Fastlane match e automação no GitHub Actions.
   - Arquivos: `.github/workflows/ios-match-bootstrap.yml`, `.github/workflows/ios-release.yml`, `Gemfile`

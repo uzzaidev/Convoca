@@ -97,13 +97,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-16T16:18:42.344Z",
+  "generated_at": "2026-06-22T12:51:23.252Z",
   "lane_tokens": {
     "contexts": 3999,
     "stubs": 0,
     "summaries": 1978
   },
-  "source_fingerprint": "54fb893a4d0a8387f91909ca4e3254836989a1109173399b87d4ffcdd89bb771",
+  "source_fingerprint": "88ac6f76b113e7c15f0b8c0ea744813d48e409ca8d6b9dcf8589da71a2c65e3b",
   "total_tokens": 5977,
   "version": 1
 }

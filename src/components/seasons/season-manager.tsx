@@ -169,18 +169,25 @@ export function SeasonManager({ groupId }: SeasonManagerProps) {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (season: Season) => {
+    switch (season.status) {
       case "active":
         return <Badge className="bg-green-500">Ativa</Badge>;
       case "finished":
         return <Badge variant="secondary">Finalizada</Badge>;
       case "upcoming":
+        if (new Date(season.starts_at) <= new Date()) {
+          return <Badge variant="outline">Aberta</Badge>;
+        }
         return <Badge variant="outline">Futura</Badge>;
       default:
         return null;
     }
   };
+
+  const canFinishSeason = (season: Season) => (
+    season.status !== "finished" && new Date(season.starts_at) <= new Date()
+  );
 
   if (isLoading) {
     return (
@@ -270,7 +277,7 @@ export function SeasonManager({ groupId }: SeasonManagerProps) {
                     <div className="flex items-center gap-2 mb-1">
                       <Trophy className="h-4 w-4 text-yellow-500" />
                       <span className="font-medium">{season.name}</span>
-                      {getStatusBadge(season.status)}
+                      {getStatusBadge(season)}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {format(new Date(season.starts_at), "dd/MM/yyyy", { locale: ptBR })}
@@ -281,7 +288,7 @@ export function SeasonManager({ groupId }: SeasonManagerProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {season.status === "active" && (
+                    {canFinishSeason(season) && (
                       <Button
                         variant="outline"
                         size="sm"

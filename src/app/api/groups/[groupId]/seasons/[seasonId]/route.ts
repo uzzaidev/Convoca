@@ -5,6 +5,7 @@ import logger from "@/lib/logger";
 import { updateSeasonSchema } from "@/lib/validations";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { normalizeSeasonDateInput } from "@/lib/season-dates";
 
 type RouteParams = {
   params: Promise<{ groupId: string; seasonId: string }>;
@@ -105,12 +106,29 @@ export async function PATCH(
       );
     }
 
-    const updates = parsed.data;
+    const updates = {
+      ...parsed.data,
+      startsAt: parsed.data.startsAt
+        ? normalizeSeasonDateInput(parsed.data.startsAt, "start")
+        : undefined,
+      endsAt: parsed.data.endsAt
+        ? normalizeSeasonDateInput(parsed.data.endsAt, "end")
+        : undefined,
+    };
 
     const hasUpdates = updates.name !== undefined || updates.startsAt !== undefined || updates.endsAt !== undefined;
     if (!hasUpdates) {
       return NextResponse.json(
         { error: "Nenhum campo para atualizar" },
+        { status: 400 }
+      );
+    }
+
+    const nextStartsAt = updates.startsAt ?? originalStartsAt;
+    const nextEndsAt = updates.endsAt ?? originalEndsAt;
+    if (new Date(nextEndsAt) <= new Date(nextStartsAt)) {
+      return NextResponse.json(
+        { error: "A data final deve ser depois da data inicial" },
         { status: 400 }
       );
     }

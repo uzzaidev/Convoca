@@ -106,9 +106,10 @@ platform :ios do
     #    O pod install acontece no passo 7, usando diretamente o pod do sistema.
     sh("cd #{ROOT} && pnpm cap copy ios")
 
-    # 7. Pod install via sistema (CocoaPods pre-instalado no runner macOS).
-    #    Nao usa bundle exec para evitar conflito entre as duas instalacoes de Ruby.
-    sh("cd #{ROOT}/ios/App && pod install --repo-update")
+    # 7. Pod install e feito como step separado no workflow (ios-release.yml)
+    #    ANTES de chamar "fastlane beta", para evitar o conflito de Ruby entre
+    #    o bundle exec do fastlane (Ruby 3.3) e o CocoaPods do Homebrew (Ruby 3.4).
+    #    O sh() herda o BUNDLE_GEMFILE/RUBYOPT do bundle exec e contamina o pod.
 
     # 8. Garante que a pasta de saida existe antes do gym
     FileUtils.mkdir_p("#{ROOT}/build")

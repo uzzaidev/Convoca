@@ -4,6 +4,16 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### fix
+- Adicionado a gem "xcpretty" ao Gemfile para melhorar a saída do Fastlane.
+- Atualizado o Fastfile para definir constantes de ID do bundle, ID da equipe e nome do perfil de provisionamento.
+- Alterada a configuração do Fastlane para usar variáveis constantes em vez de valores hardcoded, facilitando manutenção.
+- Incluída a etapa de atualização das configurações de assinatura de código para usar assinatura manual antes do archive, garantindo compatibilidade em CI.
+- Melhorada a configuração do `gym` para passar argumentos de build e opções de exportação, incluindo o método de assinatura e perfil de provisionamento.
+- Confiança: alta
+
+## 2026-06-22
+
 ### docs
 - Atualizado o playbook de CI para iOS sem Mac, incluindo lições aprendidas em 2026-06-22, como a não instalação do Ruby no Windows e execução do fastlane via GitHub Actions.
   - Arquivos: `docs/playbooks/ios-ci-sem-mac/README.md`

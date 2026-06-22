@@ -4,6 +4,19 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### chore
+- Concluído o bootstrap do fastlane match para iOS, gerando certificados e profiles de provisionamento
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Evidência: mensagem de commit indicando execução bem-sucedida
+  - Confiança: alta
+
+### feat
+- Atualizado status do processo de release iOS na checklist, indicando que os certificados foram gerados e o próximo passo é rodar o workflow de release
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### fix
 - Adicionado `*.p8` ao arquivo `.gitignore` para evitar o commit de chaves privadas Apple.
   - Arquivos: `.gitignore`

@@ -4,25 +4,68 @@ platform :ios do
 
   desc "Gerar e armazenar certificados (roda uma vez para setup)"
   lane :setup_certs do
-    match(
-      type: "appstore",
-      readonly: false,
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      app_identifier: "com.uzzai.convoca",
-      team_id: "2YRXNXGL8K"
+    # Em CI nao existe keychain interativo — cria um temporario antes do match
+    create_keychain(
+      name:            "CI_KEYCHAIN",
+      password:        ENV["MATCH_PASSWORD"],
+      default_keychain: true,
+      unlock:           true,
+      timeout:          3600,
+      lock_when_sleeps: false
     )
+
+    # Autentica no Apple Developer Portal via API Key (.p8), sem Apple ID/senha
+    api_key = app_store_connect_api_key(
+      key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      in_house:    false
+    )
+
+    match(
+      type:                    "appstore",
+      readonly:                false,
+      api_key:                 api_key,
+      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+      app_identifier:          "com.uzzai.convoca",
+      team_id:                 "2YRXNXGL8K",
+      keychain_name:           "CI_KEYCHAIN",
+      keychain_password:       ENV["MATCH_PASSWORD"]
+    )
+
     UI.success "Certificados gerados e salvos em convoca-certs ✅"
   end
 
   desc "Build e upload para TestFlight"
   lane :beta do
-    # Instala certificado + provisioning profile
+    # Keychain temporario para CI (mesmo padrao do setup_certs)
+    create_keychain(
+      name:            "CI_KEYCHAIN",
+      password:        ENV["MATCH_PASSWORD"],
+      default_keychain: true,
+      unlock:           true,
+      timeout:          3600,
+      lock_when_sleeps: false
+    )
+
+    # API Key para acesso ao Apple Developer Portal / App Store Connect
+    api_key = app_store_connect_api_key(
+      key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      in_house:    false
+    )
+
+    # Instala certificado + provisioning profile (readonly=true: usa os do match)
     match(
-      type: "appstore",
-      readonly: true,
+      type:                    "appstore",
+      readonly:                true,
+      api_key:                 api_key,
       git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      app_identifier: "com.uzzai.convoca",
-      team_id: "2YRXNXGL8K"
+      app_identifier:          "com.uzzai.convoca",
+      team_id:                 "2YRXNXGL8K",
+      keychain_name:           "CI_KEYCHAIN",
+      keychain_password:       ENV["MATCH_PASSWORD"]
     )
 
     # Build mobile (Next.js export → out/)

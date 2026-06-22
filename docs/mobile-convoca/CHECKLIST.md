@@ -152,7 +152,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] `Gemfile` com fastlane criado no projeto
 - [x] `fastlane/Appfile` configurado (`com.uzzai.convoca`, Team ID `2YRXNXGL8K`)
 - [x] `fastlane/Matchfile` configurado (tipo `appstore`, url `uzzaidev/convoca-certs`)
-- [ ] `fastlane match appstore` executado — Distribution Cert + Provisioning Profile gerados  ← PROXIMO PASSO: rodar workflow `ios-match-bootstrap`
+- [x] `fastlane match appstore` executado — Distribution Cert + Provisioning Profile gerados e salvos em `uzzaidev/convoca-certs` (2026-06-22, 1m14s ✅)
 - [x] `MATCH_PASSWORD` definido como GitHub secret (`Uzzai2025@`)
 - [x] `MATCH_GIT_BASIC_AUTHORIZATION` (base64 user:token) configurado como GitHub secret
 
@@ -163,8 +163,8 @@ Workflow CI: `.github/workflows/ios-release.yml`
   - `MATCH_PASSWORD` / `MATCH_GIT_BASIC_AUTHORIZATION` / `GOOGLE_SERVICE_INFO_PLIST_BASE64`
 - [x] `.github/workflows/ios-release.yml` commitado e no ar
 - [x] `.github/workflows/ios-match-bootstrap.yml` commitado (workflow de setup 1x)
-- [ ] Bootstrap disparado: ir em Actions → `iOS Match Bootstrap` → Run workflow  ← PROXIMO PASSO
-- [ ] Workflow disparado manualmente (Run workflow)
+- [x] Bootstrap disparado e concluído com sucesso (2026-06-22 ✅)
+- [ ] Workflow `ios-release` disparado manualmente (Run workflow)  ← PROXIMO PASSO
 - [ ] Build verde no GitHub Actions (signing OK)
 - [ ] Build aparecendo no App Store Connect → TestFlight
 - [ ] App instalado no iPhone via TestFlight
@@ -183,7 +183,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: Android EM ANALISE na Google (enviado 2026-06-19) | iOS: secrets OK, aguardando bootstrap fastlane match
+## Status: Android EM ANALISE na Google (enviado 2026-06-19) | iOS: certs gerados ✅ — proximo: rodar ios-release para primeiro build TestFlight
 
 Proximos passos enquanto aguarda / apos aprovacao:
 

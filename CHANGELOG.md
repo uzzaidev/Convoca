@@ -4,6 +4,24 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### fix
+- Desabilitado CapacitorHttp e CapacitorCookies no iOS para login NextAuth na WKWebView, evitando conflito com o cookie jar nativo (`HTTPCookieStorage`). Essa alteração garante que o login funcione corretamente no iOS usando a WebView pura.
+  - Arquivos: `capacitor.config.ts`, `fastlane/Fastfile`, `package.json`
+  - Evidência: alteração na configuração de plugins e comandos de build
+  - Confiança: alta
+
+### docs
+- Atualizado checklist de build no TestFlight para indicar que o login na WebView com cookie NextAuth foi corrigido após o commit de desabilitação do CapacitorHttp/Cookies no iOS.
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`
+  - Confiança: alta
+
+### docs
+- Incluído no README do playbook de CI a instrução de desligar CapacitorHttp/CapacitorCookies no iOS durante o processo de build, usando a variável `CAPACITOR_PLATFORM=ios` para garantir o funcionamento do login.
+  - Arquivos: `docs/playbooks/ios-ci-sem-mac/README.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### chore
 - Atualizado o checklist de build iOS para o release 1.0.0 no TestFlight
   - Arquivos: `docs/mobile-convoca/CHECKLIST.md`

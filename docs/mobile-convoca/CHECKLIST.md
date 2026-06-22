@@ -168,7 +168,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] Build verde no GitHub Actions (signing OK) ✅ 4m06s
 - [x] Build aparecendo no App Store Connect → TestFlight ✅ v1.0.0 build 1 "Pronta para envio"
 - [ ] App instalado no iPhone via TestFlight  ← **PRÓXIMO PASSO**
-- [ ] Login na WebView funcionando (cookie NextAuth)
+- [ ] Login na WebView funcionando (cookie NextAuth) — fix `CAPACITOR_PLATFORM=ios` commitado; **precisa build 2 no TestFlight**
 - [ ] Push notification recebida no device iOS
 - [ ] Deep link `convoca://` abrindo o app
 

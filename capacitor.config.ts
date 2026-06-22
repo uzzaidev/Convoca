@@ -1,5 +1,12 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+// CAPACITOR_PLATFORM=ios | android — setado nos scripts cap:sync:* e no CI iOS.
+// No iOS, CapacitorHttp/CapacitorCookies quebram o login NextAuth: o fetch vai
+// para o cookie jar nativo (HTTPCookieStorage) e a WKWebView usa outro store.
+// Android funciona com os dois plugins ligados; iOS deve usar a WebView pura.
+const platform = process.env.CAPACITOR_PLATFORM;
+const isIosBuild = platform === "ios";
+
 const config: CapacitorConfig = {
   appId: "com.uzzai.convoca",
   appName: "Convoca",
@@ -19,10 +26,10 @@ const config: CapacitorConfig = {
   },
   plugins: {
     CapacitorCookies: {
-      enabled: true,
+      enabled: !isIosBuild,
     },
     CapacitorHttp: {
-      enabled: true,
+      enabled: !isIosBuild,
     },
     SplashScreen: {
       launchShowDuration: 1200,

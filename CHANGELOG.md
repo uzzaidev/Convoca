@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### docs
+- Documentadas lições aprendidas ao configurar o Fastfile para iOS CI, incluindo uso de caminhos absolutos, assinatura manual, separação de pod install, e requisitos de API Key.
+  - Arquivos: `docs/playbooks/ios-ci-sem-mac/README.md`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### fix
 - Separou o comando `pod install` como etapa distinta no workflow do iOS para evitar conflito entre Ruby 3.3 e Ruby 3.4. Essa mudança previne contaminação do ambiente do CocoaPods pelo Ruby utilizado pelo fastlane.
   - Arquivos: `.github/workflows/ios-release.yml`, `fastlane/Fastfile`

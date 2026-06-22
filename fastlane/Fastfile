@@ -1,6 +1,8 @@
+require "fileutils"
+
 default_platform(:ios)
 
-# __dir__ = pasta fastlane/; ROOT = raiz do repo
+# __dir__ = pasta fastlane/ ; ROOT = raiz do repo
 ROOT         = File.expand_path("..", __dir__)
 BUNDLE_ID    = "com.uzzai.convoca"
 TEAM_ID      = "2YRXNXGL8K"
@@ -8,6 +10,9 @@ PROFILE_NAME = "match AppStore #{BUNDLE_ID}"
 
 platform :ios do
 
+  # ---------------------------------------------------------------------------
+  # setup_certs — roda UMA vez para gerar Distribution Cert + Provisioning Profile
+  # ---------------------------------------------------------------------------
   desc "Gerar e armazenar certificados (roda uma vez para setup)"
   lane :setup_certs do
     create_keychain(
@@ -40,9 +45,13 @@ platform :ios do
     UI.success "Certificados gerados e salvos em convoca-certs ✅"
   end
 
+  # ---------------------------------------------------------------------------
+  # beta — build completo + upload para TestFlight
+  # ---------------------------------------------------------------------------
   desc "Build e upload para TestFlight"
   lane :beta do
-    # Keychain temporario para CI (sem keychain interativo no runner macOS)
+
+    # 1. Keychain temporario — CI nao tem keychain interativo
     create_keychain(
       name:             "CI_KEYCHAIN",
       password:         ENV["MATCH_PASSWORD"],
@@ -52,6 +61,7 @@ platform :ios do
       lock_when_sleeps: false
     )
 
+    # 2. API Key Apple — autentica sem Apple ID/senha
     api_key = app_store_connect_api_key(
       key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
@@ -59,7 +69,7 @@ platform :ios do
       in_house:    false
     )
 
-    # Instala Distribution Cert + Provisioning Profile do repo convoca-certs
+    # 3. Instala Distribution Cert + Provisioning Profile do repo convoca-certs
     match(
       type:                    "appstore",
       readonly:                true,
@@ -71,8 +81,10 @@ platform :ios do
       keychain_password:       ENV["MATCH_PASSWORD"]
     )
 
-    # Muda o projeto para Manual Signing.
-    # Usa caminho absoluto para evitar ambiguidade de diretorio de trabalho.
+    # 4. Muda o projeto para Manual Signing.
+    #    update_code_signing_settings grava DEVELOPMENT_TEAM, CODE_SIGN_STYLE
+    #    e PROVISIONING_PROFILE_SPECIFIER direto no .pbxproj — nao precisa
+    #    repetir esses valores no xcargs do gym.
     update_code_signing_settings(
       use_automatic_signing: false,
       path:                  "#{ROOT}/ios/App/App.xcodeproj",
@@ -85,23 +97,25 @@ platform :ios do
     app_version = ENV["APP_VERSION"] || "1.0.0"
     build_num   = ENV["BUILD_NUMBER"] || "1"
 
-    # Next.js export para Capacitor (gera out/)
+    # 5. Gera out/ (Next.js export para Capacitor)
     sh("cd #{ROOT} && pnpm build:mobile")
 
-    # Copia assets e plugins nativos iOS (sem rodar pod install aqui).
-    # "cap copy" evita o conflito de Ruby entre setup-ruby 3.3 e Homebrew 3.4
-    # quando o Capacitor tentaria chamar "bundle exec pod" internamente.
-    # O pod install e feito logo abaixo pelo action cocoapods do fastlane.
+    # 6. Copia assets e plugins nativos iOS.
+    #    Usa "cap copy" (sem pod install) para evitar conflito de Ruby entre
+    #    o setup-ruby 3.3 (nosso bundler) e o Homebrew Ruby 3.4 do runner.
+    #    O pod install acontece no passo 7, usando diretamente o pod do sistema.
     sh("cd #{ROOT} && pnpm cap copy ios")
 
-    # Instala dependencias nativas iOS via CocoaPods
-    cocoapods(
-      clean_install:   true,
-      podfile:         "#{ROOT}/ios/App/Podfile",
-      use_bundle_exec: false
-    )
+    # 7. Pod install via sistema (CocoaPods pre-instalado no runner macOS).
+    #    Nao usa bundle exec para evitar conflito entre as duas instalacoes de Ruby.
+    sh("cd #{ROOT}/ios/App && pod install --repo-update")
 
-    # Archive + exportar IPA (Manual Signing)
+    # 8. Garante que a pasta de saida existe antes do gym
+    FileUtils.mkdir_p("#{ROOT}/build")
+
+    # 9. Archive + exportar IPA com Manual Signing.
+    #    xcargs so passa versao — signing ja foi gravado no .pbxproj pelo passo 4.
+    #    export_options define o metodo e mapeamento de provisioning profile.
     gym(
       workspace:        "#{ROOT}/ios/App/App.xcworkspace",
       scheme:           "App",
@@ -109,23 +123,15 @@ platform :ios do
       export_method:    "app-store",
       output_directory: "#{ROOT}/build",
       output_name:      "Convoca.ipa",
-      xcargs: [
-        "DEVELOPMENT_TEAM=#{TEAM_ID}",
-        "CODE_SIGN_STYLE=Manual",
-        "PROVISIONING_PROFILE_SPECIFIER=#{PROFILE_NAME}",
-        "MARKETING_VERSION=#{app_version}",
-        "CURRENT_PROJECT_VERSION=#{build_num}"
-      ].join(" "),
+      xcargs:           "MARKETING_VERSION=#{app_version} CURRENT_PROJECT_VERSION=#{build_num}",
       export_options: {
         method:               "app-store",
         teamID:               TEAM_ID,
-        provisioningProfiles: {
-          BUNDLE_ID => PROFILE_NAME
-        }
+        provisioningProfiles: { BUNDLE_ID => PROFILE_NAME }
       }
     )
 
-    # Upload para TestFlight via API Key (sem Apple ID/senha)
+    # 10. Upload para TestFlight (sem Apple ID, sem esperar processamento)
     pilot(
       api_key:                           api_key,
       skip_waiting_for_build_processing: true

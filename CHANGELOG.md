@@ -5,6 +5,25 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### feat
+- Documentou estratégias de gerenciamento de temporadas, arquitetura móvel e fatos de extração de projeto.
+  - Arquivos: `.brv/_queue_status.json`, `.brv/context-tree/convoca/season_management/season_management.md`, `.brv/context-tree/mobile/architecture/convoca_mobile_architecture.md`, `.brv/context-tree/facts/project/project_facts_extraction.md`
+  - Evidência: adição de novos arquivos de documentação e atualização de status de fila
+  - Confiança: alta
+
+### feat
+- Incluiu novos arquivos de abstração e overview para gerenciamento de temporadas, arquitetura móvel e fatos do projeto.
+  - Arquivos: `.brv/context-tree/convoca/season_management/season_management.abstract.md`, `.brv/context-tree/convoca/season_management/season_management.overview.md`, `.brv/context-tree/mobile/architecture/convoca_mobile_architecture.abstract.md`, `.brv/context-tree/mobile/architecture/convoca_mobile_architecture.overview.md`, `.brv/context-tree/facts/project/project_facts_extraction.abstract.md`, `.brv/context-tree/facts/project/project_facts_extraction.overview.md`
+  - Confiança: alta
+
+### fix
+- Atualizado o estado do dream com aumento no número de curadorias desde o último sonho.
+  - Arquivos: `.brv/dream-state.json`
+  - Evidência: incremento de `curationsSinceDream` de 2 para 6
+  - Confiança: alta
+
+## 2026-06-22
+
+### feat
 - Melhorada a gestão de temporadas com normalização e validação de datas
   - Arquivos: `src/lib/season-dates.ts`, `src/app/api/groups/[groupId]/seasons/[seasonId]/route.ts`, `src/app/api/groups/[groupId]/seasons/route.ts`, `src/components/seasons/season-manager.tsx`
   - Confiança: alta

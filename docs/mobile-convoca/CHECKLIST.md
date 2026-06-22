@@ -1,42 +1,45 @@
 # Checklist - Convoca Android / Play Store primeiro
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-19.
 
-Escopo atual: preparar e validar o app Android para Google Play Store. iOS fica planejado, mas bloqueado por macOS/Xcode.
+Escopo atual: app Android publicado na Google Play (em revisao). iOS fica planejado, mas bloqueado por macOS/Xcode.
 
-Regra importante: nenhuma migration foi aplicada ainda. A migration `20260610_add_push_tokens.sql` foi criada, mas esta pendente ate existir `DATABASE_URL` ou `POSTGRES_URL_NON_POOLING` no ambiente local.
+Status geral: ENVIADO PARA ANALISE da Google em 2026-06-19 (release ConvocaR01). Push validado de ponta a ponta, paginas legais publicas, formularios de compliance preenchidos. Aguardando aprovacao (1-3 dias).
 
 Identidade:
 
-- App ID / package: `com.convoca.app`
+- App ID / package: `com.uzzai.convoca`  (ALTERADO de `com.convoca.app` — nome estava reservado/em uso na Play; namespace interno Java segue `com.convoca.app`)
 - Nome: `Convoca`
 - WebView de producao: `https://convoca.uzzai.com.br`
 - Estrategia: Capacitor com `server.url` ao vivo e `webDir: out` como fallback
 - Atualizacoes web/API: deploy em `convoca.uzzai.com.br`; nova Play Store release so para mudancas nativas/Capacitor/Android/iOS.
+- Vercel de producao: projeto `convoca` (nao `peladeiros`); secrets via Doppler prd -> sync Vercel
+- Firebase: projeto `convoca-app-uzzai-2b530`
 
 ## Fase 0 - Contas e decisoes
 
 - [x] Estrategia Android definida: `server.url` + fallback local
-- [x] App ID definido: `com.convoca.app`
+- [x] App ID definido: `com.uzzai.convoca`
 - [x] Dominio da WebView definido: `https://convoca.uzzai.com.br`
-- [ ] Politica de Privacidade publicada em URL publica
-- [ ] Termos de Uso publicados em URL publica
+- [x] Politica de Privacidade publicada em URL publica (`/privacidade` retorna 200 sem login)
+- [x] Termos de Uso publicados em URL publica (`/termos` 200)
 - [x] Pagina `/privacidade` criada no app
 - [x] Pagina `/termos` criada no app
 - [x] Pagina `/suporte` criada no app
 - [x] Pagina `/lgpd` criada no app
 - [x] Pagina `/excluir-conta` criada no app
 - [x] Link de exclusao de conta adicionado em `/profile`
+- [x] **Paginas legais tornadas PUBLICAS no `proxy.ts`** (antes davam HTTP 307 -> login; era bloqueador da loja)
 - [x] Rascunho de listing criado em `docs/mobile-convoca/STORE_LISTING_DRAFT.md`
-- [ ] Conta Google Play Console criada
-- [ ] Usuario demo criado com grupo/evento populado para revisao da loja
+- [x] Conta Google Play Console criada (org Uzz.Ai Ltda)
+- [x] Usuario demo criado e POPULADO para revisao (`demo.review@convoca.uzzai.com.br` / `ConvocaDemo2026`) — grupo "Pelada dos Cracks" (ativo) + 10 membros + evento futuro com 11 confirmacoes
 
 ## Fase 1 - Setup Capacitor
 
 - [x] Dependencias Capacitor instaladas (`@capacitor/core`, `android`, `ios`)
 - [x] Plugins nativos instalados (`app`, `status-bar`, `network`, `splash-screen`, `push-notifications`, `camera`, `share`, `biometric-auth`)
 - [x] Dev deps instaladas (`@capacitor/cli`, `@capacitor/assets`, `cross-env`)
-- [x] `capacitor.config.ts` criado
+- [x] `capacitor.config.ts` criado (appId `com.uzzai.convoca`)
 - [x] `capacitor.config.ts` com `appId`, `appName`, `webDir` e `server.url`
 - [x] `CapacitorCookies` e `CapacitorHttp` habilitados
 - [x] Splash/status bar configurados com verde Convoca
@@ -55,11 +58,12 @@ Identidade:
 - [x] `pnpm build:mobile` gera `out/index.html`
 - [x] `pnpm cap:sync` sincroniza Android
 - [x] TypeScript validado com `pnpm exec tsc --noEmit`
+- [x] `pnpm build` (producao SSR via Doppler) valida igual a Vercel
 - [x] APK debug compila com `gradlew assembleDebug`
-- [x] AAB release tecnico compila com `gradlew bundleRelease`
+- [x] AAB compila com `gradlew bundleRelease`
 - [x] Templates de App Links criados em `docs/mobile-convoca/templates/`
-- [ ] App testado em device fisico/emulador carregando `convoca.uzzai.com.br`
-- [ ] Login testado dentro do app em device fisico
+- [x] App testado em device fisico (instalou APK debug e carregou `convoca.uzzai.com.br`)
+- [x] Login testado dentro do app em device fisico (cookie/sessao NextAuth funcionando na WebView)
 
 ## Fase 3 - Features nativas MVP
 
@@ -72,14 +76,16 @@ Identidade:
 - [x] API route para salvar token criada em `src/app/api/mobile/push-token/route.ts`
 - [x] Migration `push_tokens` criada em `src/db/migrations/20260610_add_push_tokens.sql`
 - [x] `src/db/migrations/schema.sql` atualizado com `push_tokens`
-- [ ] Migration `20260610_add_push_tokens.sql` aplicada no banco
-- [ ] Firebase criado e app Android `com.convoca.app` registrado
-- [ ] `android/app/google-services.json` adicionado localmente
-- [ ] Push validado em device fisico
+- [x] Migration `20260610_add_push_tokens.sql` aplicada no banco (via `doppler run -p convoca -c prd`)
+- [x] Firebase criado e app Android `com.uzzai.convoca` registrado (projeto `convoca-app-uzzai-2b530`)
+- [x] `android/app/google-services.json` adicionado localmente (gitignored)
+- [x] **Backend de envio criado**: `src/lib/mobile/fcm.ts` (FCM HTTP v1 via jose) + `/api/mobile/push/send`
+- [x] Credenciais FCM no Doppler prd (`FIREBASE_SERVICE_ACCOUNT` + `FIREBASE_PROJECT_ID`, sync Vercel)
+- [x] Push validado em device fisico (FCM HTTP 200 -> notificacao recebida)
 
 ## Fase 4 - Config Android para Play Store
 
-- [x] `applicationId "com.convoca.app"`
+- [x] `applicationId "com.uzzai.convoca"`
 - [x] `versionCode 1`
 - [x] `versionName "1.0.0"`
 - [x] `minSdkVersion 23`
@@ -91,47 +97,104 @@ Identidade:
 - [x] Intent filter HTTPS para `convoca.app`
 - [x] `strings.xml` com `custom_url_scheme=convoca`
 - [x] `.gitignore` protege keystore, `release.properties` e `google-services.json`
-- [x] `android/release.properties.example` criado
+- [x] `android/release.properties.example` criado (storeFile corrigido para `release.keystore`)
 - [x] `build.gradle` le `release.properties` quando existir
-- [ ] Keystore de producao gerado
-- [ ] Backup do keystore feito em pelo menos 2 locais seguros
-- [ ] `android/release.properties` criado localmente com senhas reais
-- [ ] AAB final assinado gerado com o keystore de producao
+- [x] Keystore de producao gerado (`android/app/release.keystore`, alias `convoca`, SHA-256 `03:EB:03:BA:...:29:A5`)
+- [x] Backup do keystore preparado (`C:\Users\pedro\convoca-keystore-backup` + `.zip`) — usuario guarda em 2+ locais
+- [x] `android/release.properties` criado localmente com senhas reais
+- [x] AAB final assinado gerado com o keystore de producao (verificado: package `com.uzzai.convoca`, assinatura bate)
 
 ## Fase 5 - Play Console
 
-- [ ] App criado no Google Play Console
-- [ ] Categoria definida como Esportes
-- [ ] Nome curto e descricao preenchidos
-- [ ] Icone 512x512 preparado para a loja
-- [ ] Feature graphic 1024x500 preparado
-- [ ] Screenshots Android preparadas
-- [ ] URL da Politica de Privacidade informada
-- [ ] URL de suporte informada na loja
-- [ ] URL de exclusao de conta informada no Data Safety
-- [ ] Data Safety preenchido
-- [ ] Content Rating preenchido
-- [ ] Target audience / Ads declaration preenchido
-- [ ] Conta demo informada para revisao
-- [ ] AAB enviado para Teste Interno
-- [ ] Login, push e deep links validados pelo Teste Interno
-- [ ] AAB promovido para Producao
+- [x] App criado no Google Play Console (Convoca)
+- [x] Categoria definida como Esportes
+- [x] Nome curto e descricao preenchidos
+- [x] Icone 512x512 preparado para a loja
+- [x] Feature graphic 1024x500 preparado
+- [x] Screenshots Android preparadas (geradas em `C:\Users\pedro\convoca-screenshots\SELECIONADAS`, 1236x2196)
+- [x] URL da Politica de Privacidade informada (`https://convoca.uzzai.com.br/privacidade`)
+- [x] URL de suporte informada na loja (`https://convoca.uzzai.com.br/suporte`)
+- [x] URL de exclusao de conta informada no Data Safety (`https://convoca.uzzai.com.br/excluir-conta`)
+- [x] Data Safety preenchido
+- [x] Content Rating preenchido
+- [x] Target audience / Ads declaration preenchido
+- [x] Conta demo informada para revisao (`demo.review@convoca.uzzai.com.br` / `ConvocaDemo2026`)
+- [x] AAB enviado para a Play (release ConvocaR01, faixa Producao)
+- [x] **Versao ENVIADA PARA ANALISE (2026-06-19)** — aguardando revisao da Google (1-3 dias)
+- [ ] Login/push/deep links validados via build de release assinado (testado so no APK debug ate agora)
+- [ ] App APROVADO e publicado na Google Play
 
-## Fase 6 - iOS depois
+## Fase 6 - iOS via GitHub Actions (sem Mac)
 
-- [x] Projeto iOS base gerado em `ios/App`
+Estrategia: GitHub Actions runner `macos-26` (Xcode 26.5) + fastlane match.
+Playbook completo: `docs/playbooks/ios-ci-sem-mac/README.md`
+Workflow CI: `.github/workflows/ios-release.yml`
+
+### Sprint iOS-S1 — Contas e identidade
+
+- [x] Projeto iOS base gerado em `ios/App` (bundle id `com.uzzai.convoca`)
 - [x] `Info.plist` configurado com URL scheme e permissoes
-- [x] `App.entitlements` criado com Push Notifications e Associated Domains
+- [x] `App.entitlements` com Push Notifications + Associated Domains + `aps-environment: production`
 - [x] Assets iOS atualizados
-- [x] Runbook iOS criado em `docs/mobile-convoca/IOS_MAC_RUNBOOK.md`
-- [ ] Mac/Xcode 26+ ou CI macOS disponivel
-- [ ] Conta Apple Developer ativa
-- [ ] Signing/capabilities configurados no Xcode
-- [ ] Push APNs/Firebase configurado
-- [ ] URL de suporte informada no App Store Connect
-- [ ] URL de privacidade informada no App Store Connect
-- [ ] Fluxo de exclusao de conta testado dentro do app
-- [ ] Archive enviado ao App Store Connect
+- [ ] Team ID anotado (Apple Developer → Membership)
+- [ ] App ID `com.uzzai.convoca` registrado no Apple Developer Portal
+- [ ] Push Notifications + Associated Domains habilitados no App ID
+- [ ] App criado no App Store Connect
+- [ ] API Key `.p8` baixada + Key ID + Issuer ID anotados
+- [ ] App iOS `com.uzzai.convoca` registrado no Firebase
+- [ ] `GoogleService-Info.plist` baixado e salvo em `ios/App/App/` (gitignored)
+- [ ] APNs Auth Key `.p8` criada e uploadada no Firebase
+- [ ] `GoogleService-Info.plist` convertido para base64 (pronto para secret)
+
+### Sprint iOS-S2 — fastlane match
+
+- [ ] Repo `convoca-certs` criado no GitHub (privado)
+- [ ] `Gemfile` com fastlane criado no projeto
+- [ ] `fastlane/Appfile` configurado (`com.uzzai.convoca`, Team ID)
+- [ ] `fastlane/Matchfile` configurado (tipo `appstore`, url `convoca-certs`)
+- [ ] `fastlane match appstore` executado — Distribution Cert + Provisioning Profile gerados
+- [ ] `MATCH_PASSWORD` guardado no Doppler
+- [ ] `MATCH_GIT_BASIC_AUTHORIZATION` (base64 user:token) pronto para secret
+
+### Sprint iOS-S3 — CI GitHub Actions
+
+- [ ] 6 secrets configurados no GitHub Actions (ver playbook S3-1)
+- [ ] `.github/workflows/ios-release.yml` commitado
+- [ ] Workflow disparado manualmente (Run workflow)
+- [ ] Build verde no GitHub Actions (signing OK)
+- [ ] Build aparecendo no App Store Connect → TestFlight
+- [ ] App instalado no iPhone via TestFlight
+- [ ] Login na WebView funcionando (cookie NextAuth)
+- [ ] Push notification recebida no device iOS
+- [ ] Deep link `convoca://` abrindo o app
+
+### Sprint iOS-S4 — App Store Connect e Submissao
+
+- [ ] `apple-app-site-association` publicado (rota publica no Next.js)
+- [ ] Screenshots iPhone 6.9" (1320x2868) preparadas
+- [ ] Listing preenchido no App Store Connect
+- [ ] App Privacy preenchido (sem venda de dados)
+- [ ] Build selecionada na versao 1.0.0
+- [ ] Regra de IAP analisada (Stripe = B2B externo, nao IAP)
+- [ ] Conta demo informada nos Review Notes
+- [ ] Submit for Review clicado
+
+## Status: EM ANALISE na Google (enviado 2026-06-19)
+
+Proximos passos enquanto aguarda / apos aprovacao:
+
+1. Acompanhar status em Play Console -> Painel / Versoes (1-3 dias; conta nova pode demorar mais)
+2. Se a Google pedir ajustes: corrigir e reenviar
+3. Apos aprovado: app fica publico em `https://play.google.com/store/apps/details?id=com.uzzai.convoca`
+4. [FEITO] Conta demo populada com grupo "Pelada dos Cracks" + 10 membros + evento (11 confirmacoes)
+5. (Opcional) Testar o build de release assinado via Teste Interno
+6. iOS: quando tiver Mac/Xcode (Fase 6)
+
+## Commits desta etapa (na main, ja deployados)
+
+- `ec59bae` feat: estruturar app mobile (Capacitor) + paginas de loja
+- `f5e0f16` feat: backend de envio de push via FCM HTTP v1
+- `72ec718` fix: paginas legais publicas + rename para com.uzzai.convoca
 
 ## Comandos ja validados
 
@@ -139,9 +202,11 @@ Identidade:
 pnpm build:mobile
 pnpm cap:sync
 pnpm exec tsc --noEmit
+doppler run -p convoca -c prd -- pnpm build          # build SSR igual a Vercel
+doppler run -p convoca -c prd -- pnpm db:migrate -- --only 20260610_add_push_tokens.sql
 ```
 
-Para Gradle no Windows desta maquina, usar JDK 21 do Android Studio e SDK local:
+Para Gradle no Windows desta maquina, usar JDK do Android Studio e SDK local:
 
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
@@ -156,6 +221,5 @@ cd android
 Artefatos gerados:
 
 - APK debug: `android/app/build/outputs/apk/debug/app-debug.apk`
-- AAB tecnico: `android/app/build/outputs/bundle/release/app-release.aab`
-
-Observacao: o AAB tecnico compila, mas o AAB de loja ainda precisa do keystore de producao.
+- AAB de loja (assinado): `android/app/build/outputs/bundle/release/app-release.aab` (package `com.uzzai.convoca`)
+```

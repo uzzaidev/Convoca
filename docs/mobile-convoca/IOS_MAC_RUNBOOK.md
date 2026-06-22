@@ -1,120 +1,76 @@
-# Runbook iOS - finalizar no Mac
+# Runbook iOS — Build e Deploy via GitHub Actions (sem Mac)
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-22.
 
-Este projeto iOS foi gerado no Windows com Capacitor, mas o build, assinatura e envio para App Store Connect precisam acontecer em um Mac.
+> **Estratégia atual:** GitHub Actions runner `macos-26` (Xcode 26.5) + fastlane match.
+> Não é necessário Mac, Hackintosh ou aluguel de máquina.
+>
+> Playbook completo com sprints e checklist: `docs/playbooks/ios-ci-sem-mac/README.md`
+> Workflow CI pronto: `.github/workflows/ios-release.yml`
 
-Requisito atual da Apple: desde 28 de abril de 2026, uploads no App Store Connect precisam ser feitos com Xcode 26 ou mais novo usando SDK iOS/iPadOS 26 ou mais novo.
+---
 
-## Estado ja preparado
+## Estado já preparado no projeto
 
-- Projeto Xcode criado em `ios/App`.
-- Bundle id: `com.convoca.app`.
-- Display name: `Convoca`.
-- URL scheme: `convoca://`.
-- Universal Links previstos:
+- Projeto Xcode em `ios/App`
+- Bundle ID: `com.uzzai.convoca`
+- Display name: `Convoca`
+- URL scheme: `convoca://`
+- Universal Links configurados:
   - `applinks:convoca.uzzai.com.br`
   - `applinks:convoca.app`
-- Push entitlement criado em `ios/App/App/App.entitlements`.
-- Permissoes declaradas no `Info.plist`:
-  - Camera
-  - Photo Library
-  - Photo Library Add
-  - Face ID
-- Background mode para `remote-notification`.
-- Deployment target configurado para iOS 15.0.
-- Assets iOS gerados a partir de `assets/icon.png` e `assets/splash.png`.
+- Push entitlement em `ios/App/App/App.entitlements` (`aps-environment: production`)
+- Permissões no `Info.plist`: Camera, Photo Library, Face ID, Background push
+- Deployment target: iOS 15.0
+- Assets iOS (ícone e splash) gerados
 
-## No Mac
+---
 
-1. Instalar dependencias.
+## Como fazer um release iOS
 
-```bash
-brew install cocoapods
-pnpm install
-```
+### 1. Pré-requisito único (feito uma vez)
 
-2. Sincronizar o app.
+Completar os Sprints iOS-S1 e iOS-S2 do playbook.
+Ver `docs/playbooks/ios-ci-sem-mac/README.md`.
 
-```bash
-pnpm build:mobile
-pnpm cap:sync
-```
+### 2. Disparar o workflow
 
-3. Instalar pods.
+GitHub → Actions → **iOS Release** → Run workflow
 
-```bash
-cd ios/App
-pod install
-```
+Preencher:
+- `app_version`: ex. `1.0.0`
+- `build_number`: inteiro crescente (ex. `1`, `2`, `3`…)
 
-4. Abrir no Xcode.
+O CI vai:
+1. Rodar no `macos-26` (Xcode 26.5)
+2. Instalar certs via `fastlane match`
+3. `pnpm build:mobile` → `cap sync ios` → `pod install`
+4. `xcodebuild archive`
+5. Upload para TestFlight
 
-```bash
-open App.xcworkspace
-```
+### 3. Validar no TestFlight
 
-5. Ajustar Signing & Capabilities no target `App`.
+App Store Connect → TestFlight → aguardar processamento (~10–30 min).
+Instalar no iPhone → testar login, push, deep link.
 
-- Team: selecionar a conta Apple Developer.
-- Bundle Identifier: `com.convoca.app`.
-- Signing: Automatic.
-- Capabilities:
-  - Push Notifications
-  - Associated Domains
-  - Background Modes: Remote notifications
+### 4. Submeter para revisão
 
-6. Firebase/APNs.
+App Store Connect → Convoca → versão → Submit for Review.
 
-- Registrar app iOS `com.convoca.app` no Firebase.
-- Baixar `GoogleService-Info.plist`.
-- Arrastar `GoogleService-Info.plist` para `ios/App/App` pelo Xcode.
-- Confirmar que o arquivo esta no target `App`.
-- Criar/subir APNs Auth Key (`.p8`) no Firebase.
+---
 
-7. Associated Domains.
+## Pendências antes do 1º submit
 
-Os dominios precisam servir `apple-app-site-association`.
+- [ ] Completar Sprints S1–S4 do playbook iOS
+- [ ] `apple-app-site-association` publicado na rota pública
+- [ ] Screenshots iPhone 6.9" (1320×2868)
+- [ ] Confirmar Stripe não entra em IAP (ver playbook S4-6)
 
-Template em `docs/mobile-convoca/templates/apple-app-site-association.template.json`.
+---
 
-Substituir `TEAM_ID` pelo Team ID da conta Apple:
+## Requisito Apple (em vigor desde 28/04/2026)
 
-```text
-TEAM_ID.com.convoca.app
-```
+Todos os uploads ao App Store Connect precisam ser feitos com Xcode 26 ou mais novo,
+usando SDK iOS/iPadOS 26 ou mais novo.
 
-8. Build local.
-
-No Xcode:
-
-- Selecionar destino `Any iOS Device (arm64)`.
-- Product -> Clean Build Folder.
-- Product -> Build.
-
-9. Archive.
-
-No Xcode:
-
-- Product -> Archive.
-- Distribute App -> App Store Connect -> Upload.
-
-10. App Store Connect.
-
-- Criar app com bundle `com.convoca.app`.
-- Preencher App Privacy.
-- Preencher Age Rating.
-- Informar conta demo.
-- Inserir screenshots.
-- Selecionar build enviado.
-- Submit for Review.
-
-## Pendencias antes de submeter iOS
-
-- Ter Mac com Xcode 26+.
-- Ter Apple Developer Program ativo.
-- Configurar Firebase/APNs.
-- Publicar `apple-app-site-association` nos dominios.
-- Testar login no WebView em device real.
-- Testar push em device real.
-- Confirmar se pagamentos Stripe no app nao entram em regra de In-App Purchase.
+O runner `macos-26` do GitHub Actions tem Xcode 26.5 instalado — requisito atendido.

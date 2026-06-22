@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-06-22
 
+### refactor
+- Reorganização e consolidação do conteúdo da documentação de arquitetura, banco de dados, fatos, segurança e contexto de fatos.
+  - Arquivos: `.brv/context-tree/_index.md`, `.brv/context-tree/facts/_index.md`, `.brv/context-tree/_manifest.json`
+  - Confiança: alta
+
+## 2026-06-22
+
 ### feat
 - Documentou estratégias de gerenciamento de temporadas, arquitetura móvel e fatos de extração de projeto.
   - Arquivos: `.brv/_queue_status.json`, `.brv/context-tree/convoca/season_management/season_management.md`, `.brv/context-tree/mobile/architecture/convoca_mobile_architecture.md`, `.brv/context-tree/facts/project/project_facts_extraction.md`

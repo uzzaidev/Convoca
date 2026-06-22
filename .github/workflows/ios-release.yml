@@ -111,6 +111,14 @@ jobs:
           key: pods-${{ runner.os }}-${{ hashFiles('ios/App/Podfile.lock') }}
           restore-keys: pods-${{ runner.os }}-
 
+      # 11b. Pod install — roda AQUI (fora do bundle exec fastlane) para evitar
+      #      conflito entre Ruby 3.3 do setup-ruby e Ruby 3.4 do Homebrew.
+      #      O sh() do fastlane herda BUNDLE_GEMFILE/RUBYOPT e contamina o pod.
+      - name: Pod install (CocoaPods)
+        run: |
+          cd ios/App
+          pod install --repo-update
+
       # 12. fastlane beta — orquestra tudo: match, build, archive, upload
       #     O Fastfile cuida de: create_keychain, match, update_code_signing_settings,
       #     pnpm build:mobile, pnpm cap sync ios, pod install, gym, pilot.

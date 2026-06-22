@@ -121,6 +121,7 @@ jobs:
       #      O sh() do fastlane herda BUNDLE_GEMFILE/RUBYOPT e contamina o pod.
       - name: Pod install (CocoaPods)
         run: |
+          node scripts/fix-ios-podfile-paths.mjs
           cd ios/App
           pod install --repo-update
 

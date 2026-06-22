@@ -1,15 +1,15 @@
 default_platform(:ios)
 
-BUNDLE_ID = "com.uzzai.convoca"
-TEAM_ID   = "2YRXNXGL8K"
-# Nome do provisioning profile gerado pelo fastlane match
+# __dir__ = pasta fastlane/; ROOT = raiz do repo
+ROOT         = File.expand_path("..", __dir__)
+BUNDLE_ID    = "com.uzzai.convoca"
+TEAM_ID      = "2YRXNXGL8K"
 PROFILE_NAME = "match AppStore #{BUNDLE_ID}"
 
 platform :ios do
 
   desc "Gerar e armazenar certificados (roda uma vez para setup)"
   lane :setup_certs do
-    # Em CI nao existe keychain interativo — cria um temporario antes do match
     create_keychain(
       name:             "CI_KEYCHAIN",
       password:         ENV["MATCH_PASSWORD"],
@@ -19,7 +19,6 @@ platform :ios do
       lock_when_sleeps: false
     )
 
-    # Autentica no Apple Developer Portal via API Key (.p8), sem Apple ID/senha
     api_key = app_store_connect_api_key(
       key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
@@ -43,7 +42,7 @@ platform :ios do
 
   desc "Build e upload para TestFlight"
   lane :beta do
-    # Keychain temporario para CI (sem keychain interativo no runner)
+    # Keychain temporario para CI (sem keychain interativo no runner macOS)
     create_keychain(
       name:             "CI_KEYCHAIN",
       password:         ENV["MATCH_PASSWORD"],
@@ -53,7 +52,6 @@ platform :ios do
       lock_when_sleeps: false
     )
 
-    # API Key para acesso ao Apple Developer Portal / App Store Connect
     api_key = app_store_connect_api_key(
       key_id:      ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id:   ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
@@ -61,7 +59,7 @@ platform :ios do
       in_house:    false
     )
 
-    # Instala Distribution Certificate + Provisioning Profile do repo convoca-certs
+    # Instala Distribution Cert + Provisioning Profile do repo convoca-certs
     match(
       type:                    "appstore",
       readonly:                true,
@@ -73,42 +71,41 @@ platform :ios do
       keychain_password:       ENV["MATCH_PASSWORD"]
     )
 
-    # Muda o projeto para Manual Signing antes do archive.
-    # Sem isso, o Xcode exige selecionar equipe na UI (falha em CI).
+    # Muda o projeto para Manual Signing.
+    # Usa caminho absoluto para evitar ambiguidade de diretorio de trabalho.
     update_code_signing_settings(
       use_automatic_signing: false,
-      path:                  "../../ios/App/App.xcodeproj",
+      path:                  "#{ROOT}/ios/App/App.xcodeproj",
       team_id:               TEAM_ID,
       bundle_identifier:     BUNDLE_ID,
       code_sign_identity:    "iPhone Distribution",
       profile_name:          PROFILE_NAME
     )
 
-    # Build mobile (Next.js export → out/)
-    sh("cd ../.. && pnpm build:mobile")
-
-    # Sync Capacitor iOS (copia assets e plugins nativos)
-    sh("cd ../.. && pnpm cap sync ios")
-
-    # Instalar CocoaPods (dependencias nativas iOS)
-    cocoapods(
-      clean_install:    true,
-      podfile:          "../../ios/App/Podfile",
-      use_bundle_exec:  false
-    )
-
     app_version = ENV["APP_VERSION"] || "1.0.0"
     build_num   = ENV["BUILD_NUMBER"] || "1"
 
-    # Archive e exportar IPA
+    # Next.js export para Capacitor (gera out/)
+    sh("cd #{ROOT} && pnpm build:mobile")
+
+    # Sincroniza assets e plugins nativos iOS
+    sh("cd #{ROOT} && pnpm cap sync ios")
+
+    # Instala dependencias nativas iOS via CocoaPods
+    cocoapods(
+      clean_install:   true,
+      podfile:         "#{ROOT}/ios/App/Podfile",
+      use_bundle_exec: false
+    )
+
+    # Archive + exportar IPA (Manual Signing)
     gym(
-      workspace:        "../../ios/App/App.xcworkspace",
+      workspace:        "#{ROOT}/ios/App/App.xcworkspace",
       scheme:           "App",
       configuration:    "Release",
       export_method:    "app-store",
-      output_directory: "../../build",
+      output_directory: "#{ROOT}/build",
       output_name:      "Convoca.ipa",
-      # Passa team, versao e modo de signing explicitamente para o xcodebuild
       xcargs: [
         "DEVELOPMENT_TEAM=#{TEAM_ID}",
         "CODE_SIGN_STYLE=Manual",
@@ -125,7 +122,7 @@ platform :ios do
       }
     )
 
-    # Upload para TestFlight via API Key (sem Apple ID / senha)
+    # Upload para TestFlight via API Key (sem Apple ID/senha)
     pilot(
       api_key:                           api_key,
       skip_waiting_for_build_processing: true

@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-22
 
 ### fix
+- Adicionado `*.p8` ao arquivo `.gitignore` para evitar o commit de chaves privadas Apple.
+  - Arquivos: `.gitignore`
+  - Evidência: alteração na linha do `.gitignore` para ignorar arquivos `.p8`
+  - Confiança: alta
+
+## 2026-06-22
+
+### fix
 - Adicionada configuração de `api_key` nas lanes `setup_certs` e `beta` para autenticação no Apple Developer Portal e App Store Connect usando API Key (.p8). Também foi criado um keychain temporário não interativo para CI.
   - Arquivos: `fastlane/Fastfile`
   - Evidência: adição de `api_key` e `create_keychain` nas lanes

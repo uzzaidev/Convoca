@@ -102,18 +102,43 @@ export async function GET(
     `;
 
     const topGoalkeepers = await sql`
+      WITH goalkeeper_games AS (
+        SELECT
+          ea.user_id,
+          t.id as team_id,
+          t.event_id
+        FROM event_attendance ea
+        INNER JOIN team_members tm ON tm.user_id = ea.user_id
+        INNER JOIN teams t ON t.id = tm.team_id AND t.event_id = ea.event_id
+        WHERE ea.event_id = ANY(${eventIds})
+          AND ea.status = 'yes'
+          AND ea.role = 'gk'
+      )
       SELECT
         u.id,
         u.name,
         u.image,
-        COUNT(*) as saves
-      FROM event_actions ea
-      INNER JOIN users u ON ea.subject_user_id = u.id
-      WHERE ea.event_id = ANY(${eventIds})
-        AND ea.action_type = 'save'
-        AND ea.subject_user_id IS NOT NULL
+        COUNT(DISTINCT gg.event_id) as games,
+        SUM(
+          (
+            SELECT COUNT(*)
+            FROM event_actions ea_goal
+            INNER JOIN teams t_opp ON t_opp.id = ea_goal.team_id
+            WHERE ea_goal.event_id = gg.event_id
+              AND ea_goal.action_type = 'goal'
+              AND t_opp.id != gg.team_id
+          ) + (
+            SELECT COUNT(*)
+            FROM event_actions ea_own_goal
+            WHERE ea_own_goal.event_id = gg.event_id
+              AND ea_own_goal.action_type = 'own_goal'
+              AND ea_own_goal.team_id = gg.team_id
+          )
+        )::int as goals_conceded
+      FROM goalkeeper_games gg
+      INNER JOIN users u ON gg.user_id = u.id
       GROUP BY u.id, u.name, u.image
-      ORDER BY saves DESC
+      ORDER BY goals_conceded ASC, games DESC, u.name ASC
       LIMIT 10
     `;
 
@@ -173,7 +198,7 @@ export async function GET(
         u.name,
         u.image,
         COUNT(DISTINCT CASE
-          WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
+          WHEN ea.status = 'yes'
           THEN ea.event_id
         END) as games_played,
         COUNT(DISTINCT CASE
@@ -188,8 +213,12 @@ export async function GET(
         CASE
           WHEN (SELECT total FROM total_count) > 0
           THEN ROUND(
-            COUNT(DISTINCT CASE WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL THEN ea.event_id END)::numeric * 100.0 /
-            NULLIF((SELECT total FROM total_count)::numeric, 0),
+            COUNT(DISTINCT CASE WHEN ea.status = 'yes' THEN ea.event_id END)::numeric * 100.0 /
+            NULLIF(
+              (SELECT total FROM total_count)::numeric -
+              COUNT(DISTINCT CASE WHEN ea.status = 'dm' THEN ea.event_id END)::numeric,
+              0
+            ),
             1
           )
           ELSE 0

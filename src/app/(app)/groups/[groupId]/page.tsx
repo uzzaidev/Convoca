@@ -57,7 +57,7 @@ type UpcomingEvent = {
 type Stats = {
   topScorers: Array<{ id: string; name: string; goals: string; games: string }>;
   topAssisters: Array<{ id: string; name: string; assists: string; games: string }>;
-  topGoalkeepers: Array<{ id: string; name: string; saves: string; games: string }>;
+  topGoalkeepers: Array<{ id: string; name: string; goals_conceded: string; games: string }>;
   recentMatches: Array<{
     id: string;
     starts_at: string;
@@ -373,23 +373,45 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
 
       // Goleiros
       const topGoalkeepers = await sql`
-        WITH player_games AS (
-          SELECT tm.user_id, COUNT(DISTINCT t.event_id) as total_games
-          FROM team_members tm
-          INNER JOIN teams t ON tm.team_id = t.id
-          WHERE t.event_id = ANY(${eventIds})
-          GROUP BY tm.user_id
+        WITH goalkeeper_games AS (
+          SELECT
+            ea.user_id,
+            t.id as team_id,
+            t.event_id
+          FROM event_attendance ea
+          INNER JOIN team_members tm ON tm.user_id = ea.user_id
+          INNER JOIN teams t ON t.id = tm.team_id AND t.event_id = ea.event_id
+          WHERE ea.event_id = ANY(${eventIds})
+            AND ea.status = 'yes'
+            AND ea.role = 'gk'
         )
-        SELECT u.id, u.name, COUNT(*) as saves,
-          COALESCE(pg.total_games, 0) as games
-        FROM event_actions ea
-        INNER JOIN users u ON ea.subject_user_id = u.id
-        LEFT JOIN player_games pg ON pg.user_id = u.id
-        WHERE ea.event_id = ANY(${eventIds}) AND ea.action_type = 'save'
-        GROUP BY u.id, u.name, pg.total_games
-        ORDER BY saves DESC LIMIT 10
+        SELECT
+          u.id,
+          u.name,
+          COUNT(DISTINCT gg.event_id) as games,
+          SUM(
+            (
+              SELECT COUNT(*)
+              FROM event_actions ea_goal
+              INNER JOIN teams t_opp ON t_opp.id = ea_goal.team_id
+              WHERE ea_goal.event_id = gg.event_id
+                AND ea_goal.action_type = 'goal'
+                AND t_opp.id != gg.team_id
+            ) + (
+              SELECT COUNT(*)
+              FROM event_actions ea_own_goal
+              WHERE ea_own_goal.event_id = gg.event_id
+                AND ea_own_goal.action_type = 'own_goal'
+                AND ea_own_goal.team_id = gg.team_id
+            )
+          )::int as goals_conceded
+        FROM goalkeeper_games gg
+        INNER JOIN users u ON u.id = gg.user_id
+        GROUP BY u.id, u.name
+        ORDER BY goals_conceded ASC, games DESC, u.name ASC
+        LIMIT 10
       `;
-      stats.topGoalkeepers = topGoalkeepers as unknown as Array<{ id: string; name: string; saves: string; games: string }>;
+      stats.topGoalkeepers = topGoalkeepers as unknown as Array<{ id: string; name: string; goals_conceded: string; games: string }>;
 
       // Jogos recentes
       const recentMatches = await sql`
@@ -424,12 +446,12 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
         SELECT 
           u.id, 
           u.name,
-          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) as games_played,
+          COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes') as games_played,
           COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') as games_dm,
           COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') as games_absent,
           (SELECT total FROM total_count) as total_games,
           ROUND(
-            COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) * 100.0 / 
+            COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes') * 100.0 / 
             NULLIF((SELECT total FROM total_count) - COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm'), 0), 
             1
           ) as frequency_percentage
@@ -438,7 +460,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
         LEFT JOIN event_attendance ea ON ea.user_id = u.id AND ea.event_id IN (SELECT id FROM recent_events)
         WHERE gm.group_id = ${groupId}
         GROUP BY u.id, u.name
-        HAVING COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes' AND ea.checked_in_at IS NOT NULL) > 0
+        HAVING COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'yes') > 0
            OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'dm') > 0
            OR COUNT(DISTINCT ea.event_id) FILTER (WHERE ea.status = 'no') > 0
         ORDER BY games_played DESC, frequency_percentage DESC

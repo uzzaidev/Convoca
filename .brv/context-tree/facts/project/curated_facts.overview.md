@@ -1,0 +1,7 @@
+- Curated facts are organized by subject and extracted from RLM context.
+- Successful extraction and deduplication of factual statements.
+- Issues with frequency views counting presence only when event_attendance.checked_in_at was non-null.
+- Adjustments made to count status='yes' as participation, excluding DM from percentage denominator.
+- Goalkeeper rankings changed to rank by goals conceded, using team assignments to compute goals suffered.
+- Notable entities include Convoca, groups.draw_config, scoring_configs, and event_attendance.
+- Decisions involved schema adjustments and ranking criteria changes.

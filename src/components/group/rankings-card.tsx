@@ -51,6 +51,13 @@ type PlayerFrequency = {
   frequency_percentage: string;
 };
 
+type GoalkeeperStat = {
+  id: string;
+  name: string;
+  goals_conceded: string;
+  games?: string;
+};
+
 type GeneralRanking = {
   id: string;
   name: string;
@@ -153,7 +160,7 @@ const TIEBREAKER_FIELD: Record<TiebreakerKey, { field: keyof GeneralRanking; dir
 type RankingsCardProps = {
   topScorers: Array<{ id: string; name: string; goals: string; games?: string }>;
   topAssisters: Array<{ id: string; name: string; assists: string; games?: string }>;
-  topGoalkeepers: Array<{ id: string; name: string; saves: string; games?: string }>;
+  topGoalkeepers: GoalkeeperStat[];
   generalRanking: GeneralRanking[];
   playerFrequency: PlayerFrequency[];
   currentUserId: string;
@@ -412,15 +419,15 @@ export function RankingsCard({
   });
 
   const goalkeepersData: PlayerStat[] = topGoalkeepers.map((p) => {
-    const savesCount = parseInt(p.saves);
+    const concededCount = parseInt(p.goals_conceded);
     return {
       id: p.id,
       name: p.name,
-      value: savesCount,
-      label: `${p.saves} defesa${savesCount !== 1 ? "s" : ""}`,
+      value: concededCount,
+      label: `${p.goals_conceded} gol${concededCount !== 1 ? "s" : ""} sofrido${concededCount !== 1 ? "s" : ""}`,
       games: p.games ? parseInt(p.games) : undefined,
     };
-  });
+  }).sort((a, b) => a.value - b.value || (b.games ?? 0) - (a.games ?? 0) || a.name.localeCompare(b.name));
 
   const renderRankingList = (data: PlayerStat[], emptyMessage: string, fullscreen = false) => {
     if (data.length === 0) {
@@ -1011,7 +1018,7 @@ export function RankingsCard({
               <div className="flex items-center gap-2">
                 <Hand className="h-5 w-5 text-purple-600 dark:text-purple-500" />
                 <span className="text-xs md:text-sm text-muted-foreground">
-                  Top 10 defesas
+                  Top 10 menos vazados
                 </span>
               </div>
               <div className="flex gap-2">
@@ -1038,14 +1045,14 @@ export function RankingsCard({
                       <Hand className="h-5 w-5 text-purple-600" />
                       Goleiros
                     </DialogTitle>
-                    <DialogDescription>Top 10 defesas do grupo</DialogDescription>
+                    <DialogDescription>Top 10 menos vazados do grupo</DialogDescription>
                   </DialogHeader>
-                  {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda", true)}
+                  {renderRankingList(goalkeepersData, "Nenhum goleiro com jogos registrados ainda", true)}
                 </DialogContent>
               </Dialog>
               </div>
             </div>
-            {renderRankingList(goalkeepersData, "Nenhuma defesa registrada ainda")}
+            {renderRankingList(goalkeepersData, "Nenhum goleiro com jogos registrados ainda")}
           </TabsContent>
 
           <TabsContent value="frequencia" className="space-y-4 mt-0">

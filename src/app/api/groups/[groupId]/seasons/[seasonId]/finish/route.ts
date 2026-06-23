@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { normalizeTiebreakers } from "@/lib/scoring-tiebreakers";
 
 type RouteParams = {
   params: Promise<{ groupId: string; seasonId: string }>;
@@ -18,6 +19,43 @@ const DEFAULT_SCORING = {
   pointsMvp: 0,
   pointsPresence: 0,
 };
+
+type RankingRow = Record<string, unknown> & {
+  points?: number | string | null;
+  wins?: number | string | null;
+  goal_difference?: number | string | null;
+  goals?: number | string | null;
+  games_played?: number | string | null;
+  assists?: number | string | null;
+  mvp_count?: number | string | null;
+};
+
+function toNum(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v) || 0;
+  return 0;
+}
+
+function compareByKey(a: RankingRow, b: RankingRow, key: string): number {
+  switch (key) {
+    case "wins":
+      return toNum(b.wins) - toNum(a.wins);
+    case "goal_difference":
+      return toNum(b.goal_difference) - toNum(a.goal_difference);
+    case "goals":
+      return toNum(b.goals) - toNum(a.goals);
+    case "games_played":
+      return toNum(b.games_played) - toNum(a.games_played);
+    case "games_played_asc":
+      return toNum(a.games_played) - toNum(b.games_played);
+    case "assists":
+      return toNum(b.assists) - toNum(a.assists);
+    case "mvp_count":
+      return toNum(b.mvp_count) - toNum(a.mvp_count);
+    default:
+      return 0;
+  }
+}
 
 // POST /api/groups/[groupId]/seasons/[seasonId]/finish - Finalizar temporada e criar snapshot
 export async function POST(
@@ -53,19 +91,29 @@ export async function POST(
       );
     }
 
-    const [groupData] = await sql`
-      SELECT draw_config FROM groups WHERE id = ${groupId}
+    const [scoringConfig] = await sql`
+      SELECT
+        points_win as "pointsWin",
+        points_draw as "pointsDraw",
+        points_loss as "pointsLoss",
+        points_goal as "pointsGoal",
+        points_assist as "pointsAssist",
+        points_mvp as "pointsMvp",
+        points_presence as "pointsPresence",
+        tiebreakers
+      FROM scoring_configs
+      WHERE group_id = ${groupId}
     `;
-    const cfg = groupData?.draw_config ?? {};
     const scoring = {
-      pointsWin: cfg.points_win ?? DEFAULT_SCORING.pointsWin,
-      pointsDraw: cfg.points_draw ?? DEFAULT_SCORING.pointsDraw,
-      pointsLoss: cfg.points_loss ?? DEFAULT_SCORING.pointsLoss,
-      pointsGoal: cfg.points_goal ?? DEFAULT_SCORING.pointsGoal,
-      pointsAssist: cfg.points_assist ?? DEFAULT_SCORING.pointsAssist,
-      pointsMvp: cfg.points_mvp ?? DEFAULT_SCORING.pointsMvp,
-      pointsPresence: cfg.points_presence ?? DEFAULT_SCORING.pointsPresence,
+      pointsWin: scoringConfig?.pointsWin ?? DEFAULT_SCORING.pointsWin,
+      pointsDraw: scoringConfig?.pointsDraw ?? DEFAULT_SCORING.pointsDraw,
+      pointsLoss: scoringConfig?.pointsLoss ?? DEFAULT_SCORING.pointsLoss,
+      pointsGoal: scoringConfig?.pointsGoal ?? DEFAULT_SCORING.pointsGoal,
+      pointsAssist: scoringConfig?.pointsAssist ?? DEFAULT_SCORING.pointsAssist,
+      pointsMvp: scoringConfig?.pointsMvp ?? DEFAULT_SCORING.pointsMvp,
+      pointsPresence: scoringConfig?.pointsPresence ?? DEFAULT_SCORING.pointsPresence,
     };
+    const tiebreakers = normalizeTiebreakers(scoringConfig?.tiebreakers);
 
     const rankings = await sql`
       WITH
@@ -188,10 +236,22 @@ export async function POST(
       ORDER BY points DESC, goal_difference DESC, goals DESC
     `;
 
+    const sortedRankings = [...(rankings as unknown as RankingRow[])].sort((a, b) => {
+      const pointsDelta = toNum(b.points) - toNum(a.points);
+      if (pointsDelta !== 0) return pointsDelta;
+
+      for (const key of tiebreakers) {
+        const delta = compareByKey(a, b, key);
+        if (delta !== 0) return delta;
+      }
+
+      return 0;
+    });
+
     await sql`DELETE FROM season_snapshots WHERE season_id = ${seasonId}`;
 
-    for (let i = 0; i < rankings.length; i++) {
-      const ranking = rankings[i];
+    for (let i = 0; i < sortedRankings.length; i++) {
+      const ranking = sortedRankings[i];
       await sql`
         INSERT INTO season_snapshots (
           season_id, user_id, position, points, games_played,
@@ -213,14 +273,14 @@ export async function POST(
     `;
 
     logger.info(
-      { userId: user.id, groupId, seasonId, playersCount: rankings.length },
+      { userId: user.id, groupId, seasonId, playersCount: sortedRankings.length },
       "Season finished and snapshot created"
     );
 
     return NextResponse.json({
       success: true,
       season: { ...season, status: "finished" },
-      playersCount: rankings.length,
+      playersCount: sortedRankings.length,
     });
   } catch (error) {
     return handleRouteError(error, {

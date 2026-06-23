@@ -1,0 +1,5 @@
+- Fix addresses TypeScript compilation issues in the season finish route.
+- Improved type safety and compatibility with PostgreSQL parameters.
+- Changes include replacing loose types with concrete typed shapes for SQL parameters.
+- Requires proper typing in SQL queries to avoid parameter inference issues.
+- Example provided demonstrates the change from Record<string, unknown> to a concrete type.

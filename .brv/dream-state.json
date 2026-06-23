@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 1,
+  "curationsSinceDream": 2,
   "lastDreamAt": "2026-06-22T13:33:26.576Z",
   "lastDreamLogId": "drm-1782134844406",
   "pendingMerges": [],
@@ -7,6 +7,10 @@
     {
       "enqueuedAt": 1782223126271,
       "path": "facts/project/curated_facts.md"
+    },
+    {
+      "enqueuedAt": 1782223802528,
+      "path": "facts/project/season_finish_route_fix.md"
     }
   ],
   "totalDreams": 2,

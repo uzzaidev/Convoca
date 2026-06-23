@@ -20,14 +20,22 @@ const DEFAULT_SCORING = {
   pointsPresence: 0,
 };
 
-type RankingRow = Record<string, unknown> & {
-  points?: number | string | null;
-  wins?: number | string | null;
-  goal_difference?: number | string | null;
-  goals?: number | string | null;
-  games_played?: number | string | null;
-  assists?: number | string | null;
-  mvp_count?: number | string | null;
+type RankingRow = {
+  user_id: string;
+  player_name: string | null;
+  player_image: string | null;
+  games_played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goals: number;
+  assists: number;
+  own_goals: number;
+  mvp_count: number;
+  team_goals: number;
+  goals_conceded: number;
+  goal_difference: number;
+  points: number;
 };
 
 function toNum(v: unknown): number {
@@ -115,7 +123,7 @@ export async function POST(
     };
     const tiebreakers = normalizeTiebreakers(scoringConfig?.tiebreakers);
 
-    const rankings = await sql`
+    const rankings = await sql<RankingRow[]>`
       WITH
       season_events AS (
         SELECT id FROM events
@@ -236,7 +244,7 @@ export async function POST(
       ORDER BY points DESC, goal_difference DESC, goals DESC
     `;
 
-    const sortedRankings = [...(rankings as unknown as RankingRow[])].sort((a, b) => {
+    const sortedRankings = [...rankings].sort((a, b) => {
       const pointsDelta = toNum(b.points) - toNum(a.points);
       if (pointsDelta !== 0) return pointsDelta;
 

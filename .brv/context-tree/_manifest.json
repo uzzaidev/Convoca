@@ -67,6 +67,14 @@
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/curated_facts.abstract.md",
+      "abstractTokens": 36,
+      "importance": 50,
+      "path": "facts/project/curated_facts.md",
+      "tokens": 36,
+      "type": "context"
+    },
+    {
       "abstractPath": "facts/project/curate_workflow_rlm_approach.abstract.md",
       "abstractTokens": 43,
       "importance": 50,
@@ -92,18 +100,18 @@
     },
     {
       "importance": 50,
-      "path": "security/context.md",
-      "tokens": 136,
+      "path": "security/operations/context.md",
+      "tokens": 93,
       "type": "context"
     }
   ],
-  "generated_at": "2026-06-23T13:58:46.291Z",
+  "generated_at": "2026-06-23T14:10:02.548Z",
   "lane_tokens": {
-    "contexts": 3999,
+    "contexts": 3992,
     "stubs": 0,
     "summaries": 1615
   },
-  "source_fingerprint": "8a82307df13e35878d7b64ecb4b879d6f780eb220470fc5cb6c2f311fa61c7c8",
-  "total_tokens": 5614,
+  "source_fingerprint": "a9d58908f74a6fa161f2fc10116b39e30dbab8baf65e5227f01bf9d26ff91c2a",
+  "total_tokens": 5607,
   "version": 1
 }

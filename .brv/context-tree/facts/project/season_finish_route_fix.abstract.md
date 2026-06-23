@@ -1,0 +1,1 @@
+This document details a fix for TypeScript compilation issues in the season finish route, enhancing type safety and PostgreSQL compatibility.

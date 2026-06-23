@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-23
+
+### feat
+- Adicionado suporte a deep links, AASA, assetlinks e proxy público para /.well-known
+  - Arquivos: `README.md`
+  - Confiança: alta
+
 ## 2026-06-22
 
 ### fix

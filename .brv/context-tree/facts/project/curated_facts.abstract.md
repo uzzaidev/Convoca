@@ -1,0 +1,1 @@
+This document details curated factual statements about Convoca, focusing on schema adjustments, ranking changes, and data accuracy improvements.

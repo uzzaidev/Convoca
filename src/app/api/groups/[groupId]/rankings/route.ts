@@ -321,7 +321,7 @@ export async function GET(
           u.image as player_image,
           gm.base_rating,
           COUNT(DISTINCT CASE
-            WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
+            WHEN ea.status = 'yes'
             THEN ea.event_id
           END) as games_played,
           COUNT(DISTINCT CASE WHEN pm.result = 'win' THEN pm.event_id END) as wins,
@@ -469,7 +469,7 @@ export async function GET(
           u.image as player_image,
           gm.base_rating,
           COUNT(DISTINCT CASE
-            WHEN ea.status = 'yes' AND ea.checked_in_at IS NOT NULL
+            WHEN ea.status = 'yes'
             THEN ea.event_id
           END) as games_played,
           COUNT(DISTINCT CASE WHEN pm.result = 'win' THEN pm.event_id END) as wins,

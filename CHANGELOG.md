@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-23
 
 ### feat
+- Atualizou a lógica de ranking e cálculos de estatísticas para goleiros, incluindo a mudança de ordenação para por gols sofridos. Também adicionou documentação de fatos curados.
+  - Arquivos: `.brv/_queue_status.json`, `.brv/context-tree/_manifest.json`, `.brv/context-tree/facts/project/curated_facts.md`, `.brv/context-tree/facts/project/curated_facts.abstract.md`, `.brv/context-tree/facts/project/curated_facts.overview.md`, `src/app/(app)/groups/[groupId]/page.tsx`, `src/app/api/groups/[groupId]/rankings/route.ts`, `src/app/api/groups/[groupId]/stats/route.ts`, `src/app/api/groups/[groupId]/seasons/[seasonId]/finish/route.ts`
+  - Confiança: alta
+
+## 2026-06-23
+
+### feat
 - Adicionado suporte a deep links, AASA, assetlinks e proxy público para /.well-known
   - Arquivos: `README.md`
   - Confiança: alta

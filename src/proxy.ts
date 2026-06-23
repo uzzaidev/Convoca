@@ -25,9 +25,12 @@ export async function proxy(req: NextRequest) {
   const isApiRoute = pathname.startsWith("/api");
   const isAuthPage = pathname.startsWith("/auth");
   const isErrorPage = pathname === "/auth/error";
+  // /.well-known/** deve ser público: Apple (AASA) e Google (assetlinks)
+  // fazem GET sem autenticação para validar Universal Links / App Links.
+  const isWellKnown = pathname.startsWith("/.well-known");
 
-  // Skip auth check for public pages and API routes
-  if (isPublicPage || isApiRoute) {
+  // Skip auth check for public pages, API routes and well-known endpoints
+  if (isPublicPage || isApiRoute || isWellKnown) {
     return NextResponse.next();
   }
 

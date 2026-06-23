@@ -15,7 +15,7 @@
 ```
 iOS-S1 (1–2h)    Contas no Apple Developer + Firebase iOS  [manual: browser]  ✅ CONCLUÍDO 2026-06-22
 iOS-S2 (1h)      fastlane match — certificados + provisioning  [GitHub Actions]  ✅ CONCLUÍDO 2026-06-22
-iOS-S3 (30min)   GitHub secrets + disparar CI + TestFlight  ✅ BUILD + LOGIN OK (2026-06-22)
+iOS-S3 (30min)   GitHub secrets + disparar CI + TestFlight  ✅ BUILD + LOGIN + PUSH OK (v2.0.0 build 5, 2026-06-22)
 iOS-S4 (1–2h)    App Store Connect — screenshots + listing + submit  [manual]
 ```
 
@@ -31,6 +31,7 @@ Cada sprint pode ser executado **inteiro no Windows**, sem abrir o Xcode.
 | `docs/playbooks/github-secrets-via-cli/README.md` | **S3**: configura os 6 secrets com 1 comando |
 | `docs/playbooks/app-screenshots-headless/README.md` | **S4**: captura screenshots iPhone (1320×2868) via headless |
 | `docs/playbooks/firebase-push-via-cli/README.md` | **S1**: registrar app iOS + APNs no Firebase via CLI |
+| **Seção [Playbook de falhas](#playbook-de-falhas--do-primeiro-build-ao-push-ok)** (neste README) | Troubleshooting F1–F10: login, push, Vercel, CI, crash |
 
 ### O que é 100% automatizado
 
@@ -480,12 +481,13 @@ Arquivo: `.github/workflows/ios-release.yml`
 4.  pnpm install --frozen-lockfile
 5.  setup ruby 3.3  (bundler-cache: false — sem Gemfile.lock no repo)
 6.  bundle install --jobs 4 --retry 3
-7.  restaurar GoogleService-Info.plist (base64 decode do secret)
+7.  restaurar GoogleService-Info.plist (base64 decode do secret) + validar referência no project.pbxproj
 8.  determinar APP_VERSION e BUILD_NUMBER
 9.  cache CocoaPods
-10. pod install --repo-update          ← FORA do bundle exec (ambiente limpo)
-11. bundle exec fastlane beta          ← faz tudo: match, signing, gym, pilot
-12. limpar GoogleService-Info.plist    ← sempre, mesmo em falha
+10. node scripts/fix-ios-podfile-paths.mjs   ← paths hoisted para pnpm (ver F8)
+11. pod install --repo-update                 ← FORA do bundle exec (ambiente limpo)
+12. bundle exec fastlane beta                ← faz tudo: match, signing, gym, pilot
+13. limpar GoogleService-Info.plist          ← sempre, mesmo em falha
 ```
 
 > **Por que pod install vem ANTES do `fastlane beta`?**
@@ -587,39 +589,151 @@ sh("cd #{ROOT} && CAPACITOR_PLATFORM=ios pnpm cap copy ios")
 
 - [x] Android Play Store / APK: login OK com `CapacitorHttp` + `CapacitorCookies` ligados
 - [x] iOS TestFlight build ≥ 2: login OK com plugins **desligados** (`CAPACITOR_PLATFORM=ios`)
-- [ ] Push no iOS após login — ver seção **Push iOS (FCM token)** abaixo
+- [x] Push no iOS após login — **v2.0.0 build 5** ✅ (`devices: 1`, `sent: 1`, 2026-06-22)
 - [ ] Deep link `convoca://` no iOS
 
 ---
 
-## Push iOS — token FCM (não APNs)
+## Playbook de falhas — do primeiro build ao push OK
 
-### Problema (descoberto 2026-06-22)
+> **Estado final validado (2026-06-22):** TestFlight **v2.0.0 (5)** abre sem crash, login OK, push FCM OK.
+>
+> Este capítulo documenta **cada falha real** que encontramos, **por que aconteceu** e **o que corrigiu** —
+> para não repetir os mesmos erros em builds futuros.
 
-| Plataforma | Plugin antigo | Token salvo | Backend FCM |
-|------------|---------------|-------------|-------------|
-| Android | `@capacitor/push-notifications` | **FCM** ✅ | funciona |
-| iOS (antes) | `@capacitor/push-notifications` | **APNs** ❌ | `sent: 0`, tokens apagados |
+### Arquitetura que explica metade dos bugs
 
-Sintomas:
-- `devices: 2, sent: 0` → tokens inválidos para FCM (eram APNs)
-- `devices: 0` → tokens apagados + `AppDelegate.swift` sem callbacks de push (token nem registrava)
+O Convoca iOS **não embute só HTML estático** — a WebView carrega o site em produção:
 
-Firebase **produção** APNs key no console é necessária, mas **não basta** — o app precisa salvar **token FCM**.
+```
+capacitor.config.ts → server.url = "https://convoca.uzzai.com.br"
+```
 
-### Solução implementada
+| Camada | Onde roda | O que controla |
+|--------|-----------|----------------|
+| Binário `.ipa` (TestFlight) | Nativo iOS | `AppDelegate`, pods, `GoogleService-Info.plist`, signing |
+| JavaScript do app | **Vercel** (URL remota) | `push-notifications.ts`, NextAuth, UI |
+| Backend push | Vercel API | `src/lib/mobile/fcm.ts` → FCM HTTP v1 |
 
-1. **`@capacitor-firebase/messaging`** — retorna token FCM no iOS e Android
-2. **`GoogleService-Info.plist` no bundle Xcode** — referenciado em `project.pbxproj` (Copy Bundle Resources). Sem isso, `FirebaseApp.configure()` crasha ao abrir.
-3. **`AppDelegate.swift`** — callbacks APNs obrigatórios; **nao** chamar `FirebaseApp.configure()` no launch (plugin `@capacitor-firebase/app` faz isso quando o bridge carrega)
-4. Removido `@capacitor/push-notifications` (conflita com Firebase Messaging no iOS)
-5. APNs **dev + produção** no Firebase (`45G7QADN8Q`)
+**Consequência:** um fix só no CI iOS **não basta** se o JS vier da Vercel com código errado (ex.: stub de Firebase). Sempre validar **deploy Vercel + build TestFlight** juntos.
 
-### Testar push após novo build TestFlight
+---
 
-1. Instalar build **≥ 3** (com fix FCM)
-2. Login + permitir notificações
-3. Chrome (mesma conta):
+### Cronologia das falhas (ordem real de descoberta)
+
+#### F1 · Login: "email ou senha incorretos" (build 1, TestFlight)
+
+| | |
+|---|---|
+| **Sintoma** | Credenciais corretas funcionam no Android e no browser; no iPhone, login falha |
+| **Causa** | `CapacitorHttp` + `CapacitorCookies` no iOS usam cookie jar **nativo** (`HTTPCookieStorage`), separado da **WKWebView** (`WKHTTPCookieStore`). NextAuth grava sessão num jar; a WebView lê do outro |
+| **Fix** | `capacitor.config.ts`: desligar os dois plugins quando `CAPACITOR_PLATFORM=ios`. CI: `CAPACITOR_PLATFORM=ios pnpm cap copy ios` |
+| **Validação** | TestFlight build **2** — login OK ✅ |
+
+```typescript
+// capacitor.config.ts
+const isIosBuild = process.env.CAPACITOR_PLATFORM === "ios";
+CapacitorCookies: { enabled: !isIosBuild },
+CapacitorHttp:    { enabled: !isIosBuild },
+```
+
+---
+
+#### F2 · CI: upload TestFlight com mesmo `CFBundleVersion`
+
+| | |
+|---|---|
+| **Sintoma** | Re-run do workflow falha: build number já existe no App Store Connect |
+| **Causa** | `BUILD_NUMBER` fixo ou reutilizado |
+| **Fix** | Workflow: se `build_number` vazio → usa `github.run_number`. Sempre incrementar manualmente se re-disparar com mesmo run |
+| **Validação** | Builds 2, 3, 4, 5 subiram sem conflito ✅ |
+
+---
+
+#### F3 · Push: `devices: 2, sent: 0`
+
+| | |
+|---|---|
+| **Sintoma** | API `/api/mobile/push/send` retorna OK, mas nenhuma notificação no iPhone |
+| **Causa** | `@capacitor/push-notifications` no **iOS** retorna token **APNs bruto**. O backend envia via **FCM HTTP v1**, que só aceita **token FCM** |
+| **Fix** | Trocar para `@capacitor-firebase/messaging` + `@capacitor-firebase/app`; remover `@capacitor/push-notifications` |
+| **Validação** | Próximo passo — ainda falhou por outros motivos (F4–F9) |
+
+---
+
+#### F4 · Push: `devices: 0, sent: 0`
+
+| | |
+|---|---|
+| **Sintoma** | Depois de F3, API não encontra mais devices |
+| **Causa** | `sendPushToUser()` em `fcm.ts` **apaga tokens inválidos** quando FCM responde `UNREGISTERED` / `INVALID_ARGUMENT`. Os 2 tokens APNs foram removidos |
+| **Fix** | Mesmo de F3 + novo registro após build com FCM. Não é bug do backend — é limpeza correta |
+| **Lição** | `devices: 0` ≠ problema de chave APNs no Firebase; significa **nenhum token válido no banco** |
+
+---
+
+#### F5 · Firebase Console: chave APNs produção
+
+| | |
+|---|---|
+| **Sintoma** | Suspeita de que push só falha em produção / TestFlight |
+| **Causa parcial** | TestFlight usa ambiente **production** APNs — precisa da chave no slot "produção" do Firebase |
+| **O que NÃO era** | Usar a **mesma** `.p8` nos slots dev e produção é **normal e correto** |
+| **Fix** | Upload da APNs Auth Key `45G7QADN8Q` nos dois slots |
+| **Lição** | Necessário, mas **insuficiente** sozinho — ainda precisava de token FCM (F3) e bundle plist (F9) |
+
+---
+
+#### F6 · Vercel deploy: `Can't resolve 'firebase/messaging'`
+
+| | |
+|---|---|
+| **Sintoma** | `next build` (Turbopack) falha após adicionar `@capacitor-firebase/messaging` |
+| **Causa** | Plugin importa `firebase/messaging` no `web.js`; peer dep `firebase` não estava instalada |
+| **Fix** | `pnpm add firebase@^11.2.0` |
+| **Validação** | Deploy Vercel verde ✅ |
+
+---
+
+#### F7 · Vercel stub quebraria push no iPhone (armadilha evitada)
+
+| | |
+|---|---|
+| **Sintoma** | Tentativa de stubar `@capacitor-firebase/messaging` no `next.config.ts` para o build web passar sem `firebase` |
+| **Causa** | App iOS carrega JS de `convoca.uzzai.com.br` — o stub ia para o TestFlight também → `getToken()` vazio |
+| **Fix** | **Remover o stub**; manter `firebase` como dependência. Push só roda com `isNativePlatform()` mas o **módulo real** precisa estar no bundle servido pela Vercel |
+| **Lição** | Com `server.url` remoto, **Vercel é parte do app mobile** |
+
+---
+
+#### F8 · CI: `No podspec found for CapacitorFirebaseApp`
+
+| | |
+|---|---|
+| **Sintoma** | `pod install` falha no GitHub Actions após adicionar Firebase |
+| **Causa** | `Podfile` gerado pelo `cap sync` usa paths **hardcoded** do pnpm (`.pnpm/@capacitor-firebase+app@7.3.1_@capacitor+core@7.6.6/...`). Ao adicionar `firebase`, o hash da pasta muda e o path antigo **não existe** no CI |
+| **Fix** | Paths hoisted: `../../node_modules/@capacitor-firebase/app` + script `scripts/fix-ios-podfile-paths.mjs` (roda no `cap:sync:ios` e no workflow antes do `pod install`) |
+| **Validação** | Builds 4 e 5 passaram `pod install` ✅ |
+
+---
+
+#### F9 · Crash ao abrir o app (build 4)
+
+| | |
+|---|---|
+| **Sintoma** | App fecha imediatamente ao tocar no ícone (TestFlight build 4) |
+| **Causa** | `FirebaseApp.configure()` no `didFinishLaunching` **sem** `GoogleService-Info.plist` no **Copy Bundle Resources** do Xcode. O CI decodificava o plist no disco, mas o `.ipa` não incluía o arquivo |
+| **Fix** | 1) Referenciar `GoogleService-Info.plist` em `project.pbxproj` (Resources). 2) **Remover** `FirebaseApp.configure()` do launch — plugin `@capacitor-firebase/app` configura quando o bridge carrega (com plist no bundle) |
+| **Validação** | v2.0.0 build **5** abre normalmente ✅ |
+
+---
+
+#### F10 · Push OK — estado final ✅
+
+| | |
+|---|---|
+| **Build** | **v2.0.0 (5)** no TestFlight |
+| **Teste** | Chrome, mesma conta logada:
 
 ```javascript
 fetch("/api/mobile/push/send", {
@@ -630,13 +744,61 @@ fetch("/api/mobile/push/send", {
 }).then(r => r.json()).then(d => console.log(JSON.stringify(d, null, 2)));
 ```
 
-Esperado: `devices: 1`, `sent: 1` + notificação no iPhone.
+| **Resposta esperada** | `{ "ok": true, "devices": 1, "sent": 1, "results": [{ "token": "...", "ok": true }] }` + notificação no iPhone |
+| **Validado** | 2026-06-22 ✅ |
 
-### Referências push
+---
+
+### Mapa rápido: sintoma → causa provável
+
+| Sintoma | Olhar primeiro |
+|---------|----------------|
+| Login falha só no iOS | `CAPACITOR_PLATFORM=ios` no cap copy? Plugins Http/Cookies desligados? |
+| `devices: N, sent: 0` | Token não é FCM (plugin errado) ou APNs key faltando no Firebase |
+| `devices: 0` | Tokens apagados do banco; reinstalar app, login, permitir notificações |
+| Crash ao abrir (pós-Firebase) | `GoogleService-Info.plist` no `project.pbxproj`? `FirebaseApp.configure()` no launch? |
+| `pod install` no CI | Paths `.pnpm/...` no Podfile? Rodar `fix-ios-podfile-paths.mjs` |
+| Vercel build fail `firebase/messaging` | `firebase` no `package.json` |
+| Push OK na API, nada no phone | App em foreground? Permissão concedida? Build certo (2.0.0+)? |
+
+---
+
+### Stack push final (referência)
+
+| Componente | Arquivo / local |
+|------------|-----------------|
+| Plugin nativo | `@capacitor-firebase/messaging` + `@capacitor-firebase/app` |
+| Registro JS | `src/lib/mobile/push-notifications.ts` |
+| Envio backend | `src/lib/mobile/fcm.ts` + `FIREBASE_SERVICE_ACCOUNT` |
+| APNs callbacks | `ios/App/App/AppDelegate.swift` |
+| Firebase config iOS | `GoogleService-Info.plist` → bundle + secret `GOOGLE_SERVICE_INFO_PLIST_BASE64` |
+| APNs no Firebase | Key `45G7QADN8Q`, Team `2YRXNXGL8K`, dev **e** produção |
+| Entitlements | `aps-environment: production` em `App.entitlements` |
+
+### Referências
 
 - [Capacitor #7262 — NextAuth cookie state iOS](https://github.com/ionic-team/capacitor/issues/7262)
 - [Capacitor Discussion #7085 — NextAuth session on device/TestFlight](https://github.com/ionic-team/capacitor/discussions/7085)
+- [@capacitor-firebase/messaging — iOS setup](https://github.com/capawesome-team/capacitor-firebase/blob/main/packages/messaging/README.md)
 - Cookies NextAuth: `src/lib/auth.ts` (`sameSite: lax`, prefixos `__Secure-` / `__Host-`)
+
+---
+
+## Push iOS — resumo técnico (pós-fix)
+
+| Plataforma | Plugin | Token salvo | Backend FCM |
+|------------|--------|-------------|-------------|
+| Android | `@capacitor-firebase/messaging` | **FCM** ✅ | funciona |
+| iOS (antes) | `@capacitor/push-notifications` | **APNs** ❌ | `sent: 0` |
+| iOS (agora) | `@capacitor-firebase/messaging` | **FCM** ✅ | funciona |
+
+**Testar push** (após instalar v2.0.0 build ≥ 5):
+
+1. Login + permitir notificações + aguardar ~15s
+2. Rodar o `fetch` da seção F10 no Chrome (mesma conta)
+3. Esperar `devices: 1`, `sent: 1`
+
+Para a cronologia completa de falhas, ver seção **Playbook de falhas** acima.
 
 ---
 
@@ -649,7 +811,7 @@ Esperado: `devices: 1`, `sent: 1` + notificação no iPhone.
 - [x] Build no App Store Connect → TestFlight ✅ v1.0.0 build 2
 - [x] App instalado no iPhone via TestFlight ✅
 - [x] Login funcionando na WebView (NextAuth + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
-- [ ] Push notification recebida no device
+- [x] Push notification recebida no device ✅ v2.0.0 build 5 (2026-06-22)
 - [ ] Deep link `convoca://` abrindo o app
 
 ---

@@ -112,9 +112,18 @@ src/
 - ✅ Registro de gols/assistências
 - ✅ Rankings básicos
 
+### Mobile (Capacitor)
+- ✅ Android na Play Store (em análise)
+- ✅ iOS TestFlight — login NextAuth + push FCM (v2.0.0 build 5, 2026-06-22)
+- [ ] Deep links + App Store iOS
+
+> **Playbook iOS (CI sem Mac, falhas e fixes):** [docs/playbooks/ios-ci-sem-mac/README.md](./docs/playbooks/ios-ci-sem-mac/README.md) — inclui cronologia F1–F10 (login, push, Vercel, pod install, crash ao abrir).
+>
+> **Checklist mobile:** [docs/mobile-convoca/CHECKLIST.md](./docs/mobile-convoca/CHECKLIST.md)
+
 ### Fase 2 - Realtime (6-10 semanas)
 - [ ] Placar ao vivo
-- [ ] Notificações push
+- [x] Notificações push (iOS TestFlight + backend FCM; Android via Play Store)
 - [ ] Sorteio inteligente
 - [ ] Financeiro/carteira
 

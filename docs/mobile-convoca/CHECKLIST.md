@@ -99,7 +99,7 @@ Identidade:
 - [x] `.gitignore` protege keystore, `release.properties` e `google-services.json`
 - [x] `android/release.properties.example` criado (storeFile corrigido para `release.keystore`)
 - [x] `build.gradle` le `release.properties` quando existir
-- [x] Keystore de producao gerado (`android/app/release.keystore`, alias `convoca`, SHA-256 `03:EB:03:BA:...:29:A5`)
+- [x] Keystore de producao gerado (`android/app/release.keystore`, alias `convoca`, SHA-256 `03:EB:03:BA:4E:A6:F9:7B:70:90:53:31:5C:23:66:FF:72:6D:42:0D:3C:01:F8:1B:4C:60:58:DA:4C:3F:29:A5`)
 - [x] Backup do keystore preparado (`C:\Users\pedro\convoca-keystore-backup` + `.zip`) — usuario guarda em 2+ locais
 - [x] `android/release.properties` criado localmente com senhas reais
 - [x] AAB final assinado gerado com o keystore de producao (verificado: package `com.uzzai.convoca`, assinatura bate)
@@ -169,7 +169,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] Build aparecendo no App Store Connect → TestFlight ✅ v1.0.0 build 1 "Pronta para envio"
 - [x] App instalado no iPhone via TestFlight ✅
 - [x] Login na WebView funcionando (NextAuth, build 2 + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
-- [ ] Push notification recebida no device iOS — fix FCM token + GoogleService-Info no bundle (v2.0.0 build ≥ 5)
+- [x] Push notification recebida no device iOS ✅ v2.0.0 build 5 (2026-06-22)
 - [ ] Deep link `convoca://` abrindo o app
 
 ### Sprint iOS-S4 — App Store Connect e Submissao
@@ -183,7 +183,7 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: Android EM ANALISE na Google | iOS: TestFlight build 2 + login OK — proximo: push/deep link + S4 App Store
+## Status: Android EM ANALISE na Google | iOS: TestFlight v2.0.0 build 5 — login + push OK — proximo: deep link + S4 App Store
 
 Proximos passos enquanto aguarda / apos aprovacao:
 

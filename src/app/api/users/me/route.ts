@@ -67,3 +67,22 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Erro ao atualizar perfil" }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    const user = await requireAuth();
+
+    await sql`DELETE FROM users WHERE id = ${user.id}`;
+
+    logger.info({ userId: user.id }, "User account deleted");
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("autenticado")) {
+      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    }
+
+    logger.error(error, "Error deleting user account");
+    return NextResponse.json({ error: "Erro ao excluir conta" }, { status: 500 });
+  }
+}

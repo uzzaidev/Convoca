@@ -3,85 +3,242 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Termos de Uso - Convoca",
-  description: "Termos de uso do aplicativo Convoca.",
+  description: "Termos de uso do aplicativo Convoca, operado pela Uzz.Ai Ltda.",
 };
 
-const UPDATED_AT = "10 de junho de 2026";
+const UPDATED_AT = "22 de junho de 2026";
 
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-900">
       <article className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:p-10">
-        <Link href="/" className="text-sm font-semibold text-green-700 hover:text-green-800">
+        <Link
+          href="/"
+          className="text-sm font-semibold text-green-700 hover:text-green-800"
+        >
           Convoca
         </Link>
 
-        <h1 className="mt-5 text-3xl font-bold tracking-normal">Termos de Uso</h1>
-        <p className="mt-2 text-sm text-slate-500">Ultima atualizacao: {UPDATED_AT}</p>
+        <h1 className="mt-5 text-3xl font-bold tracking-normal">
+          Termos de Uso
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Ultima atualizacao: {UPDATED_AT}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Uzz.Ai Ltda &middot; CNPJ 64.025.866/0001-30
+        </p>
 
         <section className="mt-8 space-y-4 leading-7 text-slate-700">
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            1. Identificacao
+          </h2>
           <p>
-            Estes termos regulam o uso do Convoca, uma plataforma para organizacao de grupos
-            esportivos, eventos, confirmacoes de presenca, sorteio de times, estatisticas e gestao
-            interna de cobrancas.
+            <strong>CONTRATADA:</strong> Uzz.Ai Ltda, inscrita no CNPJ sob o
+            n&ordm; 64.025.866/0001-30, com sede na Av. Julio de Castilhos,
+            1.989, Sala L, Centro, Caxias do Sul/RS, CEP 95.020-485. Contato:
+            contato@uzzai.com.br &middot; juridico@uzzai.com.br
+          </p>
+          <p>
+            <strong>CONTRATANTE:</strong> pessoa fisica ou juridica que realiza o
+            cadastro, cria um Grupo no Convoca e aceita estes Termos, assumindo o
+            papel de organizador responsavel pelo Grupo.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Uso do servico</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            2. Objeto
+          </h2>
           <p>
-            Voce deve usar o Convoca de forma licita, respeitando outros usuarios e as regras dos
-            grupos dos quais participa. O administrador de cada grupo e responsavel pela gestao dos
-            membros, eventos, configuracoes, cobrancas internas e informacoes publicadas no grupo.
+            Estes Termos regulam o acesso e o uso da plataforma Convoca em regime
+            de Software como Servico (SaaS). O Convoca oferece: criacao e gestao
+            de grupos e eventos esportivos; sistema RSVP com lista de espera
+            automatica; sorteio de times; registro de gols, assistencias e
+            estatisticas; rankings e votacao de MVP; controle financeiro do grupo
+            (cobrancas, despesas, mensalidades); notificacoes push e convites por
+            link.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Conta e seguranca</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            3. Cadastro e conta
+          </h2>
           <p>
-            Voce e responsavel por manter suas credenciais seguras e por atividades realizadas na
-            sua conta. Informe qualquer uso nao autorizado assim que identificado.
+            O acesso a plataforma exige a criacao de uma conta com informacoes
+            verdadeiras, completas e atualizadas. O contratante e integralmente
+            responsavel pela guarda e confidencialidade das credenciais de
+            acesso. Toda atividade realizada sob a conta e de sua
+            responsabilidade.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Conteudo dos grupos</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            4. Licenca de uso
+          </h2>
           <p>
-            Dados de eventos, presencas, estatisticas, rankings, fotos e cobrancas sao inseridos por
-            usuarios e administradores. O Convoca pode remover conteudos ou restringir contas quando
-            houver abuso, violacao destes termos ou risco de seguranca.
+            A Uzz.Ai concede uma licenca de uso nao exclusiva, intransferivel,
+            revogavel e limitada para acessar e utilizar a plataforma durante a
+            vigencia do plano contratado. A licenca nao implica transferencia de
+            propriedade, cessao ou acesso ao codigo-fonte, algoritmos ou modelos
+            de IA. A plataforma e licenciada, nao vendida.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Pagamentos e cobrancas</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            5. Uso aceitavel e vedacoes
+          </h2>
           <p>
-            Funcionalidades de cobranca ajudam grupos a organizar valores, despesas e mensalidades.
-            As relacoes financeiras entre membros e administradores sao de responsabilidade do
-            proprio grupo, salvo quando houver contratacao direta de planos ou servicos do Convoca.
+            O contratante compromete-se a utilizar a plataforma exclusivamente
+            para fins licitos. Sao expressamente vedados: criar grupos ou eventos
+            com finalidade distinta da organizacao esportiva; inserir informacoes
+            falsas; realizar engenharia reversa; revender ou sublicenciar o
+            acesso; usar robos ou scrapers; inserir dados de membros sem
+            consentimento ou base legal (LGPD).
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Disponibilidade</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            6. Responsabilidades sobre os membros
+          </h2>
           <p>
-            Trabalhamos para manter o app disponivel, mas o servico pode ter interrupcoes por
-            manutencao, atualizacoes, falhas de terceiros, indisponibilidade de rede ou eventos fora
-            do nosso controle.
+            O contratante e responsavel pelo grupo e por todos os membros nele
+            incluidos. Ao convidar um membro, declara ter obtido o consentimento
+            para o compartilhamento de dados na plataforma. Eventuais conflitos
+            entre contratante e membros sao de responsabilidade exclusiva das
+            partes envolvidas.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Limitacao de responsabilidade</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            7. Propriedade intelectual
+          </h2>
           <p>
-            O Convoca e uma ferramenta de organizacao. Nao nos responsabilizamos por conflitos entre
-            membros, acidentes, resultados esportivos, pagamentos combinados fora da plataforma ou
-            decisoes tomadas pelos administradores dos grupos.
+            A plataforma, incluindo seu codigo-fonte, algoritmos, modelos de IA,
+            interfaces, marcas e logotipos, e de propriedade exclusiva da Uzz.Ai
+            ou de seus licenciadores. Os dados inseridos pelo contratante e pelos
+            membros permanecem de propriedade de seus respectivos titulares.
           </p>
 
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Alteracoes</h2>
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            8. Protecao de dados pessoais
+          </h2>
           <p>
-            Estes termos podem ser atualizados para refletir mudancas no app, exigencias legais ou
-            melhorias operacionais. A versao vigente sera publicada nesta pagina.
-          </p>
-
-          <h2 className="pt-4 text-xl font-semibold text-slate-900">Contato</h2>
-          <p>
-            Para duvidas sobre estes termos, entre em contato pelo email{" "}
-            <a className="font-semibold text-green-700" href="mailto:suporte@convoca.app">
-              suporte@convoca.app
-            </a>
+            O tratamento de dados pessoais observa a Lei n&ordm; 13.709/2018
+            (LGPD). A Uzz.Ai atua como Operadora dos dados dos membros,
+            processando-os conforme as instrucoes do contratante. O contratante
+            atua como Controlador dos dados dos membros de seu grupo. Informacoes
+            completas estao na{" "}
+            <Link
+              className="font-semibold text-green-700"
+              href="/privacidade"
+            >
+              Politica de Privacidade
+            </Link>
             .
           </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            9. Disponibilidade e suporte
+          </h2>
+          <p>
+            A Uzz.Ai envida seus melhores esforcos para manter a plataforma
+            disponivel. Manutencoes programadas serao comunicadas com antecedencia
+            minima de 48 horas. A Uzz.Ai nao garante disponibilidade
+            ininterrupta em razao de fatores fora de seu controle, incluindo
+            falhas de infraestrutura de terceiros (Neon PostgreSQL, Vercel),
+            casos fortuitos e forca maior.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            10. Suspensao e encerramento
+          </h2>
+          <p>
+            O acesso pode ser suspenso apos 15 dias de inadimplencia (com
+            notificacao de 48h). Em caso de violacao grave, a suspensao pode ser
+            imediata. O contratante pode encerrar o contrato a qualquer momento.
+            Apos o encerramento, os dados ficam disponiveis para exportacao por
+            30 dias; apos esse prazo, sao permanentemente excluidos.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            11. Direito de arrependimento
+          </h2>
+          <p>
+            O contratante pessoa fisica tem direito de arrependimento nos termos
+            do Art. 49 do Codigo de Defesa do Consumidor, podendo desistir da
+            contratacao no prazo de 7 dias corridos contados do aceite, sem custo
+            ou penalidade. Manifeste sua intencao por escrito em
+            contato@uzzai.com.br.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            12. Limitacao de responsabilidade
+          </h2>
+          <p>
+            A Uzz.Ai nao responde por: danos indiretos, lucros cessantes ou
+            perda de dados; conflitos entre contratante e membros sobre sorteios,
+            pagamentos ou estatisticas; decisoes baseadas em dados ou rankings
+            gerados pela plataforma; danos causados pelo uso inadequado da
+            plataforma. A responsabilidade total da Uzz.Ai fica limitada ao valor
+            efetivamente pago nos 12 meses anteriores ao evento.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            13. Alteracoes destes termos
+          </h2>
+          <p>
+            A Uzz.Ai pode alterar estes termos a qualquer tempo. Alteracoes
+            relevantes serao comunicadas com antecedencia minima de 15 dias. O
+            uso continuado da plataforma implica aceitacao das alteracoes.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            14. Lei aplicavel e foro
+          </h2>
+          <p>
+            Estes Termos sao regidos pelas leis da Republica Federativa do
+            Brasil. Fica eleito o Foro da Comarca de Caxias do Sul/RS para
+            dirimir quaisquer litigios, com renuncia expressa a qualquer outro.
+            Para o contratante pessoa fisica consumidor, aplica-se o foro de seu
+            domicilio quando assim previsto no Codigo de Defesa do Consumidor.
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            15. Contato
+          </h2>
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              Geral:{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="mailto:contato@uzzai.com.br"
+              >
+                contato@uzzai.com.br
+              </a>
+            </li>
+            <li>
+              Juridico e protecao de dados:{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="mailto:juridico@uzzai.com.br"
+              >
+                juridico@uzzai.com.br
+              </a>
+            </li>
+            <li>
+              WhatsApp:{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="https://wa.me/5554992841942"
+              >
+                +55 (54) 99284-1942
+              </a>
+            </li>
+          </ul>
         </section>
+
+        <footer className="mt-10 border-t border-slate-200 pt-6 text-xs text-slate-400">
+          <p>Uzz.Ai Ltda — CNPJ 64.025.866/0001-30</p>
+          <p>
+            Av. Julio de Castilhos, 1.989, Sala L, Centro — Caxias do Sul/RS —
+            CEP 95.020-485
+          </p>
+          <p>Versao 1.0 — {UPDATED_AT}</p>
+        </footer>
       </article>
     </main>
   );

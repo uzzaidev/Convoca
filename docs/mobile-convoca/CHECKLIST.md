@@ -170,20 +170,25 @@ Workflow CI: `.github/workflows/ios-release.yml`
 - [x] App instalado no iPhone via TestFlight ✅
 - [x] Login na WebView funcionando (NextAuth, build 2 + `CAPACITOR_PLATFORM=ios`) ✅ 2026-06-22
 - [x] Push notification recebida no device iOS ✅ v2.0.0 build 5 (2026-06-22)
-- [ ] Deep link `convoca://` abrindo o app
+- [x] Deep link `convoca://` abrindo o app ✅ (2026-06-23)
+- [x] Universal Link `https://convoca.uzzai.com.br/*` abrindo o app ✅ (AASA publicado, 2026-06-23)
 
 ### Sprint iOS-S4 — App Store Connect e Submissao
 
-- [ ] `apple-app-site-association` publicado (rota publica no Next.js)
-- [ ] Screenshots iPhone 6.9" (1320x2868) preparadas
-- [ ] Listing preenchido no App Store Connect
-- [ ] App Privacy preenchido (sem venda de dados)
-- [ ] Build selecionada na versao 1.0.0
+- [x] `apple-app-site-association` publicado (rota publica no Next.js) ✅ 2026-06-23
+- [x] Screenshots iPhone 6.9" (1320x2868) capturadas — 6 curadas em `C:\Users\pedro\convoca-screenshots\APP_STORE\SELECIONADAS\` ✅ 2026-06-23
+- [x] Material completo do listing preparado em `docs/mobile-convoca/APP_STORE_CONNECT_SUBMISSION.md` ✅ 2026-06-23
+- [x] App Privacy mapeado (§5 do submission doc — sem venda de dados, sem tracking) ✅ 2026-06-23
+- [x] Content Rating mapeado (§6 — resultado esperado 4+) ✅ 2026-06-23
+- [x] Review Notes + conta demo preparados (§4) ✅ 2026-06-23
+- [ ] Listing preenchido no App Store Connect (copiar textos do submission doc)
+- [ ] App Privacy preenchido no App Store Connect (copiar tabelas do submission doc)
+- [ ] Screenshots enviadas no App Store Connect
+- [ ] Build selecionada na versao 1.0.0 (v2.0.0 build 5 — ja aparece no TestFlight)
 - [ ] Regra de IAP analisada (Stripe = B2B externo, nao IAP)
-- [ ] Conta demo informada nos Review Notes
 - [ ] Submit for Review clicado
 
-## Status: Android EM ANALISE na Google | iOS: TestFlight v2.0.0 build 5 — login + push OK — proximo: deep link + S4 App Store
+## Status: Android EM ANALISE na Google | iOS: S4 pronto (screenshots + listing + privacy preparados) — falta copiar no App Store Connect e clicar Submit
 
 Proximos passos enquanto aguarda / apos aprovacao:
 

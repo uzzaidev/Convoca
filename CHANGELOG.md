@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-26
+
+### fix
+- Remove conta in-app e páginas legais com conteúdo jurídico na plataforma iOS.
+  - Arquivos: `docs/mobile-convoca/APP_STORE_CONNECT_SUBMISSION.md`
+  - Evidência: commit que adiciona o arquivo de submissão e mensagem de correção
+  - Confiança: alta
+
 ## 2026-06-23
 
 ### feat

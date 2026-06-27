@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-27
 
 ### fix
+- Atualizado checklist de rejeições da Apple para incluir correções de layout no iPad (Guideline 4) e esclarecimento sobre o modelo de negócio (Guideline 2.1b). 
+  - Arquivos: `docs/mobile-convoca/CHECKLIST.md`, `docs/playbooks/app-store-review-rejeicoes/README.md`
+  - Evidência: inclusão de detalhes técnicos e orientações para evitar rejeições relacionadas a layout e informações de negócio
+  - Confiança: alta
+
+## 2026-06-27
+
+### fix
 - Corrigido botão de sair cortado no iPad ajustando safe area insets e viewport fit
   - Arquivos: `src/app/layout.tsx`, `src/components/layout/AppSidebar.tsx`
   - Evidência: alterações em safe area insets e estilos de layout

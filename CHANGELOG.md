@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-27
+
+### fix
+- Corrigido botão de sair cortado no iPad ajustando safe area insets e viewport fit
+  - Arquivos: `src/app/layout.tsx`, `src/components/layout/AppSidebar.tsx`
+  - Evidência: alterações em safe area insets e estilos de layout
+  - Confiança: alta
+
 ## 2026-06-26
 
 ### fix

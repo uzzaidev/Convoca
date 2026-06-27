@@ -5,6 +5,18 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-06-27
 
 ### fix
+- Atualizada a seção de notas de revisão na documentação de submissão para a App Store, incluindo instruções de exclusão de conta e detalhes sobre funcionalidades financeiras. Alterações no arquivo `APP_STORE_CONNECT_SUBMISSION.md`.
+  - Arquivos: `docs/mobile-convoca/APP_STORE_CONNECT_SUBMISSION.md`
+  - Confiança: alta
+
+### feat
+- Implementada opção de exclusão de conta direta no app na página de exclusão, com mensagem de confirmação e instruções claras para o usuário. Arquivo `src/app/excluir-conta/page.tsx`.
+  - Arquivos: `src/app/excluir-conta/page.tsx`
+  - Confiança: alta
+
+## 2026-06-27
+
+### fix
 - Atualizado checklist de rejeições da Apple para incluir correções de layout no iPad (Guideline 4) e esclarecimento sobre o modelo de negócio (Guideline 2.1b). 
   - Arquivos: `docs/mobile-convoca/CHECKLIST.md`, `docs/playbooks/app-store-review-rejeicoes/README.md`
   - Evidência: inclusão de detalhes técnicos e orientações para evitar rejeições relacionadas a layout e informações de negócio

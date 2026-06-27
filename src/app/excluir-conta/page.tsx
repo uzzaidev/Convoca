@@ -46,29 +46,43 @@ export default function DeleteAccountPage() {
 
         <section className="mt-8 space-y-4 leading-7 text-slate-700">
           <p>
-            Voce pode solicitar a exclusao da sua conta Convoca e dos dados
-            pessoais associados, conforme previsto na LGPD (Lei n&ordm;
-            13.709/2018). A solicitacao deve ser enviada pelo mesmo e-mail
-            usado no cadastro para validacao da titularidade.
+            Voce pode excluir sua conta Convoca e os dados pessoais associados
+            diretamente pelo app ou por e-mail, conforme previsto na LGPD (Lei
+            n&ordm; 13.709/2018).
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">
-            Como solicitar
+            Opcao 1 — Excluir diretamente no app (recomendado)
           </h2>
           <p>
-            Clique no botao abaixo para abrir um e-mail pre-preenchido ou envie
-            manualmente para{" "}
+            Dentro do app, acesse <strong>Perfil</strong> →{" "}
+            <strong>Privacidade e conta</strong> →{" "}
+            <strong>Excluir minha conta</strong>. A exclusao e imediata apos a
+            confirmacao.
+          </p>
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+            <p className="text-sm font-semibold text-green-800">
+              A exclusao pelo app e instantanea. Seus dados pessoais sao
+              removidos imediatamente.
+            </p>
+          </div>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            Opcao 2 — Solicitar por e-mail
+          </h2>
+          <p>
+            Caso prefira, envie um e-mail para{" "}
             <a
               className="font-semibold text-green-700"
               href={`mailto:${LEGAL_EMAIL}`}
             >
               {LEGAL_EMAIL}
-            </a>
-            .
+            </a>{" "}
+            usando o mesmo e-mail cadastrado no Convoca.
           </p>
 
           <a
-            className="inline-flex h-11 items-center justify-center rounded-md bg-green-700 px-5 text-sm font-semibold text-white hover:bg-green-800"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-slate-600 px-5 text-sm font-semibold text-white hover:bg-slate-700"
             href={`mailto:${LEGAL_EMAIL}?subject=${subject}&body=${body}`}
           >
             Solicitar exclusao por e-mail

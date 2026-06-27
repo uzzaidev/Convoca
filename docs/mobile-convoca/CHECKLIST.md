@@ -176,28 +176,85 @@ Workflow CI: `.github/workflows/ios-release.yml`
 ### Sprint iOS-S4 — App Store Connect e Submissao
 
 - [x] `apple-app-site-association` publicado (rota publica no Next.js) ✅ 2026-06-23
-- [x] Screenshots iPhone 6.9" (1320x2868) capturadas — 6 curadas em `C:\Users\pedro\convoca-screenshots\APP_STORE\SELECIONADAS\` ✅ 2026-06-23
+- [x] Screenshots iPhone 6.5" (1284x2778) capturadas — 6 curadas em `C:\Users\pedro\convoca-screenshots\APP_STORE\SELECIONADAS\` ✅ 2026-06-23
+- [x] Screenshots iPad 13" (2048x2732) capturadas — 5 em `C:\Users\pedro\convoca-screenshots\APP_STORE_IPAD\` ✅ 2026-06-23
 - [x] Material completo do listing preparado em `docs/mobile-convoca/APP_STORE_CONNECT_SUBMISSION.md` ✅ 2026-06-23
 - [x] App Privacy mapeado (§5 do submission doc — sem venda de dados, sem tracking) ✅ 2026-06-23
 - [x] Content Rating mapeado (§6 — resultado esperado 4+) ✅ 2026-06-23
 - [x] Review Notes + conta demo preparados (§4) ✅ 2026-06-23
-- [ ] Listing preenchido no App Store Connect (copiar textos do submission doc)
-- [ ] App Privacy preenchido no App Store Connect (copiar tabelas do submission doc)
-- [ ] Screenshots enviadas no App Store Connect
-- [ ] Build selecionada na versao 1.0.0 (v2.0.0 build 5 — ja aparece no TestFlight)
-- [ ] Regra de IAP analisada (Stripe = B2B externo, nao IAP)
-- [ ] Submit for Review clicado
+- [x] Listing preenchido no App Store Connect ✅ 2026-06-23
+- [x] App Privacy preenchido e PUBLICADO no App Store Connect ✅ 2026-06-23
+- [x] Screenshots iPhone + iPad enviadas no App Store Connect ✅ 2026-06-23
+- [x] Build selecionada (v2.0.0 build 5) ✅ 2026-06-23
+- [x] Submit for Review clicado ✅ 2026-06-23
 
-## Status: Android EM ANALISE na Google | iOS: S4 pronto (screenshots + listing + privacy preparados) — falta copiar no App Store Connect e clicar Submit
+### Sprint iOS-S4.1 — Rejeicoes e correcoes da Apple
 
-Proximos passos enquanto aguarda / apos aprovacao:
+#### Rejeicao 1 — Guideline 5.1.2(i) Privacy: Data Use and Sharing (2026-06-24)
 
-1. Acompanhar status em Play Console -> Painel / Versoes (1-3 dias; conta nova pode demorar mais)
-2. Se a Google pedir ajustes: corrigir e reenviar
-3. Apos aprovado: app fica publico em `https://play.google.com/store/apps/details?id=com.uzzai.convoca`
-4. [FEITO] Conta demo populada com grupo "Pelada dos Cracks" + 10 membros + evento (11 confirmacoes)
-5. (Opcional) Testar o build de release assinado via Teste Interno
-6. iOS: quando tiver Mac/Xcode (Fase 6)
+**Problema:** App Privacy no App Store Connect marcava dados como "usados para tracking" (rastreamento). O Convoca nao faz tracking.
+
+**Causa raiz:** Preenchimento incorreto do App Privacy — na pergunta "Os dados sao usados para rastrear o usuario?" estava marcado "Sim" em vez de "Nao".
+
+**Correcao:** Editar App Privacy → para cada tipo de dado (Nome, Email, User ID, etc.) → marcar "Nao" em tracking → Publicar → Resubmeter (mesma build, sem alteracao de codigo).
+
+**Licao para futuros apps:** "Tracking" na definicao da Apple = cruzar dados do app com dados de terceiros para publicidade OU compartilhar com data brokers. Apps que so usam dados para funcionalidade propria devem SEMPRE marcar tracking = Nao.
+
+#### Rejeicao 2 — Guideline 5.1.1(v) Account Deletion (2026-06-26)
+
+**Problema:** A exclusao de conta exigia que o usuario enviasse email. Apple exige exclusao direta no app, sem passos extras.
+
+**Causa raiz:** A pagina `/excluir-conta` so tinha um botao "mailto:" e nao fazia a exclusao de verdade.
+
+**Correcao (requer novo build):**
+1. Criar endpoint `DELETE /api/users/me` — deleta o user do banco (FKs com ON DELETE CASCADE cuidam das tabelas filhas)
+2. Adicionar botao no perfil (`/profile`) com fluxo: "Excluir minha conta" → confirmacao "Tem certeza?" → chama DELETE → signOut → redireciona ao login
+3. Commit `165968f`, push, disparar workflow `ios-release` no GitHub Actions para gerar nova build
+4. No App Store Connect → selecionar a nova build → resubmeter
+
+**Licao para futuros apps:** A Apple NAO aceita exclusao por email (exceto industrias altamente reguladas como bancos/saude). O app DEVE ter um botao que exclui a conta diretamente, com no maximo uma tela de confirmacao. Implementar `DELETE /api/users/me` + botao com confirmacao ANTES de submeter.
+
+**Quando precisa de novo build vs. apenas resubmeter:**
+- Mudanca so no App Store Connect (labels, textos, screenshots, App Privacy) → **mesma build**, apenas resubmeter
+- Mudanca no codigo (nova API, novo botao, fix de bug) → **novo build obrigatorio** (disparar CI → esperar TestFlight → selecionar nova build → resubmeter)
+
+#### Rejeicao 3 — Guideline 4 Design: layout iPad (2026-06-27)
+
+**Problema:** Botao "Sair" cortado na parte inferior esquerda no iPad Air 11-inch (M3), iPadOS 26.5.
+
+**Causa raiz:** O sidebar fixo (`h-screen`) nao respeitava safe area insets do iPadOS. O bloco inferior (perfil + Sair) nao tinha `shrink-0` nem padding para safe areas.
+
+**Correcao (requer novo build):**
+1. Adicionar `viewport-fit: cover` no meta viewport (`layout.tsx`)
+2. Adicionar `padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))` no bloco inferior do sidebar
+3. Adicionar `min-h-0` no flex container do sidebar e `shrink-0` no bloco inferior
+4. Mudar `<aside>` de `overflow-y-auto` para `overflow-hidden` (scroll fica no `<nav>` interno que ja tem `overflow-y-auto`)
+
+**Licao para futuros apps:** Apps Capacitor no iPad devem usar `viewport-fit=cover` + `env(safe-area-inset-*)` em areas fixas. Testar layout em iPad ANTES de submeter. A Apple testa em iPads reais.
+
+#### Rejeicao 3b — Guideline 2.1(b) Information Needed: modelo de negocio (2026-06-27)
+
+**Problema:** Apple pediu esclarecimento sobre funcionalidades financeiras (cobrancas, carteira). Quer saber se precisa IAP (In-App Purchase).
+
+**Causa raiz:** O Convoca tem funcionalidades de cobranca de grupo (rateio de quadra, mensalidade), que a Apple pode interpretar como "conteudo digital pago".
+
+**Correcao:** Responder via Reply no App Store Connect explicando que:
+- As cobrancas sao para gestao financeira de grupos esportivos (rateio de custos reais: quadra, bola, coletes)
+- O pagamento e feito fora do app (PIX, dinheiro) — o app so registra quem pagou
+- Nao ha conteudo digital desbloqueavel, assinatura premium ou moeda virtual
+- E um modelo B2B/group-management, isento de IAP conforme App Review Guidelines 3.1.3(e) e (f)
+
+**Licao para futuros apps:** Se o app tem qualquer funcionalidade de "pagamento" ou "cobranca", mesmo que seja apenas registro/controle (sem processar pagamento), incluir uma nota preemptiva nos Review Notes explicando que nao ha compra digital e que o app nao processa pagamentos.
+
+## Status: Android EM ANALISE na Google | iOS: fix iPad layout + reply business model (build nova via CI)
+
+Proximos passos:
+
+1. Disparar workflow `ios-release` no GitHub Actions
+2. Nova build aparece no TestFlight (~5-10 min apos CI verde)
+3. No App Store Connect → versao 1.0 → selecionar nova build → Reply com esclarecimento de business model → resubmeter
+4. Acompanhar revisao (1-3 dias)
+5. Android: acompanhar Play Console
 
 ## Commits desta etapa (na main, ja deployados)
 
@@ -205,6 +262,8 @@ Proximos passos enquanto aguarda / apos aprovacao:
 - `f5e0f16` feat: backend de envio de push via FCM HTTP v1
 - `72ec718` fix: paginas legais publicas + rename para com.uzzai.convoca
 - `77ba861` feat(ios): fastlane match + CI workflows para build sem Mac (2026-06-22)
+- `165968f` fix(ios): exclusao de conta in-app + paginas legais com conteudo juridico (2026-06-26)
+- `e48722f` fix(ios): botao Sair cortado no iPad + safe area insets (2026-06-27)
 
 ## Comandos ja validados
 

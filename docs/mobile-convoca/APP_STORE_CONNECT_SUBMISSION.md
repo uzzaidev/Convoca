@@ -101,7 +101,7 @@ https://convoca.uzzai.com.br/privacidade
 | **User name** | `demo.review@convoca.uzzai.com.br` |
 | **Password** | `ConvocaDemo2026` |
 
-### Review Notes (copie inteiro)
+### Review Notes (copie inteiro — versao atualizada 2026-06-27)
 ```
 This is a sports group management app (soccer/futsal) for Brazilian players.
 
@@ -115,7 +115,22 @@ Main flows to test:
 3. Rankings tab → see player rankings
 4. Profile → manage account, privacy settings, account deletion
 
-The app loads a live web URL (https://convoca.uzzai.com.br) in a native WebView container (Capacitor). This is the standard architecture for hybrid apps.
+ACCOUNT DELETION: Users can delete their account directly in-app at
+Profile → "Privacidade e conta" → "Excluir minha conta" → confirm.
+The deletion is immediate and does not require email.
+
+FINANCIAL FEATURE NOTE: The "Pagamentos" (Payments) section is a
+bookkeeping/record-keeping tool only. It helps group organizers track
+who has paid for real-world expenses (field rental, equipment, monthly
+dues). The app does NOT process any payments — actual payments happen
+outside the app via bank transfer (PIX), cash, or other offline methods.
+No digital content is sold, no subscriptions exist, and no payment
+gateway is integrated. This falls under App Review Guidelines 3.1.3(e)
+— goods and services consumed outside the app.
+
+The app loads a live web URL (https://convoca.uzzai.com.br) in a native
+WebView container (Capacitor) with native push notifications (APNs/FCM).
+This is the standard architecture for hybrid apps.
 
 No special configuration or external hardware is needed.
 ```
@@ -203,7 +218,7 @@ Responda tudo como "None" ou "No":
 | Simulated Gambling | None |
 | Real-Money Gambling | None |
 | Contests | None |
-| Unrestricted Web Access | **Yes** (WebView carrega site ao vivo) |
+| Unrestricted Web Access | **No** (WebView carrega apenas convoca.uzzai.com.br — URL controlada, sem navegacao livre) |
 | Made for Kids | **No** |
 
 → Resultado esperado: **4+**

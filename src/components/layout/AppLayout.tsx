@@ -70,7 +70,7 @@ export function AppLayout({ user, groups, children }: AppLayoutProps) {
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar (fixed) */}
       <aside
-        className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 overflow-y-auto"
+        className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 overflow-hidden"
         style={{ width: isCollapsed ? collapsedWidth : sidebarWidth }}
       >
         <AppSidebar

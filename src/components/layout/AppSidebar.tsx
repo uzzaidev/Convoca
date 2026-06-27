@@ -162,7 +162,7 @@ export function AppSidebar({
   }
 
   return (
-    <div className="flex flex-col h-full bg-navy text-white select-none">
+    <div className="flex flex-col h-full min-h-0 bg-navy text-white select-none">
       {/* Logo / Header */}
       <div className={cn("flex items-center border-b border-white/10 h-16 px-4", isCollapsed && "justify-center")}>
         {!isCollapsed ? (
@@ -428,7 +428,7 @@ export function AppSidebar({
       </nav>
 
       {/* Bottom: perfil + admin + logout */}
-      <div className="border-t border-white/10 px-2 py-3 space-y-0.5">
+      <div className="shrink-0 border-t border-white/10 px-2 py-3 space-y-0.5" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}>
         {!isCollapsed && (
           <div className="px-3 py-2 mb-1 rounded-lg bg-white/5">
             <p className="text-[11px] text-white/40 truncate">{user.email}</p>

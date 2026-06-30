@@ -3,13 +3,19 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 593,
+      "tokens": 678,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 1022,
+      "tokens": 634,
+      "type": "summary"
+    },
+    {
+      "order": 2,
+      "path": "facts/_index.md",
+      "tokens": 649,
       "type": "summary"
     },
     {
@@ -34,6 +40,12 @@
       "importance": 50,
       "path": "architecture/billing/stripe_v21_api_migration.md",
       "tokens": 956,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/billing-system-and-database-portability.md",
+      "tokens": 226,
       "type": "context"
     },
     {
@@ -67,51 +79,21 @@
       "type": "context"
     },
     {
-      "abstractPath": "facts/project/curated_facts.abstract.md",
-      "abstractTokens": 36,
-      "importance": 50,
-      "path": "facts/project/curated_facts.md",
-      "tokens": 36,
-      "type": "context"
-    },
-    {
-      "abstractPath": "facts/project/curate_workflow_rlm_approach.abstract.md",
-      "abstractTokens": 43,
-      "importance": 50,
-      "path": "facts/project/curate_workflow_rlm_approach.md",
-      "tokens": 43,
-      "type": "context"
-    },
-    {
-      "abstractPath": "facts/project/project_facts.abstract.md",
-      "abstractTokens": 50,
-      "importance": 50,
-      "path": "facts/project/project_facts.md",
-      "tokens": 50,
-      "type": "context"
-    },
-    {
       "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
       "abstractTokens": 35,
       "importance": 50,
       "path": "facts/project/rlm_curate_workflow_facts.md",
       "tokens": 35,
       "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "security/operations/context.md",
-      "tokens": 93,
-      "type": "context"
     }
   ],
-  "generated_at": "2026-06-23T14:10:02.548Z",
+  "generated_at": "2026-06-23T14:27:06.970Z",
   "lane_tokens": {
-    "contexts": 3992,
+    "contexts": 3996,
     "stubs": 0,
-    "summaries": 1615
+    "summaries": 1961
   },
-  "source_fingerprint": "a9d58908f74a6fa161f2fc10116b39e30dbab8baf65e5227f01bf9d26ff91c2a",
-  "total_tokens": 5607,
+  "source_fingerprint": "a10f9bd4371a5c63a1d8eb3b9567cf0928ecf1762480fe70e88b86254df83344",
+  "total_tokens": 5957,
   "version": 1
 }

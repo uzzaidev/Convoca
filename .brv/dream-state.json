@@ -1,18 +1,9 @@
 {
-  "curationsSinceDream": 2,
-  "lastDreamAt": "2026-06-22T13:33:26.576Z",
-  "lastDreamLogId": "drm-1782134844406",
+  "curationsSinceDream": 0,
+  "lastDreamAt": "2026-06-23T14:27:06.975Z",
+  "lastDreamLogId": "drm-1782224710033",
   "pendingMerges": [],
-  "staleSummaryPaths": [
-    {
-      "enqueuedAt": 1782223126271,
-      "path": "facts/project/curated_facts.md"
-    },
-    {
-      "enqueuedAt": 1782223802528,
-      "path": "facts/project/season_finish_route_fix.md"
-    }
-  ],
-  "totalDreams": 2,
+  "staleSummaryPaths": [],
+  "totalDreams": 3,
   "version": 1
 }

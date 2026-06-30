@@ -1,0 +1,111 @@
+{
+  "completedAt": 1782224826971,
+  "id": "drm-1782224710033",
+  "operations": [
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "facts/project/season_finish_route_fix.md",
+        "facts\\project\\season_finish_route_fix.md"
+      ],
+      "needsReview": true,
+      "outputFile": "facts/project/season_finish_route_fix.md",
+      "previousTexts": {
+        "facts/project/season_finish_route_fix.md": "---\ntitle: Season Finish Route Fix\nsummary: Fix for season finish route where snapshot insert failed TypeScript compilation. Adjusted types for better compatibility with PostgreSQL parameters.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-23T14:09:44.797Z'\nupdatedAt: '2026-06-23T14:09:44.797Z'\n---\n## Reason\nDocumenting fix for season snapshot insert failure due to TypeScript compilation issues.\n\n## Raw Concept\n**Task:**\nDocumenting fix for TypeScript compilation issues in SQL template parameters.\n\n**Changes:**\n- Build fix for season finish route: season snapshot insert failed TypeScript compilation because sortedRankings was typed as Record<string, unknown>\n- Replaced the loose RankingRow with a concrete typed shape for all selected columns\n- Typed the query as sql<RankingRow[]> so insert parameters are accepted\n\n**Flow:**\nfixing compilation issues -> adjusting types -> ensuring parameter acceptance\n\n**Timestamp:** 2026-06-23\n\n**Author:** Development Team\n\n## Narrative\n### Structure\nFix addresses TypeScript compilation issues in the season finish route.\n\n### Dependencies\nRequires proper typing in the SQL query to avoid parameter inference issues.\n\n### Highlights\nImproved type safety and compatibility with PostgreSQL.\n\n### Rules\nEnsure all SQL parameters are properly typed to avoid inference issues.\n\n### Examples\nExample fix: Changed sortedRankings from Record<string, unknown> to a concrete typed shape.\n",
+        "facts\\project\\season_finish_route_fix.md": "---\ntitle: Season Finish Route Fix\nsummary: Fix for season finish route where snapshot insert failed TypeScript compilation. Adjusted types for better compatibility with PostgreSQL parameters.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-23T14:09:44.797Z'\nupdatedAt: '2026-06-23T14:09:44.797Z'\n---\n## Reason\nDocumenting fix for season snapshot insert failure due to TypeScript compilation issues.\n\n## Raw Concept\n**Task:**\nDocumenting fix for TypeScript compilation issues in SQL template parameters.\n\n**Changes:**\n- Build fix for season finish route: season snapshot insert failed TypeScript compilation because sortedRankings was typed as Record<string, unknown>\n- Replaced the loose RankingRow with a concrete typed shape for all selected columns\n- Typed the query as sql<RankingRow[]> so insert parameters are accepted\n\n**Flow:**\nfixing compilation issues -> adjusting types -> ensuring parameter acceptance\n\n**Timestamp:** 2026-06-23\n\n**Author:** Development Team\n\n## Narrative\n### Structure\nFix addresses TypeScript compilation issues in the season finish route.\n\n### Dependencies\nRequires proper typing in the SQL query to avoid parameter inference issues.\n\n### Highlights\nImproved type safety and compatibility with PostgreSQL.\n\n### Rules\nEnsure all SQL parameters are properly typed to avoid inference issues.\n\n### Examples\nExample fix: Changed sortedRankings from Record<string, unknown> to a concrete typed shape.\n"
+      },
+      "reason": "Both files contain identical information regarding the fix for TypeScript compilation issues in the season finish route. Merging to eliminate redundancy.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "facts/project/curated_facts.md",
+        "facts\\project\\curated_facts.md"
+      ],
+      "needsReview": true,
+      "outputFile": "facts/project/curated_facts.md",
+      "previousTexts": {
+        "facts/project/curated_facts.md": "---\ntitle: Curated Facts\nsummary: Curated factual statements extracted from context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-23T13:58:43.191Z'\nupdatedAt: '2026-06-23T13:58:43.191Z'\n---\n## Reason\nCurate from RLM context\n\n## Raw Concept\n**Task:**\nCurate factual statements\n\n**Timestamp:** 2026-06-23T13:58:43.189Z\n\n## Narrative\n### Structure\nCurated facts organized by subject\n\n### Highlights\nExtraction and deduplication successful\n\n## Facts\n- **Convoca**: Season finish route used groups.draw_config, but production schema has no draw_config column on groups.\n- **Convoca**: Switched to scoring_configs and applied configured tiebreakers when snapshot ordering is frozen.\n- **Convoca**: Frequency views were incorrectly counting presence only when event_attendance.checked_in_at was non-null.\n- **Convoca**: Real data had many status='yes' rows with checked_in_at null, so frequency displayed 0%.\n- **Convoca**: Updated group page, rankings route, and stats route to count status='yes' as participation and keep DM excluded from percentage denominator.\n- **Convoca**: Goalkeeper tab previously ranked by save actions.\n- **Convoca**: Changed it to rank actual goalkeepers (event_attendance.role='gk') by goals conceded ascending.\n- **Convoca**: Using the team assigned in that event to compute goals suffered including own goals.\n",
+        "facts\\project\\curated_facts.md": "---\ntitle: Curated Facts\nsummary: Curated factual statements extracted from context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-06-23T13:58:43.191Z'\nupdatedAt: '2026-06-23T13:58:43.191Z'\n---\n## Reason\nCurate from RLM context\n\n## Raw Concept\n**Task:**\nCurate factual statements\n\n**Timestamp:** 2026-06-23T13:58:43.189Z\n\n## Narrative\n### Structure\nCurated facts organized by subject\n\n### Highlights\nExtraction and deduplication successful\n\n## Facts\n- **Convoca**: Season finish route used groups.draw_config, but production schema has no draw_config column on groups.\n- **Convoca**: Switched to scoring_configs and applied configured tiebreakers when snapshot ordering is frozen.\n- **Convoca**: Frequency views were incorrectly counting presence only when event_attendance.checked_in_at was non-null.\n- **Convoca**: Real data had many status='yes' rows with checked_in_at null, so frequency displayed 0%.\n- **Convoca**: Updated group page, rankings route, and stats route to count status='yes' as participation and keep DM excluded from percentage denominator.\n- **Convoca**: Goalkeeper tab previously ranked by save actions.\n- **Convoca**: Changed it to rank actual goalkeepers (event_attendance.role='gk') by goals conceded ascending.\n- **Convoca**: Using the team assigned in that event to compute goals suffered including own goals.\n"
+      },
+      "reason": "Both files contain identical information regarding curated factual statements extracted from context. Merging to eliminate redundancy.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.9,
+      "needsReview": false,
+      "outputFile": "security/credential-management-across-domains.md",
+      "sources": [
+        "security/_index.md",
+        "architecture/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.85,
+      "needsReview": false,
+      "outputFile": "architecture/billing-system-and-database-portability.md",
+      "sources": [
+        "architecture/_index.md",
+        "facts/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/multi_plan_subscription_system.md",
+      "needsReview": false,
+      "reason": "The file documents the implemented multi-plan subscription system and contains actionable knowledge about the architecture.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/stripe_v21_api_migration.md",
+      "needsReview": false,
+      "reason": "This file details critical API changes affecting billing and subscription code paths, providing useful information despite being a draft.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/database/provider_migration_diagnosis.md",
+      "needsReview": false,
+      "reason": "Contains important diagnostic information regarding database provider migration readiness and dependencies, making it valuable.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_billing_and_stripe_facts.md",
+      "needsReview": false,
+      "reason": "Captures durable project facts relevant to billing and Stripe integration, which are useful for future reference.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_infrastructure_facts_2026_03_31.md",
+      "needsReview": false,
+      "reason": "Records factual statements from the infrastructure diagnosis, which are actionable and necessary for context.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/operations/backup_credential_exposure.md",
+      "needsReview": false,
+      "reason": "Documents a security risk related to credential exposure in backup scripts, which is critical operational knowledge.",
+      "type": "PRUNE"
+    }
+  ],
+  "startedAt": 1782224710033,
+  "status": "completed",
+  "summary": {
+    "consolidated": 2,
+    "errors": 0,
+    "flaggedForReview": 2,
+    "pruned": 6,
+    "synthesized": 2
+  },
+  "taskId": "12cf5eea-64ee-457e-a42c-e8344a7092f8",
+  "trigger": "agent-idle"
+}

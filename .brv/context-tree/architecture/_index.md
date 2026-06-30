@@ -1,69 +1,59 @@
 ---
-children_hash: c0547723ce529fb0a3d9707fba4d177a9f24f5109b61c35f2654f53f6cb1b601
-compression_ratio: 0.5479892761394102
+children_hash: defcd1fe31f5929de7c2744fc15dbf0a2bbe9ad4ec242f34421f797cb226fa56
+compression_ratio: 0.3032042085126734
 condensation_order: 2
-covers: [billing/_index.md, context.md, database/_index.md]
-covers_token_total: 1865
+covers: [billing-system-and-database-portability.md, billing/_index.md, context.md, database/_index.md]
+covers_token_total: 2091
 summary_level: d2
-token_count: 1022
+token_count: 634
 type: summary
 ---
-# Architecture and Database
-
-The architecture domain centers on infrastructure-level decisions and persistence design, with the billing and database topics showing the main implementation constraints and migration boundaries.
+# Structural Summary
 
 ## Billing
 
-Billing is shaped by Stripe v21 compatibility and a multi-plan subscription model. The key relationship is that subscription flow, webhook persistence, and UI state all depend on Stripe’s updated object model, so billing changes must stay aligned with API shape changes.
+The billing domain focuses on the integration with Stripe v21 and the multi-plan subscription system, emphasizing the need for compatibility with Stripe's updated API.
 
-### Drill-down entries
-- **`stripe_v21_api_migration.md`** — Stripe SDK upgrade rules and field/type compatibility.
-- **`multi_plan_subscription_system.md`** — multi-plan billing architecture, plan selection, persistence, and UI integration.
-- **`context.md`** — compact billing overview.
+### Core Structure
+- **`context.md`**: Overview of billing impacts from Stripe v21, including invoice handling and subscription management.
+- **`stripe_v21_api_migration.md`**: Details on the migration to Stripe v21, including compatibility rules and API changes.
+- **`multi_plan_subscription_system.md`**: Describes the architecture for multi-plan billing, including plan selection and webhook persistence.
 
-### Main decisions and rules
+### Key Architectural Relationships
+- Two layers:
+  1. **Stripe v21 Migration Layer**: Updates invoice and subscription handling.
+  2. **Multi-Plan Subscription Architecture**: Introduces `subscription_plans` and webhook-driven persistence.
+- Dependencies include Stripe pricing, Migration 006, and webhook synchronization.
+
+### Important Rules and Decisions
 - Use `invoices.createPreview()` instead of `invoices.retrieveUpcoming()`.
-- Read subscription period dates from `subscription.items.data[0]`.
-- Access invoice subscription via `Invoice.parent.subscription_details.subscription`.
-- Access promotion coupons via `PromotionCode.promotion.coupon`.
-- Replace `invoice.paid` with `invoice.status === "paid"`.
-- Treat `hosted_invoice_url` as nullable and normalize with `?? null`.
-- `Invoice.status` is a `Status` enum, not a plain string.
+- Handle `planId` as optional, with fallbacks to `STRIPE_PRICE_ID`.
 
-### Multi-plan system structure
-- `planId` is optional in checkout and group creation.
-- When `planId` exists, resolve `stripe_price_id` and `trial_days` from `subscription_plans`.
-- Fall back to `STRIPE_PRICE_ID` when lookup fails or no plan is provided.
-- Webhooks persist both `plan_id` and `stripe_price_id` into `group_subscriptions`.
-- Cancellation uses `cancel_at_period_end: true`.
-- Installments are not modeled as Stripe subscriptions; they use one-time payments.
-- The semestral plan uses `month` interval with `interval_count: 6`.
+### Relevant Files and Endpoints
+- APIs: `api/admin/plans/route.ts`, `api/stripe/checkout/route.ts`, and others.
+- Schema: Migration 006 adds `subscription_plans` and related fields.
 
-### Related APIs and storage
-- Admin and public billing routes: `api/admin/plans/route.ts`, `api/admin/plans/[planId]/route.ts`, `api/plans/route.ts`, `api/groups/[groupId]/billing/route.ts`, `api/stripe/checkout/route.ts`, `api/groups/route.ts`
-- UI components: `components/groups/plan-selector.tsx`, `components/groups/group-billing-tab.tsx`, `components/admin/admin-plans-tab.tsx`
-- Migration 006 creates `subscription_plans` and adds `plan_id` and `stripe_price_id` to `group_subscriptions`
+## Billing System and Database Portability
+
+The billing system's architecture must adapt to database portability to mitigate operational risks.
+
+### Evidence
+- Billing changes must align with API shape changes.
+- Migration readiness involves updating configurations, migrating schema/data, and auditing references.
 
 ## Database
 
-The database domain focuses on provider abstraction, auth data access, schema portability, and operational credential risk. The central conclusion is that provider migration is mostly an operations and configuration problem rather than a full application rewrite.
+The database domain addresses provider abstraction, schema portability, and operational credential risks, framing migration as a configuration issue rather than a core rewrite.
 
-### Drill-down entries
-- **`provider_migration_diagnosis.md`** — readiness diagnosis and source-level evidence.
-- **`migration-readiness-is-split-between-code-portability-and-operational-cleanup.md`** — synthesis of migration readiness and remaining blockers.
-- **`context.md`** — domain overview.
+### Structural Overview
+- The application is mostly provider-portable due to generic PostgreSQL access.
+- Migration involves switching `DATABASE_URL` and migrating schema/data.
 
-### Main findings
-- The app is largely provider-portable because it uses generic PostgreSQL access.
-- Authentication is custom and SQL-based, using **NextAuth Credentials** against `public.users`, not Supabase SDK auth.
-- Password recovery depends on `reset_token`, `reset_token_expiry`, and **Resend** email delivery.
-- The main migration path is a `DATABASE_URL` switch plus schema/data migration and cleanup of provider-specific references.
-- The most serious blockers are operational leftovers and exposed secrets in backup tooling.
+### Child Entries for Drill-Down
+- **`provider_migration_diagnosis.md`**: Assesses migration readiness and identifies remaining dependencies on Supabase.
+- **`migration-readiness-is-split-between-code-portability-and-operational-cleanup.md`**: Concludes that operational cleanup is the main limiting factor for migration.
 
-### Schema and portability characteristics
-- Standard PostgreSQL features support portability: `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
-- Migration readiness depends on updating configuration, migrating schema/data, auditing references, and rotating credentials.
-- Security overlaps with this area because backup scripts contain hardcoded credentials and other secret exposure risks.
-
-### Key relationship
-- Database provider abstraction reduces lock-in at the code level, but operational credential hygiene remains a separate concern and connects directly to **security/operations**.
+### Key Relationships
+- Database provider abstraction minimizes code-level lock-in.
+- Authentication access is SQL-based, enhancing portability.
+- Operational credential risks are a separate concern linked to security operations.

@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-06-30
+
+### feat
+- Adicionada uma descrição detalhada do sistema de faturamento e portabilidade de banco de dados na documentação de arquitetura.
+  - Arquivos: `.brv/context-tree/architecture/billing-system-and-database-portability.md`, `.brv/context-tree/_index.md`, `.brv/context-tree/_manifest.json`
+  - Confiança: alta
+
 ## 2026-06-27
 
 ### fix

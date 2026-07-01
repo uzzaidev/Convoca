@@ -155,14 +155,41 @@ export default function TermsPage() {
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">
-            11. Direito de arrependimento
+            11. Direito de arrependimento / Right of Withdrawal / Widerrufsrecht
           </h2>
           <p>
-            O contratante pessoa fisica tem direito de arrependimento nos termos
-            do Art. 49 do Codigo de Defesa do Consumidor, podendo desistir da
-            contratacao no prazo de 7 dias corridos contados do aceite, sem custo
-            ou penalidade. Manifeste sua intencao por escrito em
-            contato@uzzai.com.br.
+            <strong>Brasil:</strong> O contratante pessoa fisica tem direito de
+            arrependimento nos termos do Art. 49 do Codigo de Defesa do
+            Consumidor, podendo desistir da contratacao no prazo de{" "}
+            <strong>7 dias corridos</strong> contados do aceite, sem custo ou
+            penalidade.
+          </p>
+          <p className="mt-2">
+            <strong>Uniao Europeia (incluindo Alemanha e Portugal):</strong>{" "}
+            Consumidores na UE tem direito de rescisao no prazo de{" "}
+            <strong>14 dias corridos</strong> a contar da celebracao do contrato,
+            sem necessidade de justificativa, nos termos da Diretiva UE
+            2011/83/UE (Consumer Rights Directive) e do{" "}
+            <em>Burgerliches Gesetzbuch</em> §§ 355–356 (Alemanha). O direito
+            de arrependimento pode ser extinto antes do prazo se o servico for
+            totalmente prestado com consentimento expresso do consumidor.
+          </p>
+          <p className="mt-2">
+            <strong>Australia:</strong> Consumidores australianos tem direitos
+            garantidos pela Australian Consumer Law (Competition and Consumer
+            Act 2010, Schedule 2), incluindo garantias de que o servico e
+            prestado com cuidado e habilidade razoaveis.
+          </p>
+          <p className="mt-2">
+            Para exercer o direito de arrependimento em qualquer jurisdicao,
+            manifeste sua intencao por escrito em{" "}
+            <a
+              className="font-semibold text-green-700"
+              href="mailto:contato@uzzai.com.br"
+            >
+              contato@uzzai.com.br
+            </a>
+            .
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">
@@ -190,11 +217,31 @@ export default function TermsPage() {
             14. Lei aplicavel e foro
           </h2>
           <p>
-            Estes Termos sao regidos pelas leis da Republica Federativa do
-            Brasil. Fica eleito o Foro da Comarca de Caxias do Sul/RS para
-            dirimir quaisquer litigios, com renuncia expressa a qualquer outro.
-            Para o contratante pessoa fisica consumidor, aplica-se o foro de seu
-            domicilio quando assim previsto no Codigo de Defesa do Consumidor.
+            <strong>Regra geral:</strong> Estes Termos sao regidos pelas leis
+            da Republica Federativa do Brasil. Fica eleito o Foro da Comarca de
+            Caxias do Sul/RS para dirimir quaisquer litigios.
+          </p>
+          <p className="mt-2">
+            <strong>Consumidores na Uniao Europeia:</strong> Sem prejuizo da
+            escolha de foro acima, consumidores na UE podem invocar as normas
+            imperativas de protecao ao consumidor de seu pais de residencia,
+            conforme Art. 6(2) do Regulamento Roma I (CE 593/2008). A plataforma
+            de resolucao de litigios online da Comissao Europeia esta disponivel
+            em{" "}
+            <a
+              className="font-semibold text-green-700"
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ec.europa.eu/consumers/odr
+            </a>
+            .
+          </p>
+          <p className="mt-2">
+            <strong>Consumidores na Australia:</strong> Nada nestes Termos
+            exclui, restringe ou modifica direitos que nao podem ser excluidos
+            sob a Australian Consumer Law.
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">

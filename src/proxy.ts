@@ -16,6 +16,7 @@ export async function proxy(req: NextRequest) {
     "/suporte",
     "/excluir-conta",
     "/produto-convoca",
+    "/impressum",
   ];
 
   // Fast path checks before auth call

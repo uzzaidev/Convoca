@@ -71,9 +71,14 @@ export default function PrivacyPage() {
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">
-            3. Bases legais (LGPD)
+            3. Bases legais
           </h2>
-          <p>O tratamento de dados pessoais pela Uzz.Ai fundamenta-se nas seguintes bases legais previstas na Lei n&ordm; 13.709/2018:</p>
+          <p>
+            O tratamento de dados pessoais pela Uzz.Ai fundamenta-se nas
+            seguintes bases legais, aplicadas conforme a legislacao de cada
+            jurisdicao:
+          </p>
+          <p className="font-medium">Brasil — LGPD (Lei n&ordm; 13.709/2018):</p>
           <ul className="list-disc space-y-2 pl-6">
             <li>
               <strong>Execucao de contrato</strong> (Art. 7&ordm;, V) — dados
@@ -85,12 +90,52 @@ export default function PrivacyPage() {
               servicos.
             </li>
             <li>
-              <strong>Consentimento</strong> (Art. 7&ordm;, I) — comunicacoes de
-              marketing e e-mails promocionais (opt-in).
+              <strong>Consentimento</strong> (Art. 7&ordm;, I) — comunicacoes
+              de marketing (opt-in).
             </li>
             <li>
               <strong>Cumprimento de obrigacao legal</strong> (Art. 7&ordm;, II)
               — obrigacoes fiscais, contabeis e regulatorias.
+            </li>
+          </ul>
+          <p className="mt-3 font-medium">
+            Uniao Europeia — GDPR (Regulamento UE 2016/679):
+          </p>
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              <strong>Execucao de contrato</strong> (Art. 6(1)(b)) — tratamento
+              necessario para prestar o servico.
+            </li>
+            <li>
+              <strong>Interesses legitimos</strong> (Art. 6(1)(f)) — seguranca,
+              prevencao de fraudes e melhoria do servico.
+            </li>
+            <li>
+              <strong>Consentimento</strong> (Art. 6(1)(a)) — marketing (opt-in,
+              revogavel a qualquer momento).
+            </li>
+            <li>
+              <strong>Obrigacao legal</strong> (Art. 6(1)(c)) — cumprimento de
+              obrigacoes legais aplicaveis.
+            </li>
+          </ul>
+          <p className="mt-3 font-medium">
+            Australia — Privacy Act 1988 (Australian Privacy Principles):
+          </p>
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              A Uzz.Ai trata dados de usuarios australianos em conformidade com
+              as 13 Australian Privacy Principles (APPs) do Privacy Act 1988.
+              Usuarios australianos podem peticionar ao{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="https://www.oaic.gov.au"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Office of the Australian Information Commissioner (OAIC)
+              </a>{" "}
+              em caso de nao resolucao de reclamacao.
             </li>
           </ul>
 
@@ -174,6 +219,19 @@ export default function PrivacyPage() {
           </p>
 
           <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            7b. Transferencias internacionais de dados
+          </h2>
+          <p>
+            Os dados sao armazenados em servidores nos EUA (Neon Inc., Vercel
+            Inc.). Para usuarios da Uniao Europeia, essas transferencias sao
+            realizadas com base nas{" "}
+            <strong>Clausulas Contratuais Padrao</strong> (Standard Contractual
+            Clauses — SCC) adotadas pela Comissao Europeia, conforme Art. 46(2)
+            do GDPR. Para usuarios australianos, aplicam-se os requisitos do
+            APP 8 (cross-border disclosure).
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
             8. Direitos dos titulares (LGPD — Art. 18)
           </h2>
           <p>
@@ -203,6 +261,76 @@ export default function PrivacyPage() {
             >
               Excluir conta e dados
             </Link>
+            .
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            8b. Direitos adicionais — usuarios da Uniao Europeia (GDPR)
+          </h2>
+          <p>
+            Alem dos direitos previstos na LGPD, usuarios na Uniao Europeia tem
+            os seguintes direitos sob o GDPR:
+          </p>
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              <strong>Direito de oposicao</strong> (Art. 21) — opor-se ao
+              tratamento baseado em interesses legitimos, incluindo criacao de
+              perfis.
+            </li>
+            <li>
+              <strong>Direito a restricao</strong> (Art. 18 GDPR) — solicitar a
+              restricao do tratamento em determinadas circunstancias.
+            </li>
+            <li>
+              <strong>Revisao de decisoes automatizadas</strong> (Art. 22) —
+              nao ser submetido a decisoes baseadas exclusivamente em
+              tratamento automatizado.
+            </li>
+            <li>
+              <strong>Reclamacao a autoridade supervisora</strong> — usuarios
+              na Alemanha podem reclamar ao{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="https://www.bfdi.bund.de"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                BfDI (www.bfdi.bund.de)
+              </a>
+              ; em Portugal ao{" "}
+              <a
+                className="font-semibold text-green-700"
+                href="https://www.cnpd.pt"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                CNPD (www.cnpd.pt)
+              </a>
+              ; em outros paises da UE, a autoridade nacional competente.
+            </li>
+          </ul>
+          <p className="mt-3">
+            Tempo de resposta para solicitacoes GDPR: ate{" "}
+            <strong>30 (trinta) dias corridos</strong>, prorrogavel por mais 60
+            dias em casos complexos (com notificacao ao titular).
+          </p>
+
+          <h2 className="pt-4 text-xl font-semibold text-slate-900">
+            8c. Direitos adicionais — usuarios australianos (Privacy Act 1988)
+          </h2>
+          <p>
+            Usuarios australianos tem direito de: acessar os dados pessoais que
+            mantemos; solicitar correcao de dados inexatos; reclamar sobre o
+            tratamento de seus dados. Reclamacoes nao resolvidas podem ser
+            encaminhadas ao{" "}
+            <a
+              className="font-semibold text-green-700"
+              href="https://www.oaic.gov.au"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Office of the Australian Information Commissioner (OAIC)
+            </a>
             .
           </p>
 

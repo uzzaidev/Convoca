@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-01
+
+### feat
+- Adiciona suporte internacional para mercados DE (Alemanha) e AU (Austrália), incluindo novas listagens de loja, textos de ficha de loja e instruções de publicação.
+  - Arquivos: `docs/mobile-convoca/STORE_LISTINGS_INTERNATIONAL.md`, `src/app/impressum/page.tsx`, `src/app/privacidade/page.tsx`
+  - Confiança: alta
+
 ## 2026-06-30
 
 ### feat

@@ -4,6 +4,30 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-07
 
+### fix
+- Corrigidas verificações de autenticação nos endpoints de rotas cron para evitar erros de autorização quando a variável de ambiente `CRON_SECRET` estiver indefinida
+  - Arquivos: `src/app/api/cron/generate-monthly-charges/route.ts`, `src/app/api/cron/generate-recurring-events/route.ts`, `src/app/api/cron/notify-event-reminders/route.ts`, `src/app/api/cron/notify-payment-reminders/route.ts`
+  - Evidência: alteração na condição de verificação de `authHeader` e `auth`
+  - Confiança: alta
+
+### feat
+- Adicionado validação de status ao atualizar evento na rota `[eventId]`, permitindo apenas valores válidos (`scheduled`, `live`, `finished`, `canceled`)
+  - Arquivo: `src/app/api/events/[eventId]/route.ts`
+  - Confiança: alta
+
+### fix
+- Melhorada a segurança na consulta de cobranças de grupo, restringindo o acesso de membros comuns às suas próprias cobranças
+  - Arquivo: `src/app/api/groups/[groupId]/charges/route.ts`
+  - Evidência: validação adicional de `userId` na resposta
+  - Confiança: alta
+
+### feat
+- Geração de senha padrão para novos membros do grupo agora utiliza `randomBytes` para maior segurança
+  - Arquivo: `src/app/api/groups/[groupId]/members/create-user/route.ts`
+  - Confiança: alta
+
+## 2026-07-07
+
 ### feat
 - Implementado sistema completo de notificações push com 7 tipos diferentes, acionados por cron jobs via Vercel. Arquivos principais: `src/app/api/cron/notify-event-reminders/route.ts`, `src/app/api/cron/notify-payment-reminders/route.ts`, `src/app/api/events/[eventId]/route.ts`. Confiança: alta
 

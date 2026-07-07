@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireEventAccess } from "@/lib/event-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { sendPushToUser } from "@/lib/mobile/fcm";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -95,6 +96,44 @@ export async function GET(
   }
 }
 
+// Envia notificação #7 (resultado publicado) para participantes confirmados.
+// Fire-and-forget: não bloqueia a resposta do PATCH.
+async function notifyResultPublished(eventId: string, groupId: string) {
+  try {
+    const [already] = await sql`
+      SELECT 1 FROM notification_log
+      WHERE type = 'event_result_published' AND ref_id = ${eventId}
+      LIMIT 1
+    `;
+    if (already) return;
+
+    const [group] = await sql<{ name: string }[]>`
+      SELECT name FROM groups WHERE id = ${groupId}
+    `;
+    const groupName = group?.name ?? "seu grupo";
+
+    const attendees = await sql<{ user_id: string }[]>`
+      SELECT user_id FROM event_attendance
+      WHERE event_id = ${eventId} AND status = 'yes'
+    `;
+
+    for (const a of attendees) {
+      await sendPushToUser(a.user_id, {
+        title: "📊 Resultado do jogo publicado!",
+        body: `Veja as estatísticas e rankings do jogo de ${groupName}`,
+        data: { kind: "event", eventId },
+      });
+      await sql`
+        INSERT INTO notification_log (type, ref_id, user_id)
+        VALUES ('event_result_published', ${eventId}, ${a.user_id})
+        ON CONFLICT (type, ref_id, user_id) DO NOTHING
+      `;
+    }
+  } catch (err) {
+    logger.error(err, "Error sending result-published notifications");
+  }
+}
+
 // PATCH /api/events/:eventId - Update event (admin only)
 export async function PATCH(
   request: NextRequest,
@@ -128,6 +167,11 @@ export async function PATCH(
     `;
 
     logger.info({ eventId, userId: user.id }, "Event updated");
+
+    // #7 Notificação: resultado publicado quando admin muda status para 'finished'
+    if (status === "finished") {
+      void notifyResultPublished(eventId, updated.group_id as string);
+    }
 
     return NextResponse.json({ event: updated });
   } catch (error) {

@@ -439,3 +439,16 @@ CREATE TABLE IF NOT EXISTS push_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_push_tokens_user_id ON push_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_push_tokens_platform ON push_tokens(platform);
+
+-- Notification log: rastreia notificações push enviadas para evitar duplicatas
+CREATE TABLE IF NOT EXISTS notification_log (
+  id      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type    VARCHAR(60)  NOT NULL,
+  ref_id  VARCHAR(150) NOT NULL,
+  user_id UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sent_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+  UNIQUE (type, ref_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_log_type_ref ON notification_log(type, ref_id);
+CREATE INDEX IF NOT EXISTS idx_notification_log_user    ON notification_log(user_id);

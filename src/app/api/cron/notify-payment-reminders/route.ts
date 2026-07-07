@@ -11,7 +11,7 @@ import logger from "@/lib/logger";
 
 function authGuard(request: NextRequest): NextResponse | null {
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
   return null;

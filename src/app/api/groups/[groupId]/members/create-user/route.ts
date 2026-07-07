@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { requireGroupAccess } from "@/lib/group-access";
 import { handleRouteError } from "@/lib/route-errors";
 
@@ -51,7 +52,7 @@ export async function POST(
       );
     }
 
-    const password = defaultPassword || "Convoca2024!";
+    const password = defaultPassword || randomBytes(10).toString("base64url");
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [newUser] = await sql`

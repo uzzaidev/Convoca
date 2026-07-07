@@ -2,6 +2,11 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-07
+
+### feat
+- Implementado sistema completo de notificações push com 7 tipos diferentes, acionados por cron jobs via Vercel. Arquivos principais: `src/app/api/cron/notify-event-reminders/route.ts`, `src/app/api/cron/notify-payment-reminders/route.ts`, `src/app/api/events/[eventId]/route.ts`. Confiança: alta
+
 ## 2026-07-01
 
 ### feat

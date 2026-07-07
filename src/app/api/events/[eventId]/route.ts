@@ -149,7 +149,10 @@ export async function PATCH(
     });
 
     const body = await request.json();
-    const { startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, status, listOpensAt } = body;
+    const { startsAt, venueId, maxPlayers, maxGoalkeepers, waitlistEnabled, listOpensAt } = body;
+
+    const VALID_STATUSES = ["scheduled", "live", "finished", "canceled"] as const;
+    const status = VALID_STATUSES.includes(body.status) ? body.status as typeof VALID_STATUSES[number] : undefined;
 
     const [updated] = await sql`
       UPDATE events

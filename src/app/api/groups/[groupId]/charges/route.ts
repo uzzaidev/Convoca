@@ -18,11 +18,16 @@ export async function GET(
   try {
     const user = await requireAuth();
 
-    await requireGroupAccess(groupId, user);
+    const groupAccess = await requireGroupAccess(groupId, user);
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const userId = searchParams.get("userId");
+
+    // Membros comuns só podem consultar suas próprias cobranças
+    if (userId && userId !== user.id && groupAccess.userRole !== "admin" && !groupAccess.isSystemAdmin) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    }
 
     let charges;
 

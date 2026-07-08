@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Copy, Trash2, Loader2, Share2 } from "lucide-react";
+import { trackPlayerInvited } from "@/lib/mobile/analytics";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -91,6 +92,8 @@ export function InvitesManager({ groupId, groupName, initialInvites }: InvitesMa
       setInvites([data.invite, ...invites]);
       setIsDialogOpen(false);
       setNewInvite({ maxUses: "", expiresAt: "" });
+
+      void trackPlayerInvited({ groupMemberCount: invites.length });
 
       toast({
         title: "Convite criado!",

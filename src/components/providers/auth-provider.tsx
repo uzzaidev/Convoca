@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { initNativeShell } from "@/lib/mobile/native-shell";
 import { initPushNotifications } from "@/lib/mobile/push-notifications";
+import { initAnalytics } from "@/lib/mobile/analytics";
 
 function MobileRuntimeInitializer() {
   const { status } = useSession();
 
   useEffect(() => {
     void initNativeShell();
+    void initAnalytics();
   }, []);
 
   useEffect(() => {

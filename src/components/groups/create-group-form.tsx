@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { PlanSelector } from "@/components/groups/plan-selector";
+import { trackPeladaCreated } from "@/lib/mobile/analytics";
 
 export function CreateGroupForm() {
   const router = useRouter();
@@ -58,6 +59,14 @@ export function CreateGroupForm() {
       if (!response.ok) {
         throw new Error(data.error || "Erro ao criar grupo");
       }
+
+      void trackPeladaCreated({
+        maxPlayers: data.group.max_players ?? 10,
+        hasVenue: false,
+        isRecurring: false,
+        hasGoalkeeperSlots: (data.group.max_goalkeepers ?? 0) > 0,
+        privacy: formData.privacy as "private" | "public",
+      });
 
       // Redirecionar para o Stripe Checkout se tiver URL de pagamento
       if (data.checkoutUrl) {

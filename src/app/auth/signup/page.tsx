@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
+import { trackSignUpStarted, trackSignUpCompleted } from "@/lib/mobile/analytics";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,10 @@ export default function SignUpPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    void trackSignUpStarted();
+  }, []);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -55,6 +60,10 @@ export default function SignUpPage() {
         setIsLoading(false);
         return;
       }
+
+      // Captura utm_source da URL para atribuição de aquisição
+      const utmSource = new URLSearchParams(window.location.search).get("utm_source") ?? undefined;
+      void trackSignUpCompleted({ acquisitionSource: utmSource });
 
       // Redirecionar para login
       router.push("/auth/signin?message=Conta criada com sucesso! Faça login para continuar.");

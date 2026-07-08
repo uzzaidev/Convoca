@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { CreditCard } from "lucide-react";
 import { PlanSelector } from "@/components/groups/plan-selector";
+import { trackTrialStarted } from "@/lib/mobile/analytics";
 
 export function PaymentButton({ groupId }: { groupId: string }) {
   const { toast } = useToast();
@@ -29,6 +30,7 @@ export function PaymentButton({ groupId }: { groupId: string }) {
       }
 
       if (data.url) {
+        void trackTrialStarted({ planName: selectedPlanId ?? "default", trialDays: 14 });
         window.location.href = data.url;
       }
     } catch (error) {

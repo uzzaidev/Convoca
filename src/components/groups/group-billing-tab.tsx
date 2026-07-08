@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CreditCard, ExternalLink, Calendar, AlertTriangle } from "lucide-react";
+import { trackSubscriptionCancelled } from "@/lib/mobile/analytics";
 
 type Subscription = {
   id: string;
@@ -141,6 +142,9 @@ export function GroupBillingTab({ groupId }: { groupId: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       toast({ title: data.message });
+      if (action === "cancel" && subscription) {
+        void trackSubscriptionCancelled({ planName: subscription.planName });
+      }
       fetchBilling();
     } catch (error) {
       toast({

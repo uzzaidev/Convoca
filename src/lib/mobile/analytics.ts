@@ -26,10 +26,10 @@ async function getAnalytics(): Promise<Analytics | null> {
 
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
-  const measurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
+  const measurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID; // opcional até GA4 ser conectado
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-  if (!apiKey || !appId || !measurementId) return null;
+  if (!apiKey || !appId) return null;
 
   try {
     const { initializeApp, getApps, getApp } = await import("firebase/app");
@@ -37,9 +37,13 @@ async function getAnalytics(): Promise<Analytics | null> {
 
     if (!(await isSupported())) return null;
 
+    const appConfig: Record<string, string> = { apiKey, appId };
+    if (measurementId) appConfig.measurementId = measurementId;
+    if (projectId) appConfig.projectId = projectId;
+
     const app = getApps().length
       ? getApp()
-      : initializeApp({ apiKey, appId, measurementId, projectId });
+      : initializeApp(appConfig);
 
     _analytics = fbGetAnalytics(app);
   } catch {

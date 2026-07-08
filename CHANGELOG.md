@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-08
+
+### feat
+- Implementada integração do Firebase Analytics para atribuição de marketing e eventos de uso na plataforma.
+  - Arquivos: `src/lib/mobile/analytics.ts`, `src/components/auth/signup/page.tsx`, `src/components/groups/create-group-form.tsx`, `src/components/groups/group-billing-tab.tsx`, `src/components/groups/invites-manager.tsx`, `src/components/groups/payment-button.tsx`, `src/components/providers/auth-provider.tsx`
+  - Confiança: alta
+
 ## 2026-07-07
 
 ### fix

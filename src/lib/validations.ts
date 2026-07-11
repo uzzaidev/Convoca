@@ -98,3 +98,57 @@ export type PlayerRatingInput = z.infer<typeof playerRatingSchema>;
 export type CreateSeasonInput = z.infer<typeof createSeasonSchema>;
 export type UpdateSeasonInput = z.infer<typeof updateSeasonSchema>;
 export type UpdateGroupStatusInput = z.infer<typeof updateGroupStatusSchema>;
+
+// ── Campeonatos ───────────────────────────────────────────────
+
+export const createChampionshipSchema = z.object({
+  groupId: z.string().uuid(),
+  name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres").max(255),
+  description: z.string().max(1000).optional(),
+  format: z.enum(["round_robin", "single_elimination", "double_elimination", "mixed"]).default("round_robin"),
+  teamFormation: z.enum(["manual", "draw"]).default("manual"),
+  startsAt: z.string().optional(),
+  endsAt: z.string().optional(),
+  venueId: z.string().uuid().optional(),
+  matchDurationMinutes: z.number().int().min(1).max(120).default(10),
+  matchWinGoalDiff: z.number().int().min(1).max(20).default(2),
+  canCaptainEditRules: z.boolean().default(false),
+  pointsWin: z.number().int().min(0).max(10).default(3),
+  pointsDraw: z.number().int().min(0).max(10).default(1),
+  pointsLoss: z.number().int().min(0).max(10).default(0),
+});
+
+export const updateChampionshipSchema = createChampionshipSchema
+  .omit({ groupId: true, format: true })
+  .partial();
+
+export const createChampionshipTeamSchema = z.object({
+  name: z.string().min(1, "Nome obrigatório").max(100),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Cor inválida (hex #RRGGBB)").default("#6b7280"),
+  seed: z.number().int().min(1).optional(),
+  playerIds: z.array(z.string().uuid()).min(1, "Time precisa de ao menos 1 jogador"),
+  captainId: z.string().uuid().optional(),
+});
+
+export const updateChampionshipMatchSchema = z.object({
+  homeScore: z.number().int().min(0),
+  awayScore: z.number().int().min(0),
+  playedAt: z.string().datetime().optional(),
+});
+
+export const generateRoundsSchema = z.object({
+  // Optional: override scheduled times for each round
+  roundSchedules: z.array(z.object({
+    roundNumber: z.number().int().min(1),
+    scheduledAt: z.string().datetime(),
+  })).optional(),
+  // Auto-create events in group calendar for each match
+  autoCreateEvents: z.boolean().default(true),
+  defaultEventStartTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM").optional(),
+});
+
+export type CreateChampionshipInput = z.infer<typeof createChampionshipSchema>;
+export type UpdateChampionshipInput = z.infer<typeof updateChampionshipSchema>;
+export type CreateChampionshipTeamInput = z.infer<typeof createChampionshipTeamSchema>;
+export type UpdateChampionshipMatchInput = z.infer<typeof updateChampionshipMatchSchema>;
+export type GenerateRoundsInput = z.infer<typeof generateRoundsSchema>;

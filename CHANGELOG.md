@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### fix
+- Corrigido o script de criação do arquivo `release.properties` para usar `printf` sem BOM ou indentação, garantindo maior compatibilidade e clareza no arquivo gerado.
+  - Arquivos: `.github/workflows/android-release.yml`
+  - Evidência: alteração na geração do arquivo com `printf`
+  - Confiança: alta
+
+## 2026-07-11
+
+### fix
 - Atualizado a versão do Java para 21 no workflow de Android, devido ao requisito do capacitor-android >= 7.
   - Arquivos: `.github/workflows/android-release.yml`
   - Evidência: alteração na configuração do Java de 17 para 21

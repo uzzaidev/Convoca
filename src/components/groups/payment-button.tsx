@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { CreditCard } from "lucide-react";
 import { PlanSelector } from "@/components/groups/plan-selector";
 import { trackTrialStarted } from "@/lib/mobile/analytics";
+import { isNativePlatform } from "@/lib/mobile/platform-detector";
 
 export function PaymentButton({ groupId }: { groupId: string }) {
   const { toast } = useToast();
@@ -21,6 +22,7 @@ export function PaymentButton({ groupId }: { groupId: string }) {
         body: JSON.stringify({
           groupId,
           planId: selectedPlanId || undefined,
+          platform: isNativePlatform() ? "mobile" : "web",
         }),
       });
       const data = await res.json();

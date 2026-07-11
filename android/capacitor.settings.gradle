@@ -6,10 +6,10 @@ include ':aparajita-capacitor-biometric-auth'
 project(':aparajita-capacitor-biometric-auth').projectDir = new File('../node_modules/.pnpm/@aparajita+capacitor-biometric-auth@9.1.2/node_modules/@aparajita/capacitor-biometric-auth/android')
 
 include ':capacitor-firebase-app'
-project(':capacitor-firebase-app').projectDir = new File('../node_modules/.pnpm/@capacitor-firebase+app@7.3.1_@capacitor+core@7.6.6/node_modules/@capacitor-firebase/app/android')
+project(':capacitor-firebase-app').projectDir = new File('../node_modules/.pnpm/@capacitor-firebase+app@7.3_ecc168a73d0e62157b49675be2986894/node_modules/@capacitor-firebase/app/android')
 
 include ':capacitor-firebase-messaging'
-project(':capacitor-firebase-messaging').projectDir = new File('../node_modules/.pnpm/@capacitor-firebase+messaging@7.3.1_@capacitor+core@7.6.6/node_modules/@capacitor-firebase/messaging/android')
+project(':capacitor-firebase-messaging').projectDir = new File('../node_modules/.pnpm/@capacitor-firebase+messagi_17dbd71c285e643191d8bec1dcb96113/node_modules/@capacitor-firebase/messaging/android')
 
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacitor+app@7.1.2_@capacitor+core@7.6.6/node_modules/@capacitor/app/android')

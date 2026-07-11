@@ -13,7 +13,8 @@ import logger from "@/lib/logger";
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const { groupId, planId } = await request.json();
+    const { groupId, planId, platform } = await request.json();
+    const isMobile = platform === "mobile";
 
     if (!groupId) {
       return NextResponse.json(
@@ -78,6 +79,12 @@ export async function POST(request: NextRequest) {
 
     // Criar Checkout Session
     const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const successUrl = isMobile
+      ? `convoca://groups/${groupId}?payment=success`
+      : `${appUrl}/groups/${groupId}?payment=success`;
+    const cancelUrl = isMobile
+      ? `convoca://groups/${groupId}?payment=canceled`
+      : `${appUrl}/groups/${groupId}?payment=canceled`;
     const session = await getStripe().checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
@@ -101,8 +108,8 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         plan_id: resolvedPlanId || "",
       },
-      success_url: `${appUrl}/groups/${groupId}?payment=success`,
-      cancel_url: `${appUrl}/groups/${groupId}?payment=canceled`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       locale: "pt-BR",
     });
 

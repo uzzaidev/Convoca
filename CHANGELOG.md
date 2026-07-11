@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-11
 
+### fix
+- Ajustada a lógica de redirecionamento do checkout Stripe para plataformas móveis usando deep links, garantindo melhor integração com aplicativos nativos.
+  - Arquivos: `src/app/api/stripe/checkout/route.ts`, `src/components/groups/payment-button.tsx`
+  - Evidência: modificação na geração de URLs de sucesso e cancelamento com base na plataforma
+  - Confiança: alta
+
+## 2026-07-11
+
 ### feat
 - Separou as lanes de build e upload do Android em lanes distintas no Fastlane, com descrições específicas para cada uma.
   - Arquivos: `fastlane/Fastfile`

@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-11
 
+### feat
+- Separou as lanes de build e upload do Android em lanes distintas no Fastlane, com descrições específicas para cada uma.
+  - Arquivos: `fastlane/Fastfile`
+  - Confiança: alta
+
+## 2026-07-11
+
 ### fix
 - Corrigido o script de criação do arquivo `release.properties` para usar `printf` sem BOM ou indentação, garantindo maior compatibilidade e clareza no arquivo gerado.
   - Arquivos: `.github/workflows/android-release.yml`

@@ -16,7 +16,7 @@ platform :android do
     sh("cd #{ROOT} && pnpm build:mobile")
 
     # 2. Sincroniza assets + plugins nativos Android
-    sh("cd #{ROOT} && cross-env CAPACITOR_PLATFORM=android npx cap sync android")
+    sh("cd #{ROOT} && CAPACITOR_PLATFORM=android npx cap sync android")
 
     # 3. Builda AAB assinado — signing lido do release.properties (já criado pelo CI)
     gradle(

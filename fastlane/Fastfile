@@ -7,7 +7,7 @@ default_platform(:ios)
 # ---------------------------------------------------------------------------
 platform :android do
 
-  desc "Build AAB release e envia para Play Store (internal testing)"
+  desc "Build AAB release (assinado, pronto para upload manual no Play Console)"
   lane :build do
     version_name = ENV["APP_VERSION"] || "1.0.0"
     version_code = (ENV["BUILD_NUMBER"] || "1").to_i
@@ -29,9 +29,15 @@ platform :android do
       }
     )
 
-    aab_path = "#{ROOT}/android/app/build/outputs/bundle/release/app-release.aab"
+    UI.success "AAB gerado ✅ v#{version_name} (#{version_code}) — faça upload manual no Play Console"
+  end
 
-    # 4. Upload para Play Store internal testing
+  desc "Upload AAB para Play Store internal testing (requer API access configurado)"
+  lane :upload do
+    version_name = ENV["APP_VERSION"] || "1.0.0"
+    version_code = (ENV["BUILD_NUMBER"] || "1").to_i
+    aab_path = ENV["AAB_PATH"] || "#{ROOT}/android/app/build/outputs/bundle/release/app-release.aab"
+
     upload_to_play_store(
       package_name:             "com.uzzai.convoca",
       track:                    "internal",

@@ -5,6 +5,7 @@ import { rsvpSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
 import { requireEventAccess } from "@/lib/event-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { sendPushToUser } from "@/lib/mobile/fcm";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -157,6 +158,17 @@ export async function POST(
             SET status = 'yes', updated_at = NOW()
             WHERE id = ${waitlistPlayer.id}
           `;
+          void sendPushToUser(waitlistPlayer.user_id as string, {
+            title: "🎉 Você entrou na pelada!",
+            body: "Saiu da lista de espera e está confirmado.",
+            data: { kind: "event", eventId },
+          }).then(() =>
+            sql`
+              INSERT INTO notification_log (type, ref_id, user_id)
+              VALUES ('waitlist_promoted', ${eventId}, ${waitlistPlayer.user_id})
+              ON CONFLICT (type, ref_id, user_id) DO NOTHING
+            `.catch(() => {})
+          ).catch(() => {});
           break;
         }
       }

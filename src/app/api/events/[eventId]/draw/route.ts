@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireEventAccess } from "@/lib/event-access";
 import { handleRouteError } from "@/lib/route-errors";
+import { sendPushToUser } from "@/lib/mobile/fcm";
 
 type Params = Promise<{ eventId: string }>;
 
@@ -301,6 +302,31 @@ export async function POST(
     }
 
     logger.info({ eventId, userId: user.id }, "Teams drawn");
+
+    // Notifica todos os jogadores sorteados (fire-and-forget)
+    void (async () => {
+      try {
+        const [group] = await sql`SELECT name FROM groups WHERE id = ${event.group_id}`;
+        const groupName = (group as { name: string } | undefined)?.name ?? "seu grupo";
+        for (const p of confirmedPlayers) {
+          const alreadySent = await sql`
+            SELECT 1 FROM notification_log
+            WHERE type = 'teams_drawn' AND ref_id = ${eventId} AND user_id = ${p.user_id}
+          `;
+          if ((alreadySent as unknown[]).length > 0) continue;
+          await sendPushToUser(p.user_id, {
+            title: "🎲 Times sorteados!",
+            body: `O sorteio foi feito em ${groupName} — veja o seu time.`,
+            data: { kind: "event", eventId },
+          });
+          await sql`
+            INSERT INTO notification_log (type, ref_id, user_id)
+            VALUES ('teams_drawn', ${eventId}, ${p.user_id})
+            ON CONFLICT (type, ref_id, user_id) DO NOTHING
+          `;
+        }
+      } catch { /* ignora — não bloqueia o sorteio */ }
+    })();
 
     return NextResponse.json({ teams: createdTeams });
   } catch (error) {

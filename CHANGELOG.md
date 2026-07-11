@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-11
 
+### fix
+- Removido o uso do `cross-env` no comando de sincronização do Android no Fastfile, ajustando para usar sintaxe nativa do Linux.
+  - Arquivos: `fastlane/Fastfile`
+  - Evidência: alteração do comando `sh("cd #{ROOT} && cross-env CAPACITOR_PLATFORM=android npx cap sync android")` para `sh("cd #{ROOT} && CAPACITOR_PLATFORM=android npx cap sync android")`
+  - Confiança: alta
+
+## 2026-07-11
+
 ### feat
 - Adicionado workflow de release Android para build AAB e upload na Play Store (internal testing). Arquivos: `.github/workflows/android-release.yml`, `fastlane/Fastfile`
   - Evidência: novo arquivo de workflow e alteração no Fastfile indicam implementação de pipeline de release

@@ -4,6 +4,25 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 
+export async function GET() {
+  try {
+    const user = await requireAuth();
+    const tokens = await sql`
+      SELECT token, platform, created_at, updated_at
+      FROM push_tokens
+      WHERE user_id = ${user.id}
+      ORDER BY updated_at DESC
+    `;
+    return NextResponse.json({ userId: user.id, count: tokens.length, tokens });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("autenticado")) {
+      return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    }
+    logger.error(error, "Error fetching push tokens");
+    return NextResponse.json({ error: "Erro ao buscar tokens" }, { status: 500 });
+  }
+}
+
 const pushTokenSchema = z.object({
   token: z.string().min(16).max(4096),
   platform: z.enum(["android", "ios"]),

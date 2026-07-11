@@ -452,3 +452,108 @@ CREATE TABLE IF NOT EXISTS notification_log (
 
 CREATE INDEX IF NOT EXISTS idx_notification_log_type_ref ON notification_log(type, ref_id);
 CREATE INDEX IF NOT EXISTS idx_notification_log_user    ON notification_log(user_id);
+
+-- ============================================================
+-- Módulo de Campeonatos (adicionado em 2026-07)
+-- Para migration incremental ver: 20260711_championships.sql
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS championships (
+  id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id         UUID         NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  name             VARCHAR(255) NOT NULL,
+  description      TEXT,
+  format           VARCHAR(30)  NOT NULL DEFAULT 'round_robin'
+                   CHECK (format IN ('round_robin', 'single_elimination', 'double_elimination', 'mixed')),
+  team_formation   VARCHAR(20)  NOT NULL DEFAULT 'manual'
+                   CHECK (team_formation IN ('manual', 'draw')),
+  status           VARCHAR(20)  NOT NULL DEFAULT 'draft'
+                   CHECK (status IN ('draft', 'active', 'finished', 'cancelled')),
+  starts_at        DATE,
+  ends_at          DATE,
+  venue_id         UUID         REFERENCES venues(id) ON DELETE SET NULL,
+  match_duration_minutes  INTEGER NOT NULL DEFAULT 10  CHECK (match_duration_minutes > 0),
+  match_win_goal_diff     INTEGER NOT NULL DEFAULT 2   CHECK (match_win_goal_diff > 0),
+  can_captain_edit_rules  BOOLEAN NOT NULL DEFAULT FALSE,
+  points_win       INTEGER      NOT NULL DEFAULT 3 CHECK (points_win >= 0),
+  points_draw      INTEGER      NOT NULL DEFAULT 1 CHECK (points_draw >= 0),
+  points_loss      INTEGER      NOT NULL DEFAULT 0 CHECK (points_loss >= 0),
+  created_by       UUID         REFERENCES users(id) ON DELETE SET NULL,
+  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS championship_phases (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  championship_id   UUID        NOT NULL REFERENCES championships(id) ON DELETE CASCADE,
+  phase_type        VARCHAR(30) NOT NULL DEFAULT 'group_stage'
+                    CHECK (phase_type IN (
+                      'group_stage', 'round_of_16', 'quarterfinals',
+                      'semifinals', 'third_place', 'final'
+                    )),
+  name              VARCHAR(100) NOT NULL,
+  "order"           INTEGER      NOT NULL DEFAULT 1,
+  status            VARCHAR(20)  NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending', 'active', 'finished')),
+  created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS championship_teams (
+  id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  championship_id  UUID         NOT NULL REFERENCES championships(id) ON DELETE CASCADE,
+  name             VARCHAR(100) NOT NULL,
+  color            VARCHAR(20)  NOT NULL DEFAULT '#6b7280',
+  seed             INTEGER,
+  is_bye           BOOLEAN      NOT NULL DEFAULT FALSE,
+  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS championship_team_players (
+  id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  championship_team_id  UUID        NOT NULL REFERENCES championship_teams(id) ON DELETE CASCADE,
+  user_id               UUID        NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  is_captain            BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (championship_team_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS championship_rounds (
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  phase_id     UUID        NOT NULL REFERENCES championship_phases(id) ON DELETE CASCADE,
+  round_number INTEGER     NOT NULL,
+  scheduled_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (phase_id, round_number)
+);
+
+CREATE TABLE IF NOT EXISTS championship_matches (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  round_id      UUID        NOT NULL REFERENCES championship_rounds(id) ON DELETE CASCADE,
+  home_team_id  UUID        NOT NULL REFERENCES championship_teams(id) ON DELETE RESTRICT,
+  away_team_id  UUID        NOT NULL REFERENCES championship_teams(id) ON DELETE RESTRICT,
+  event_id      UUID        REFERENCES events(id) ON DELETE SET NULL,
+  home_score    INTEGER     CHECK (home_score >= 0),
+  away_score    INTEGER     CHECK (away_score >= 0),
+  status        VARCHAR(20) NOT NULL DEFAULT 'scheduled'
+                CHECK (status IN ('scheduled', 'in_progress', 'finished', 'cancelled', 'postponed')),
+  played_at     TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (home_team_id != away_team_id)
+);
+
+-- FK reversa events → championship_matches (additive)
+-- ALTER TABLE events ADD COLUMN IF NOT EXISTS championship_match_id UUID REFERENCES championship_matches(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_championships_group_id ON championships(group_id);
+CREATE INDEX IF NOT EXISTS idx_championships_status ON championships(status);
+CREATE INDEX IF NOT EXISTS idx_champ_phases_champ ON championship_phases(championship_id);
+CREATE INDEX IF NOT EXISTS idx_champ_teams_champ ON championship_teams(championship_id);
+CREATE INDEX IF NOT EXISTS idx_champ_team_players_team ON championship_team_players(championship_team_id);
+CREATE INDEX IF NOT EXISTS idx_champ_team_players_user ON championship_team_players(user_id);
+CREATE INDEX IF NOT EXISTS idx_champ_rounds_phase ON championship_rounds(phase_id);
+CREATE INDEX IF NOT EXISTS idx_champ_matches_round ON championship_matches(round_id);
+CREATE INDEX IF NOT EXISTS idx_champ_matches_home ON championship_matches(home_team_id);
+CREATE INDEX IF NOT EXISTS idx_champ_matches_away ON championship_matches(away_team_id);

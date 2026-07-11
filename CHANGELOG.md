@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### feat
+- Adicionado endpoint GET /api/mobile/push-token para inspecionar tokens registrados
+  - Arquivos: `src/app/api/mobile/push-token/route.ts`
+  - Evidência: implementação da função GET que consulta tokens do usuário autenticado
+  - Confiança: alta
+
+## 2026-07-11
+
+### feat
 - Implementado módulo completo de campeonatos, incluindo fases 1 e 2, e UI da fase 3
   - Arquivos: `src/app/(app)/groups/[groupId]/championships/page.tsx`, `src/app/(app)/groups/[groupId]/championships/[championshipId]/page.tsx`
   - Confiança: alta

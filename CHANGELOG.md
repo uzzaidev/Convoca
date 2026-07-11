@@ -5,6 +5,29 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### feat
+- Implementado módulo de eliminatórias (single_elimination) para geração de fases e partidas, incluindo lógica para BYEs e avanço automático de times.  
+  - Arquivos: `src/app/api/groups/[groupId]/championships/[championshipId]/generate-rounds/route.ts`, `src/lib/single-elimination.ts`  
+  - Confiança: alta
+
+### fix
+- Ajustada ordenação e agrupamento de dados em páginas de detalhes de campeonato e rodadas, incluindo adição de campo `matchPosition` para melhor ordenação.  
+  - Arquivos: `src/app/(app)/groups/[groupId]/championships/[championshipId]/page.tsx`, `src/app/api/groups/[groupId]/championships/[championshipId]/rounds/route.ts`  
+  - Confiança: alta
+
+### refactor
+- Melhorias na lógica de geração de rounds para suportar formato de eliminação simples, separando etapas de criação de rounds, partidas e slots de vencedores.  
+  - Arquivos: `src/app/api/groups/[groupId]/championships/[championshipId]/generate-rounds/route.ts`  
+  - Confiança: alta
+
+### fix
+- Corrigido comportamento de atualização automática de vencedores em partidas de eliminação simples após pontuação, incluindo avanço de times e atualização de partidas subsequentes.  
+  - Arquivos: `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/route.ts`  
+  - Evidência: lógica de avanço automático implementada e testada  
+  - Confiança: alta
+
+## 2026-07-11
+
+### feat
 - Adicionado endpoint GET /api/mobile/push-token para inspecionar tokens registrados
   - Arquivos: `src/app/api/mobile/push-token/route.ts`
   - Evidência: implementação da função GET que consulta tokens do usuário autenticado

@@ -5,6 +5,7 @@ import logger from "@/lib/logger";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 import { updateChampionshipMatchSchema } from "@/lib/validations";
 import { sendPushToUser } from "@/lib/mobile/fcm";
+import { getWinnerSlot } from "@/lib/single-elimination";
 
 type Params = Promise<{ groupId: string; championshipId: string; matchId: string }>;
 
@@ -131,7 +132,43 @@ export async function PATCH(
       "Championship match result recorded"
     );
 
-    // Check if all matches in the championship are finished → auto-finish
+    // Auto-advance winner for single elimination
+    if (champ.format === "single_elimination") {
+      const [matchInfo] = await sql`
+        SELECT cm.match_position, cr.round_number
+        FROM championship_matches cm
+        JOIN championship_rounds cr ON cr.id = cm.round_id
+        JOIN championship_phases cp ON cp.id = cr.phase_id
+        WHERE cm.id = ${matchId} AND cp.championship_id = ${championshipId}
+      `;
+
+      if (matchInfo?.match_position != null) {
+        const winnerId =
+          d.homeScore > d.awayScore ? updated.home_team_id : updated.away_team_id;
+        const { nextPosition, slot } = getWinnerSlot(matchInfo.match_position as number);
+        const nextRound = (matchInfo.round_number as number) + 1;
+
+        const [nextMatch] = await sql`
+          SELECT cm.id
+          FROM championship_matches cm
+          JOIN championship_rounds cr ON cr.id = cm.round_id
+          JOIN championship_phases cp ON cp.id = cr.phase_id
+          WHERE cp.championship_id = ${championshipId}
+            AND cr.round_number = ${nextRound}
+            AND cm.match_position = ${nextPosition}
+        `;
+
+        if (nextMatch) {
+          if (slot === "home") {
+            await sql`UPDATE championship_matches SET home_team_id = ${winnerId} WHERE id = ${nextMatch.id}`;
+          } else {
+            await sql`UPDATE championship_matches SET away_team_id = ${winnerId} WHERE id = ${nextMatch.id}`;
+          }
+        }
+      }
+    }
+
+    // Check if all determined matches are finished → auto-finish
     const [pending] = await sql`
       SELECT COUNT(*) AS cnt
       FROM championship_matches cm
@@ -139,6 +176,8 @@ export async function PATCH(
       JOIN championship_phases cp ON cp.id = cr.phase_id
       WHERE cp.championship_id = ${championshipId}
         AND cm.status NOT IN ('finished', 'cancelled')
+        AND cm.home_team_id IS NOT NULL
+        AND cm.away_team_id IS NOT NULL
     `;
 
     const champFinished = Number(pending.cnt) === 0;

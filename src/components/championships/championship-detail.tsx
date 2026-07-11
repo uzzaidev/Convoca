@@ -49,21 +49,23 @@ export type TeamData = {
 
 type MatchData = {
   id: string;
-  homeTeamId: string;
-  awayTeamId: string;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeTeamColor: string;
-  awayTeamColor: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  homeTeamName: string | null;
+  awayTeamName: string | null;
+  homeTeamColor: string | null;
+  awayTeamColor: string | null;
   homeScore: number | null;
   awayScore: number | null;
   status: string;
   eventId: string | null;
+  matchPosition: number | null;
 };
 
 type RoundData = {
   id: string;
   round_number: number;
+  round_name: string | null;
   scheduled_at: string | null;
   matches: MatchData[];
 };
@@ -510,6 +512,132 @@ function StandingsTable({ standings }: { standings: StandingData[] }) {
   );
 }
 
+// ─── Bracket View (single elimination) ────────────────────────────────────────
+
+function EliminationMatchCard({
+  match: m,
+  isAdmin,
+  onClick,
+}: {
+  match: MatchData;
+  isAdmin: boolean;
+  onClick: () => void;
+}) {
+  const isFinished = m.status === "finished";
+  const isTBD = !m.homeTeamId || !m.awayTeamId;
+  const canEdit = isAdmin && !isFinished && !isTBD;
+
+  const homeWon = isFinished && m.homeScore != null && m.awayScore != null && m.homeScore > m.awayScore;
+  const awayWon = isFinished && m.homeScore != null && m.awayScore != null && m.awayScore > m.homeScore;
+
+  return (
+    <Card
+      className={`w-44 shrink-0 ${canEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+        ${isFinished ? "border-primary/30" : ""}`}
+      onClick={canEdit ? onClick : undefined}
+    >
+      <CardContent className="p-0">
+        {/* Home team row */}
+        <div
+          className={`flex items-center justify-between gap-1 px-3 py-2 border-b
+            ${homeWon ? "bg-green-50 dark:bg-green-950/30" : ""}
+            ${!m.homeTeamId ? "opacity-50" : ""}`}
+        >
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {m.homeTeamColor && <TeamColorDot color={m.homeTeamColor} />}
+            <span className={`text-xs truncate ${homeWon ? "font-bold" : ""}`}>
+              {m.homeTeamName ?? "A definir"}
+            </span>
+          </div>
+          {isFinished && (
+            <span className={`tabular-nums text-sm font-bold shrink-0 ${homeWon ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}`}>
+              {m.homeScore}
+            </span>
+          )}
+        </div>
+
+        {/* Away team row */}
+        <div
+          className={`flex items-center justify-between gap-1 px-3 py-2
+            ${awayWon ? "bg-green-50 dark:bg-green-950/30" : ""}
+            ${!m.awayTeamId ? "opacity-50" : ""}`}
+        >
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {m.awayTeamColor && <TeamColorDot color={m.awayTeamColor} />}
+            <span className={`text-xs truncate ${awayWon ? "font-bold" : ""}`}>
+              {m.awayTeamName ?? "A definir"}
+            </span>
+          </div>
+          {isFinished && (
+            <span className={`tabular-nums text-sm font-bold shrink-0 ${awayWon ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}`}>
+              {m.awayScore}
+            </span>
+          )}
+        </div>
+
+        {/* Footer */}
+        {(isFinished || canEdit) && (
+          <div className="px-3 py-1 border-t flex items-center justify-center">
+            {isFinished
+              ? <span className="text-[10px] text-muted-foreground">Finalizado</span>
+              : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BracketView({
+  rounds,
+  isAdmin,
+  onMatchClick,
+}: {
+  rounds: RoundData[];
+  isAdmin: boolean;
+  onMatchClick: (m: MatchData) => void;
+}) {
+  if (rounds.length === 0) {
+    return <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma rodada gerada.</div>;
+  }
+
+  // Max matches in round 1 determines bracket height
+  const maxMatches = rounds[0]?.matches.length ?? 1;
+
+  return (
+    <div className="overflow-x-auto pb-4">
+      <div className="flex gap-6 min-w-max items-start">
+        {rounds.map((r) => {
+          const matchCount = r.matches.length;
+          // Vertical gap between matches grows with each round to center them
+          const gapFactor = maxMatches / matchCount;
+          const cardHeight = 88; // approx px per card
+          const baseGap = 12;
+          const gap = Math.round((gapFactor - 1) * (cardHeight + baseGap) + baseGap);
+
+          return (
+            <div key={r.id} className="flex flex-col items-center" style={{ minWidth: 176 }}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-3 text-center">
+                {r.round_name ?? `Rodada ${r.round_number}`}
+              </p>
+              <div className="flex flex-col" style={{ gap }}>
+                {r.matches.map((m) => (
+                  <EliminationMatchCard
+                    key={m.id}
+                    match={m}
+                    isAdmin={isAdmin}
+                    onClick={() => onMatchClick(m)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Rounds Tab ────────────────────────────────────────────────────────────────
 
 function RoundsTab({
@@ -531,7 +659,7 @@ function RoundsTab({
         <div key={r.id}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-              Rodada {r.round_number}
+              {r.round_name ?? `Rodada ${r.round_number}`}
             </h3>
             {r.scheduled_at && (
               <span className="text-xs text-muted-foreground">{formatDateShort(r.scheduled_at)}</span>
@@ -550,18 +678,22 @@ function RoundsTab({
 
 function MatchCard({ match: m, isAdmin, onClick }: { match: MatchData; isAdmin: boolean; onClick: () => void }) {
   const isFinished = m.status === "finished";
+  const isTBD = !m.homeTeamId || !m.awayTeamId;
+  const canEdit = isAdmin && !isFinished && !isTBD;
 
   return (
     <Card
-      className={`${isAdmin && !isFinished ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
-      onClick={isAdmin && !isFinished ? onClick : undefined}
+      className={`${canEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
+      onClick={canEdit ? onClick : undefined}
     >
       <CardContent className="p-3">
         <div className="flex items-center gap-2">
           {/* Home team */}
           <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-            <span className="font-medium text-sm truncate">{m.homeTeamName}</span>
-            <TeamColorDot color={m.homeTeamColor} />
+            <span className={`font-medium text-sm truncate ${!m.homeTeamId ? "text-muted-foreground italic" : ""}`}>
+              {m.homeTeamName ?? "A definir"}
+            </span>
+            {m.homeTeamColor && <TeamColorDot color={m.homeTeamColor} />}
           </div>
 
           {/* Score / vs */}
@@ -579,14 +711,16 @@ function MatchCard({ match: m, isAdmin, onClick }: { match: MatchData; isAdmin: 
 
           {/* Away team */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <TeamColorDot color={m.awayTeamColor} />
-            <span className="font-medium text-sm truncate">{m.awayTeamName}</span>
+            {m.awayTeamColor && <TeamColorDot color={m.awayTeamColor} />}
+            <span className={`font-medium text-sm truncate ${!m.awayTeamId ? "text-muted-foreground italic" : ""}`}>
+              {m.awayTeamName ?? "A definir"}
+            </span>
           </div>
 
           {/* Status / action */}
           {isFinished ? (
             <Badge variant="outline" className="text-[10px] shrink-0">Fim</Badge>
-          ) : isAdmin ? (
+          ) : canEdit ? (
             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
           ) : null}
         </div>
@@ -733,8 +867,9 @@ function DraftPanel({
           <DialogHeader>
             <DialogTitle>Iniciar Campeonato?</DialogTitle>
             <DialogDescription>
-              Serão geradas {teams.length % 2 === 0 ? teams.length - 1 : teams.length} rodadas com{" "}
-              {Math.floor(teams.length / 2)} partidas cada. Os eventos serão criados automaticamente no calendário do grupo.
+              {championship.format === "single_elimination"
+                ? `Bracket de eliminatórias com ${teams.length} times. ${Math.ceil(Math.log2(teams.length))} rodadas até a final.`
+                : `Serão geradas ${teams.length % 2 === 0 ? teams.length - 1 : teams.length} rodadas com ${Math.floor(teams.length / 2)} partidas cada. Os eventos serão criados automaticamente no calendário do grupo.`}
             </DialogDescription>
           </DialogHeader>
 
@@ -781,7 +916,8 @@ export function ChampionshipDetail({
   const [rounds, setRounds] = useState<RoundData[]>(initialRounds);
   const [standings, setStandings] = useState<StandingData[]>(initialStandings);
   const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
-  const [tab, setTab] = useState("standings");
+  const defaultTab = championship.format === "single_elimination" ? "bracket" : "standings";
+  const [tab, setTab] = useState(defaultTab);
 
   // Poll standings every 15s when active
   const fetchStandings = useCallback(async () => {
@@ -869,8 +1005,32 @@ export function ChampionshipDetail({
         />
       )}
 
-      {/* Active / Finished mode */}
-      {(championship.status === "active" || championship.status === "finished") && (
+      {/* Active / Finished mode — single elimination */}
+      {(championship.status === "active" || championship.status === "finished") &&
+        championship.format === "single_elimination" && (
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="bracket">Chaveamento</TabsTrigger>
+            <TabsTrigger value="teams">Times</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="bracket">
+            <BracketView
+              rounds={rounds}
+              isAdmin={isAdmin}
+              onMatchClick={m => setSelectedMatch(m)}
+            />
+          </TabsContent>
+
+          <TabsContent value="teams">
+            <TeamsTab teams={teams} />
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {/* Active / Finished mode — round robin */}
+      {(championship.status === "active" || championship.status === "finished") &&
+        championship.format !== "single_elimination" && (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="standings">Classificação</TabsTrigger>

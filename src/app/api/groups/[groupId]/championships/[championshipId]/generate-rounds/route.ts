@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 import { generateRoundRobin } from "@/lib/round-robin";
+import { generateSingleElimination, getWinnerSlot } from "@/lib/single-elimination";
 
 type Params = Promise<{ groupId: string; championshipId: string }>;
 
@@ -32,7 +33,6 @@ export async function POST(
       );
     }
 
-    // Load real teams (no byes)
     const teams = await sql`
       SELECT id FROM championship_teams
       WHERE championship_id = ${championshipId} AND is_bye = FALSE
@@ -46,8 +46,31 @@ export async function POST(
       );
     }
 
-    // Optional: caller can provide per-round scheduled times
     const body = await request.json().catch(() => ({}));
+
+    const baseDate = champ.starts_at
+      ? new Date(champ.starts_at)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const defaultTime = body.defaultEventStartTime ?? "20:00";
+    const [hour, minute] = defaultTime.split(":").map(Number);
+
+    const teamIds = (teams as unknown as { id: string }[]).map(t => t.id);
+
+    // ── Activate championship ──────────────────────────────────────────────────
+    await sql`
+      UPDATE championships SET status = 'active', updated_at = NOW()
+      WHERE id = ${championshipId}
+    `;
+
+    // ── Branch by format ───────────────────────────────────────────────────────
+    if (champ.format === "single_elimination") {
+      return await generateElimination(
+        { groupId, championshipId, userId: user.id, champ, teamIds, baseDate, hour, minute }
+      );
+    }
+
+    // ── Round-robin (default) ──────────────────────────────────────────────────
     const roundSchedules: Record<number, string> = {};
     if (Array.isArray(body.roundSchedules)) {
       for (const rs of body.roundSchedules) {
@@ -57,31 +80,18 @@ export async function POST(
       }
     }
 
-    // Base date for auto-scheduling: championship.starts_at or 7 days from now
-    const baseDate = champ.starts_at
-      ? new Date(champ.starts_at)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    const defaultTime = body.defaultEventStartTime ?? "20:00";
-    const [hour, minute] = defaultTime.split(":").map(Number);
-
-    const teamIds = (teams as unknown as { id: string }[]).map(t => t.id);
     const rounds = generateRoundRobin(teamIds);
 
-    // Add virtual bye team to DB if N is odd (for tracking; not shown in standings)
     const needsBye = teams.length % 2 !== 0;
-    let byeTeamId: string | null = null;
     if (needsBye) {
       const [byeTeam] = await sql`
         INSERT INTO championship_teams (championship_id, name, color, is_bye)
         VALUES (${championshipId}, 'BYE', '#cccccc', TRUE)
         RETURNING id
       `;
-      byeTeamId = byeTeam.id;
-      teamIds.push(byeTeamId!);
+      teamIds.push(byeTeam.id);
     }
 
-    // Create the single phase (group_stage) for MVP
     const [phase] = await sql`
       INSERT INTO championship_phases (championship_id, phase_type, name, "order", status)
       VALUES (${championshipId}, 'group_stage', 'Fase de Grupos', 1, 'active')
@@ -93,12 +103,11 @@ export async function POST(
     for (let i = 0; i < rounds.length; i++) {
       const roundNumber = i + 1;
 
-      // Scheduled time for this round
       const roundDate = roundSchedules[roundNumber]
         ? new Date(roundSchedules[roundNumber])
         : (() => {
             const d = new Date(baseDate);
-            d.setDate(d.getDate() + i * 7); // weekly spacing
+            d.setDate(d.getDate() + i * 7);
             d.setHours(hour, minute, 0, 0);
             return d;
           })();
@@ -112,7 +121,6 @@ export async function POST(
       `;
 
       for (const { homeId, awayId } of rounds[i]) {
-        // Auto-create event in group calendar (Decision 2)
         const [event] = await sql`
           INSERT INTO events (
             group_id, starts_at, venue_id, max_players,
@@ -130,38 +138,25 @@ export async function POST(
           RETURNING id
         `;
 
-        // Create the championship match linked to the event
         const [match] = await sql`
-          INSERT INTO championship_matches (round_id, home_team_id, away_team_id, event_id)
-          VALUES (${round.id}, ${homeId}, ${awayId}, ${event.id})
+          INSERT INTO championship_matches (round_id, home_team_id, away_team_id, match_position, event_id)
+          VALUES (${round.id}, ${homeId}, ${awayId}, ${totalMatchesCreated + 1}, ${event.id})
           RETURNING id
         `;
 
-        // Link the event back to the match
-        await sql`
-          UPDATE events SET championship_match_id = ${match.id} WHERE id = ${event.id}
-        `;
+        await sql`UPDATE events SET championship_match_id = ${match.id} WHERE id = ${event.id}`;
 
         totalMatchesCreated++;
       }
     }
 
-    // Activate championship
-    await sql`
-      UPDATE championships SET status = 'active', updated_at = NOW()
-      WHERE id = ${championshipId}
-    `;
-
     logger.info(
       { championshipId, rounds: rounds.length, matches: totalMatchesCreated, userId: user.id },
-      "Championship rounds generated"
+      "Championship rounds generated (round-robin)"
     );
 
-    return NextResponse.json({
-      success: true,
-      rounds: rounds.length,
-      matches: totalMatchesCreated,
-    });
+    return NextResponse.json({ success: true, rounds: rounds.length, matches: totalMatchesCreated });
+
   } catch (error) {
     if (error instanceof Error && error.message.includes("autenticado")) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -172,4 +167,110 @@ export async function POST(
     logger.error(error, "Error generating championship rounds");
     return NextResponse.json({ error: "Erro ao gerar rodadas" }, { status: 500 });
   }
+}
+
+// ── Single-elimination bracket generator ──────────────────────────────────────
+
+async function generateElimination(ctx: {
+  groupId: string;
+  championshipId: string;
+  userId: string;
+  champ: Record<string, unknown>;
+  teamIds: string[];
+  baseDate: Date;
+  hour: number;
+  minute: number;
+}) {
+  const { groupId, championshipId, userId, champ, teamIds, baseDate, hour, minute } = ctx;
+
+  const elimRounds = generateSingleElimination(teamIds);
+
+  const [phase] = await sql`
+    INSERT INTO championship_phases (championship_id, phase_type, name, "order", status)
+    VALUES (${championshipId}, 'group_stage', 'Eliminatórias', 1, 'active')
+    RETURNING id
+  `;
+
+  // 1. Create all round rows first to get their IDs
+  const roundIdByNumber = new Map<number, string>();
+  for (const r of elimRounds) {
+    const roundDate = new Date(baseDate);
+    roundDate.setDate(roundDate.getDate() + (r.roundNumber - 1) * 7);
+    roundDate.setHours(hour, minute, 0, 0);
+
+    const [round] = await sql`
+      INSERT INTO championship_rounds (phase_id, round_number, scheduled_at, name)
+      VALUES (${phase.id}, ${r.roundNumber}, ${roundDate.toISOString()}, ${r.name})
+      RETURNING id
+    `;
+    roundIdByNumber.set(r.roundNumber, round.id);
+  }
+
+  // 2. Create TBD match slots for rounds 2+ and map position → match id
+  // key: "${roundNumber}-${position}"
+  const matchIdByRoundPos = new Map<string, string>();
+
+  for (const r of elimRounds) {
+    if (r.roundNumber === 1) continue;
+    const roundId = roundIdByNumber.get(r.roundNumber)!;
+    for (const m of r.matches) {
+      const [match] = await sql`
+        INSERT INTO championship_matches (round_id, home_team_id, away_team_id, match_position, status)
+        VALUES (${roundId}, NULL, NULL, ${m.position}, 'scheduled')
+        RETURNING id
+      `;
+      matchIdByRoundPos.set(`${r.roundNumber}-${m.position}`, match.id);
+    }
+  }
+
+  // 3. Process round 1: create real matches and handle BYEs
+  const round1 = elimRounds[0];
+  const roundId1 = roundIdByNumber.get(1)!;
+  let totalMatchesCreated = 0;
+
+  const scheduledAt1 = new Date(baseDate);
+  scheduledAt1.setHours(hour, minute, 0, 0);
+
+  for (const m of round1.matches) {
+    if (m.isBye) {
+      // Auto-advance the non-null team directly into round 2 slot (no match created)
+      const advancingTeam = m.homeId ?? m.awayId;
+      if (!advancingTeam || elimRounds.length < 2) continue;
+
+      const { nextPosition, slot } = getWinnerSlot(m.position);
+      const nextMatchId = matchIdByRoundPos.get(`2-${nextPosition}`);
+      if (nextMatchId) {
+        if (slot === "home") {
+          await sql`UPDATE championship_matches SET home_team_id = ${advancingTeam} WHERE id = ${nextMatchId}`;
+        } else {
+          await sql`UPDATE championship_matches SET away_team_id = ${advancingTeam} WHERE id = ${nextMatchId}`;
+        }
+      }
+      continue;
+    }
+
+    // Real match: no linked event for elimination (teams TBD in later rounds)
+    await sql`
+      INSERT INTO championship_matches (round_id, home_team_id, away_team_id, match_position, status)
+      VALUES (${roundId1}, ${m.homeId}, ${m.awayId}, ${m.position}, 'scheduled')
+    `;
+    totalMatchesCreated++;
+  }
+
+  logger.info(
+    {
+      championshipId,
+      rounds: elimRounds.length,
+      matches: totalMatchesCreated,
+      userId,
+    },
+    "Championship rounds generated (single-elimination)"
+  );
+
+  return NextResponse.json({
+    success: true,
+    rounds: elimRounds.length,
+    matches: totalMatchesCreated,
+    format: "single_elimination",
+  });
 }

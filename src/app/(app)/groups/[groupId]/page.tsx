@@ -8,7 +8,7 @@ import { RankingsCard } from "@/components/group/rankings-card";
 import { MyStatsCard } from "@/components/group/my-stats-card";
 import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
-import { Settings, Plus, ChevronLeft, DollarSign, MapPin, Clock, ArrowRight } from "lucide-react";
+import { Settings, Plus, ChevronLeft, DollarSign, MapPin, Clock, ArrowRight, Trophy } from "lucide-react";
 import { getGroupAccessContext } from "@/lib/group-access";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
@@ -730,28 +730,36 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
               </Badge>
             </div>
           </div>
-          {isAdmin && (
-            <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/groups/${groupId}/settings`}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configurações
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/groups/${groupId}/payments`}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Pagamentos
-                </Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link href={`/groups/${groupId}/events/new`}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Evento
-                </Link>
-              </Button>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/groups/${groupId}/championships`}>
+                <Trophy className="h-4 w-4 mr-2" />
+                Campeonatos
+              </Link>
+            </Button>
+            {isAdmin && (
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/groups/${groupId}/settings`}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/groups/${groupId}/payments`}>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Pagamentos
+                  </Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href={`/groups/${groupId}/events/new`}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Evento
+                  </Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* HERO — next event on pitch (only if there is one) */}

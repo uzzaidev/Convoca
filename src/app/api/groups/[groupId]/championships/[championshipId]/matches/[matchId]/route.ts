@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 import { updateChampionshipMatchSchema } from "@/lib/validations";
+import { sendPushToUser } from "@/lib/mobile/fcm";
 
 type Params = Promise<{ groupId: string; championshipId: string; matchId: string }>;
 
@@ -140,7 +141,8 @@ export async function PATCH(
         AND cm.status NOT IN ('finished', 'cancelled')
     `;
 
-    if (Number(pending.cnt) === 0) {
+    const champFinished = Number(pending.cnt) === 0;
+    if (champFinished) {
       await sql`
         UPDATE championships SET status = 'finished', updated_at = NOW()
         WHERE id = ${championshipId}
@@ -151,6 +153,48 @@ export async function PATCH(
       `;
       logger.info({ championshipId }, "Championship auto-finished — all matches done");
     }
+
+    // Notificações (fire-and-forget)
+    void (async () => {
+      try {
+        const [champRow] = await sql`SELECT name FROM championships WHERE id = ${championshipId}`;
+        const champName = (champRow as { name: string } | undefined)?.name ?? "Campeonato";
+
+        const [matchRow] = await sql`
+          SELECT
+            ht.name AS home_name, at.name AS away_name, cr.round_number
+          FROM championship_matches cm
+          JOIN championship_rounds cr ON cr.id = cm.round_id
+          JOIN championship_teams ht ON ht.id = cm.home_team_id
+          JOIN championship_teams at ON at.id = cm.away_team_id
+          WHERE cm.id = ${matchId}
+        `;
+        const roundNum = (matchRow as { round_number: number } | undefined)?.round_number ?? 1;
+        const homeName = (matchRow as { home_name: string } | undefined)?.home_name ?? "Casa";
+        const awayName = (matchRow as { away_name: string } | undefined)?.away_name ?? "Fora";
+
+        // Notifica todos os membros do grupo com o resultado
+        const members = await sql`SELECT user_id FROM group_members WHERE group_id = ${groupId}`;
+        for (const m of members as unknown as { user_id: string }[]) {
+          await sendPushToUser(m.user_id, {
+            title: "🏆 Resultado registrado!",
+            body: `${homeName} ${d.homeScore} × ${d.awayScore} ${awayName} — ${champName} Rodada ${roundNum}`,
+            data: { kind: "championship", championshipId },
+          });
+        }
+
+        // Se campeonato encerrou, notifica também
+        if (champFinished) {
+          for (const m of members as unknown as { user_id: string }[]) {
+            await sendPushToUser(m.user_id, {
+              title: "🏆 Campeonato encerrado!",
+              body: `${champName} chegou ao fim. Confira a classificação final!`,
+              data: { kind: "championship", championshipId },
+            });
+          }
+        }
+      } catch { /* ignora */ }
+    })();
 
     return NextResponse.json({ match: updated });
   } catch (error) {

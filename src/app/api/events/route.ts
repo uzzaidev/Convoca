@@ -4,6 +4,7 @@ import { sql } from "@/db/client";
 import { createEventSchema } from "@/lib/validations";
 import logger from "@/lib/logger";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
+import { sendPushToUser } from "@/lib/mobile/fcm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -109,6 +110,36 @@ export async function POST(request: NextRequest) {
     `;
 
     logger.info({ eventId: event.id, groupId, userId: user.id }, "Event created");
+
+    // Notifica membros do grupo sobre novo evento (fire-and-forget)
+    void (async () => {
+      try {
+        const [group] = await sql`SELECT name FROM groups WHERE id = ${groupId}`;
+        const groupName = (group as { name: string } | undefined)?.name ?? "seu grupo";
+        const dateStr = new Date(startsAt).toLocaleDateString("pt-BR", {
+          weekday: "short", day: "2-digit", month: "short",
+        });
+        const members = await sql`SELECT user_id FROM group_members WHERE group_id = ${groupId}`;
+        for (const m of members as unknown as { user_id: string }[]) {
+          if (m.user_id === user.id) continue; // não notifica quem criou
+          const alreadySent = await sql`
+            SELECT 1 FROM notification_log
+            WHERE type = 'event_created' AND ref_id = ${event.id} AND user_id = ${m.user_id}
+          `;
+          if ((alreadySent as unknown[]).length > 0) continue;
+          await sendPushToUser(m.user_id, {
+            title: "📅 Novo jogo criado!",
+            body: `${groupName} — ${dateStr}`,
+            data: { kind: "event", eventId: event.id },
+          });
+          await sql`
+            INSERT INTO notification_log (type, ref_id, user_id)
+            VALUES ('event_created', ${event.id}, ${m.user_id})
+            ON CONFLICT (type, ref_id, user_id) DO NOTHING
+          `;
+        }
+      } catch { /* ignora — não bloqueia a criação */ }
+    })();
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {

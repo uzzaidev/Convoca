@@ -71,18 +71,19 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
             COALESCE(
               json_agg(
                 json_build_object(
-                  'id',           cm.id,
-                  'homeTeamId',   cm.home_team_id,
-                  'awayTeamId',   cm.away_team_id,
-                  'homeTeamName', ht.name,
-                  'awayTeamName', at.name,
-                  'homeTeamColor',ht.color,
-                  'awayTeamColor',at.color,
-                  'homeScore',    cm.home_score,
-                  'awayScore',    cm.away_score,
-                  'status',       cm.status,
-                  'eventId',      cm.event_id
-                ) ORDER BY cm.created_at
+                  'id',            cm.id,
+                  'homeTeamId',    cm.home_team_id,
+                  'awayTeamId',    cm.away_team_id,
+                  'homeTeamName',  ht.name,
+                  'awayTeamName',  at.name,
+                  'homeTeamColor', ht.color,
+                  'awayTeamColor', at.color,
+                  'homeScore',     cm.home_score,
+                  'awayScore',     cm.away_score,
+                  'status',        cm.status,
+                  'eventId',       cm.event_id,
+                  'matchPosition', cm.match_position
+                ) ORDER BY cm.match_position NULLS LAST, cm.created_at
               ) FILTER (WHERE cm.id IS NOT NULL),
               '[]'
             ) AS matches
@@ -92,7 +93,7 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
           LEFT JOIN championship_teams ht ON ht.id = cm.home_team_id
           LEFT JOIN championship_teams at ON at.id = cm.away_team_id
           WHERE cp.championship_id = ${championshipId}
-          GROUP BY cr.id, cr.round_number, cr.scheduled_at
+          GROUP BY cr.id, cr.round_number, cr.name, cr.scheduled_at
           ORDER BY cr.round_number
         `
       : [];

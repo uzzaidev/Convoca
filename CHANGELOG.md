@@ -2,6 +2,19 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-11
+
+### feat
+- Implementado módulo completo de campeonatos, incluindo fases 1 e 2, e UI da fase 3
+  - Arquivos: `src/app/(app)/groups/[groupId]/championships/page.tsx`, `src/app/(app)/groups/[groupId]/championships/[championshipId]/page.tsx`
+  - Confiança: alta
+
+### feat
+- Adicionado disparo de notificações para os 5 eventos faltantes e endpoint de teste
+  - Arquivos: `src/app/api/events/[eventId]/admin-rsvp/route.ts`, `src/app/api/events/[eventId]/draw/route.ts`, `src/app/api/events/[eventId]/rsvp/route.ts`
+  - Evidência: inclusão de chamadas para `sendPushToUser` e logs de notificação
+  - Confiança: alta
+
 ## 2026-07-08
 
 ### fix

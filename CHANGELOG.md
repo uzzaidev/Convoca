@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### fix
+- Atualizado a versão do Java para 21 no workflow de Android, devido ao requisito do capacitor-android >= 7.
+  - Arquivos: `.github/workflows/android-release.yml`
+  - Evidência: alteração na configuração do Java de 17 para 21
+  - Confiança: alta
+
+## 2026-07-11
+
+### fix
 - Ajustado o script de CI para garantir permissão de execução no arquivo `gradlew` antes do build Android
   - Arquivos: `.github/workflows/android-release.yml`
   - Evidência: adição do comando `chmod +x android/gradlew` antes do passo de build

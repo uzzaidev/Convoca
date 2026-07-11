@@ -63,12 +63,12 @@ jobs:
       - name: Instalar dependências Node
         run: pnpm install --frozen-lockfile
 
-      # 6. Setup Java 17 (necessário para Gradle)
-      - name: Setup Java 17
+      # 6. Setup Java 21 (necessário para capacitor-android >= 7)
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
 
       # 7. Setup Ruby (para fastlane)
       - name: Setup Ruby 3.3

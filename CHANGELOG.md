@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### feat
+- Implementada a página de configurações com habilitação de notificações push no app.
+  - Arquivos: `src/app/(app)/settings/page.tsx`, `src/components/settings/notification-settings.tsx`, `src/components/layout/AppSidebar.tsx`
+  - Confiança: alta
+
+## 2026-07-11
+
+### feat
 - Implementado módulo de eliminatórias (single_elimination) para geração de fases e partidas, incluindo lógica para BYEs e avanço automático de times.  
   - Arquivos: `src/app/api/groups/[groupId]/championships/[championshipId]/generate-rounds/route.ts`, `src/lib/single-elimination.ts`  
   - Confiança: alta

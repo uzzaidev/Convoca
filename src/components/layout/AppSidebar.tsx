@@ -24,6 +24,7 @@ import {
   Users,
   Calendar,
   Settings,
+  Settings2,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -440,6 +441,14 @@ export function AppSidebar({
           href="/profile"
           icon={<UserCircle className="h-4 w-4" />}
           label="Meu Perfil"
+          isCollapsed={isCollapsed}
+          onClick={onLinkClick}
+          exact
+        />
+        <NavItem
+          href="/settings"
+          icon={<Settings2 className="h-4 w-4" />}
+          label="Configurações"
           isCollapsed={isCollapsed}
           onClick={onLinkClick}
           exact

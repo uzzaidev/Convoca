@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### feat
+- Adicionado workflow de release Android para build AAB e upload na Play Store (internal testing). Arquivos: `.github/workflows/android-release.yml`, `fastlane/Fastfile`
+  - Evidência: novo arquivo de workflow e alteração no Fastfile indicam implementação de pipeline de release
+  - Confiança: alta
+
+## 2026-07-11
+
+### feat
 - Implementada a página de configurações com habilitação de notificações push no app.
   - Arquivos: `src/app/(app)/settings/page.tsx`, `src/components/settings/notification-settings.tsx`, `src/components/layout/AppSidebar.tsx`
   - Confiança: alta

@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-11
 
 ### fix
+- Ajustado o script de CI para garantir permissão de execução no arquivo `gradlew` antes do build Android
+  - Arquivos: `.github/workflows/android-release.yml`
+  - Evidência: adição do comando `chmod +x android/gradlew` antes do passo de build
+  - Confiança: alta
+
+## 2026-07-11
+
+### fix
 - Removido o uso do `cross-env` no comando de sincronização do Android no Fastfile, ajustando para usar sintaxe nativa do Linux.
   - Arquivos: `fastlane/Fastfile`
   - Evidência: alteração do comando `sh("cd #{ROOT} && cross-env CAPACITOR_PLATFORM=android npx cap sync android")` para `sh("cd #{ROOT} && CAPACITOR_PLATFORM=android npx cap sync android")`

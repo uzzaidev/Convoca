@@ -2,6 +2,52 @@ require "fileutils"
 
 default_platform(:ios)
 
+# ---------------------------------------------------------------------------
+# Android — Build AAB + upload para Play Store internal testing
+# ---------------------------------------------------------------------------
+platform :android do
+
+  desc "Build AAB release e envia para Play Store (internal testing)"
+  lane :build do
+    version_name = ENV["APP_VERSION"] || "1.0.0"
+    version_code = (ENV["BUILD_NUMBER"] || "1").to_i
+
+    # 1. Gera out/ (Next.js export para Capacitor)
+    sh("cd #{ROOT} && pnpm build:mobile")
+
+    # 2. Sincroniza assets + plugins nativos Android
+    sh("cd #{ROOT} && cross-env CAPACITOR_PLATFORM=android npx cap sync android")
+
+    # 3. Builda AAB assinado — signing lido do release.properties (já criado pelo CI)
+    gradle(
+      task:         "bundle",
+      build_type:   "Release",
+      project_dir:  "#{ROOT}/android/",
+      properties: {
+        "versionCode" => version_code,
+        "versionName" => version_name,
+      }
+    )
+
+    aab_path = "#{ROOT}/android/app/build/outputs/bundle/release/app-release.aab"
+
+    # 4. Upload para Play Store internal testing
+    upload_to_play_store(
+      package_name:             "com.uzzai.convoca",
+      track:                    "internal",
+      aab:                      aab_path,
+      json_key_data:            ENV["GOOGLE_PLAY_JSON_KEY"],
+      skip_upload_screenshots:  true,
+      skip_upload_images:       true,
+      skip_upload_metadata:     true,
+      release_status:           "completed",
+    )
+
+    UI.success "Upload para Play Store (internal) concluído ✅ v#{version_name} (#{version_code})"
+  end
+
+end
+
 # __dir__ = pasta fastlane/ ; ROOT = raiz do repo
 ROOT         = File.expand_path("..", __dir__)
 BUNDLE_ID    = "com.uzzai.convoca"

@@ -1,0 +1,165 @@
+# Android Release — Build AAB + Upload para Play Store (internal testing)
+#
+# Equivalente ao ios-release.yml mas para Android.
+# Disparo: manual (workflow_dispatch) ou push de tag vX.Y.Z
+#
+# Secrets necessários (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64      ← base64 do arquivo release.keystore
+#   ANDROID_KEYSTORE_PASSWORD    ← storePassword do release.properties
+#   ANDROID_KEY_ALIAS            ← keyAlias (ex: convoca)
+#   ANDROID_KEY_PASSWORD         ← keyPassword do release.properties
+#   GOOGLE_PLAY_JSON_KEY         ← conteúdo do JSON da service account do Google Play
+#   GOOGLE_SERVICES_JSON_BASE64  ← base64 do google-services.json (FCM)
+
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: "Versão do app (ex: 2.1.0)"
+        required: true
+        default: "2.1.0"
+      build_number:
+        description: "versionCode — deve ser MAIOR que o último no Play Store. Vazio = usa run_number do CI."
+        required: false
+
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build-and-upload:
+    name: Build Android → Play Store (internal)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # 1. Checkout
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Setup Node
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # 3. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10.18.1"
+
+      # 4. Cache pnpm
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      # 5. Instalar dependências Node
+      - name: Instalar dependências Node
+        run: pnpm install --frozen-lockfile
+
+      # 6. Setup Java 17 (necessário para Gradle)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      # 7. Setup Ruby (para fastlane)
+      - name: Setup Ruby 3.3
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
+      # 8. Instalar fastlane
+      - name: Instalar fastlane (bundle install)
+        run: bundle install --jobs 4 --retry 3
+
+      # 9. Restaurar google-services.json (FCM / Firebase)
+      - name: Restaurar google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode \
+            > android/app/google-services.json
+          echo "✅ google-services.json restaurado"
+
+      # 10. Restaurar keystore de assinatura
+      - name: Restaurar keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode \
+            > android/app/release.keystore
+          echo "✅ release.keystore restaurado"
+
+      # 11. Criar release.properties com credenciais do keystore
+      - name: Criar release.properties
+        run: |
+          cat > android/release.properties << EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+          echo "✅ release.properties criado"
+
+      # 12. Determinar versão e build number
+      - name: Determinar APP_VERSION e BUILD_NUMBER
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "APP_VERSION=${{ github.event.inputs.app_version }}" >> $GITHUB_ENV
+            INPUT_BUILD="${{ github.event.inputs.build_number }}"
+            if [ -n "$INPUT_BUILD" ]; then
+              echo "BUILD_NUMBER=$INPUT_BUILD" >> $GITHUB_ENV
+            else
+              echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+            fi
+          else
+            TAG="${{ github.ref_name }}"
+            echo "APP_VERSION=${TAG#v}" >> $GITHUB_ENV
+            echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+          fi
+          echo "Versão: $APP_VERSION  Build: $BUILD_NUMBER"
+
+      # 13. Cache Gradle
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # 14. fastlane android build — orquestra tudo: Next.js, cap sync, gradle, upload
+      - name: fastlane android build → Play Store
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: bundle exec fastlane android build
+
+      # 15. Salvar AAB como artifact (para download manual se necessário)
+      - name: Upload AAB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ env.APP_VERSION }}-${{ env.BUILD_NUMBER }}.aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      # 16. Limpar arquivos sensíveis
+      - name: Limpar arquivos sensíveis
+        if: always()
+        run: |
+          rm -f android/app/release.keystore
+          rm -f android/release.properties
+          rm -f android/app/google-services.json
+          echo "✅ Arquivos sensíveis removidos"

@@ -138,7 +138,11 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*') }}
           restore-keys: gradle-${{ runner.os }}-
 
-      # 14. fastlane android build — orquestra tudo: Next.js, cap sync, gradle, upload
+      # 14. Garantir permissão de execução no gradlew
+      - name: chmod gradlew
+        run: chmod +x android/gradlew
+
+      # 15. fastlane android build — orquestra tudo: Next.js, cap sync, gradle, upload
       - name: fastlane android build → Play Store
         env:
           APP_VERSION: ${{ env.APP_VERSION }}

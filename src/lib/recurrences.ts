@@ -76,7 +76,6 @@ export async function generateUpcomingEventsForRecurrence(
       SELECT id FROM events
       WHERE recurrence_id = ${recurrence.id}
         AND starts_at::date = ${eventDateStr}
-        AND status != 'canceled'
     `;
 
     if (existing) {

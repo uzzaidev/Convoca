@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-13
+
+### fix
+- Impedida a criação de eventos duplicados para a mesma recorrência e data, ajustando a lógica de cancelamento e atualização de recurrence_id nos eventos. Além disso, foi criado um índice único para garantir a integridade dos dados.
+  - Arquivos: `src/db/migrations/20260713_unique_recurring_event_per_date.sql`, `src/lib/recurrences.ts`
+  - Evidência: alteração na query de atualização e criação de índice único
+  - Confiança: alta
+
 ## 2026-07-11
 
 ### fix

@@ -26,6 +26,7 @@ export async function GET(
       SELECT
         cr.id,
         cr.round_number,
+        cr.name AS round_name,
         cr.scheduled_at,
         COALESCE(
           json_agg(

@@ -58,6 +58,22 @@ export async function initPushNotifications() {
       void savePushToken(event.token);
     });
 
+    // Roteamento ao tocar na notificação
+    await FirebaseMessaging.addListener("notificationActionPerformed", (event) => {
+      const data = event.notification?.data as Record<string, string> | undefined;
+      if (!data) return;
+
+      if (data.kind === "championship" && data.championshipId && data.groupId) {
+        window.location.assign(`/groups/${data.groupId}/championships/${data.championshipId}`);
+        return;
+      }
+
+      if (data.kind === "event" && data.eventId) {
+        window.location.assign(`/events/${data.eventId}`);
+        return;
+      }
+    });
+
     const { token } = await FirebaseMessaging.getToken();
     if (token) {
       await savePushToken(token);

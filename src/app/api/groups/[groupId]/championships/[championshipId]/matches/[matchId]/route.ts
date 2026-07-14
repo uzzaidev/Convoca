@@ -65,14 +65,34 @@ export async function PATCH(
   try {
     const { groupId, championshipId, matchId } = await params;
     const user = await requireAuth();
-    const context = await requireGroupAccess(groupId, user, {
-      minRole: "admin",
-      adminErrorMessage: "Apenas admins podem registrar resultados",
-    });
+
+    // Admins OR captains of either team can register match results
+    let context;
+    try {
+      context = await requireGroupAccess(groupId, user, { minRole: "admin" });
+    } catch {
+      // Not admin — check if user is captain of a team in this match
+      context = await requireGroupAccess(groupId, user);
+      const [captainCheck] = await sql`
+        SELECT ctp.id
+        FROM championship_team_players ctp
+        JOIN championship_teams ct ON ct.id = ctp.championship_team_id
+        JOIN championship_matches cm ON (cm.home_team_id = ct.id OR cm.away_team_id = ct.id)
+        WHERE cm.id = ${matchId}
+          AND ctp.user_id = ${user.id}
+          AND ctp.is_captain = TRUE
+      `;
+      if (!captainCheck) {
+        return NextResponse.json(
+          { error: "Apenas admins ou capitães podem registrar resultados" },
+          { status: 403 }
+        );
+      }
+    }
 
     // Verify championship is active and belongs to group
     const [champ] = await sql`
-      SELECT id, status FROM championships WHERE id = ${championshipId} AND group_id = ${groupId}
+      SELECT id, status, format FROM championships WHERE id = ${championshipId} AND group_id = ${groupId}
     `;
     if (!champ) {
       return NextResponse.json({ error: "Campeonato não encontrado" }, { status: 404 });
@@ -218,7 +238,7 @@ export async function PATCH(
           await sendPushToUser(m.user_id, {
             title: "🏆 Resultado registrado!",
             body: `${homeName} ${d.homeScore} × ${d.awayScore} ${awayName} — ${champName} Rodada ${roundNum}`,
-            data: { kind: "championship", championshipId },
+            data: { kind: "championship", championshipId, groupId },
           });
         }
 
@@ -228,7 +248,7 @@ export async function PATCH(
             await sendPushToUser(m.user_id, {
               title: "🏆 Campeonato encerrado!",
               body: `${champName} chegou ao fim. Confira a classificação final!`,
-              data: { kind: "championship", championshipId },
+              data: { kind: "championship", championshipId, groupId },
             });
           }
         }

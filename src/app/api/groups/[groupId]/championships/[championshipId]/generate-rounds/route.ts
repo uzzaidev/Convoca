@@ -129,8 +129,8 @@ export async function POST(
             ${groupId},
             ${scheduledAt},
             ${champ.venue_id ?? null},
-            ${champ.match_duration_minutes},
-            0,
+            999,
+            999,
             FALSE,
             'scheduled',
             ${user.id}

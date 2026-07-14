@@ -2,6 +2,19 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-14
+
+### fix
+- Corrigidos bugs críticos relacionados às partidas de campeonato, incluindo validações na confirmação de presença e na exclusão de times que já disputaram partidas
+  - Arquivos: `src/app/api/events/[eventId]/rsvp/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/teams/[teamId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/route.ts`
+  - Evidência: adição de validações específicas para partidas de campeonato e restrições na exclusão de times
+  - Confiança: alta
+
+### feat
+- Melhorias de UX na página de detalhes do campeonato, incluindo a adição de componentes para exibição de status ao vivo, classificação, artilheiros, meus jogos e campeões
+  - Arquivos: `src/components/championships/championship-detail.tsx`
+  - Confiança: alta
+
 ## 2026-07-13
 
 ### fix

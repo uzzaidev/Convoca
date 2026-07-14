@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-14
 
+### chore
+- Atualizado o valor padrão de `APP_VERSION` para 5.0.0 na configuração do fluxo de trabalho de release do iOS.
+  - Arquivos: `.github/workflows/ios-release.yml`
+  - Evidência: alteração no default e na descrição do input `app_version`
+  - Confiança: alta
+
+## 2026-07-14
+
 ### fix
 - Corrigidos bugs críticos relacionados às partidas de campeonato, incluindo validações na confirmação de presença e na exclusão de times que já disputaram partidas
   - Arquivos: `src/app/api/events/[eventId]/rsvp/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/teams/[teamId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/route.ts`

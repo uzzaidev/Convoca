@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
           FROM events e
           LEFT JOIN venues v ON e.venue_id = v.id
           WHERE e.group_id = ${groupId} AND e.status = ${status}
+            AND e.championship_match_id IS NULL
           ORDER BY e.starts_at DESC
           LIMIT ${limit}
         `
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
           FROM events e
           LEFT JOIN venues v ON e.venue_id = v.id
           WHERE e.group_id = ${groupId}
+            AND e.championship_match_id IS NULL
           ORDER BY e.starts_at DESC
           LIMIT ${limit}
         `;

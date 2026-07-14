@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Plus, Play, AlertCircle, Users, ChevronRight, Crown, Star } from "lucide-react";
+import { Trophy, Plus, Play, AlertCircle, Users, ChevronRight, Crown, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,7 +134,40 @@ function TeamColorDot({ color }: { color: string }) {
 
 // ─── Team Card (draft mode) ────────────────────────────────────────────────────
 
-function TeamCard({ team }: { team: TeamData }) {
+function TeamCard({
+  team,
+  isAdmin,
+  groupId,
+  championshipId,
+  onDeleted,
+}: {
+  team: TeamData;
+  isAdmin?: boolean;
+  groupId?: string;
+  championshipId?: string;
+  onDeleted?: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!groupId || !championshipId || !onDeleted) return;
+    if (!confirm(`Remover o time "${team.name}"? Esta ação não pode ser desfeita.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/teams/${team.id}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "Erro ao remover time"); return; }
+      onDeleted();
+    } catch {
+      alert("Erro de conexão");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <Card className="border-l-4" style={{ borderLeftColor: team.color }}>
       <CardContent className="p-4">
@@ -144,6 +177,17 @@ function TeamCard({ team }: { team: TeamData }) {
           <span className="text-xs text-muted-foreground ml-auto">
             {team.players.length} jogador{team.players.length !== 1 ? "es" : ""}
           </span>
+          {isAdmin && onDeleted && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50 ml-1"
+              title="Remover time"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <div className="space-y-1">
           {team.players.map(p => (
@@ -826,7 +870,16 @@ function DraftPanel({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {teams.map(t => <TeamCard key={t.id} team={t} />)}
+          {teams.map(t => (
+            <TeamCard
+              key={t.id}
+              team={t}
+              isAdmin={isAdmin}
+              groupId={groupId}
+              championshipId={championship.id}
+              onDeleted={() => { router.refresh(); onTeamAdded(); }}
+            />
+          ))}
         </div>
       )}
 
@@ -877,7 +930,7 @@ function DraftPanel({
             <p className="text-sm text-muted-foreground">
               Início: {new Date(championship.startsAt).toLocaleDateString("pt-BR", {
                 day: "2-digit", month: "long", year: "numeric"
-              })}. Rodadas serão espaçadas semanalmente.
+              })}.
             </p>
           )}
 

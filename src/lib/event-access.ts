@@ -32,6 +32,7 @@ type EventAccessRow = {
   list_opens_at: string | null;
   created_by: string | null;
   updated_at: string;
+  championship_match_id: string | null;
 };
 
 export type EventAccessContext = {

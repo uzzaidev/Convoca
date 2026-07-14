@@ -41,6 +41,13 @@ export async function POST(
       allowSystemAdmin: false,
     });
 
+    if (event.championship_match_id) {
+      return NextResponse.json(
+        { error: "Confirmação de presença não está disponível para partidas de campeonato" },
+        { status: 400 }
+      );
+    }
+
     if (event.status === "canceled") {
       return NextResponse.json(
         { error: "Este evento foi cancelado" },

@@ -126,6 +126,34 @@ export async function PATCH(
     }
 
     const d = parsed.data;
+
+    // ── action: start ─────────────────────────────────────────────────────────
+    if (d.action === "start") {
+      if (existing.status === "finished") {
+        return NextResponse.json(
+          { error: "Partida já encerrada" },
+          { status: 400 }
+        );
+      }
+      const [started] = await sql`
+        UPDATE championship_matches SET
+          status     = 'playing',
+          updated_at = NOW()
+        WHERE id = ${matchId}
+        RETURNING *
+      `;
+      logger.info({ matchId, userId: user.id }, "Championship match started");
+      return NextResponse.json({ match: started });
+    }
+
+    // ── Registrar/corrigir resultado ──────────────────────────────────────────
+    if (d.homeScore === undefined || d.awayScore === undefined) {
+      return NextResponse.json(
+        { error: "homeScore e awayScore são obrigatórios" },
+        { status: 400 }
+      );
+    }
+
     const playedAt = d.playedAt ?? new Date().toISOString();
 
     const [updated] = await sql`
@@ -164,7 +192,9 @@ export async function PATCH(
 
       if (matchInfo?.match_position != null) {
         const winnerId =
-          d.homeScore > d.awayScore ? updated.home_team_id : updated.away_team_id;
+          (updated.home_score as number) > (updated.away_score as number)
+            ? updated.home_team_id
+            : updated.away_team_id;
         const { nextPosition, slot } = getWinnerSlot(matchInfo.match_position as number);
         const nextRound = (matchInfo.round_number as number) + 1;
 

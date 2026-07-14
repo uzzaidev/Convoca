@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Plus, Play, AlertCircle, Users, ChevronRight, Crown, Star, Trash2 } from "lucide-react";
+import {
+  Trophy, Plus, Play, AlertCircle, Users, ChevronRight,
+  Crown, Star, Trash2, Radio, Pencil, Goal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 
 // ─── Shared Types ──────────────────────────────────────────────────────────────
 
@@ -85,6 +93,15 @@ type StandingData = {
   points: number;
 };
 
+type TopScorer = {
+  user_id: string;
+  user_name: string;
+  user_image: string | null;
+  team_name: string;
+  team_color: string;
+  goals: number;
+};
+
 type Props = {
   groupId: string;
   championship: ChampionshipData;
@@ -99,16 +116,16 @@ type Props = {
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: "Rascunho",
-  active: "Em andamento",
-  finished: "Finalizado",
+  draft:     "Rascunho",
+  active:    "Em andamento",
+  finished:  "Finalizado",
   cancelled: "Cancelado",
 };
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  draft: "secondary",
-  active: "default",
-  finished: "outline",
+  draft:     "secondary",
+  active:    "default",
+  finished:  "outline",
   cancelled: "destructive",
 };
 
@@ -129,6 +146,17 @@ function TeamColorDot({ color }: { color: string }) {
       className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
       style={{ backgroundColor: color }}
     />
+  );
+}
+
+// ─── Live badge ────────────────────────────────────────────────────────────────
+
+function LiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+      <Radio className="h-2.5 w-2.5 animate-pulse" />
+      Ao vivo
+    </span>
   );
 }
 
@@ -208,13 +236,7 @@ function TeamCard({
 // ─── Add Team Modal ────────────────────────────────────────────────────────────
 
 function AddTeamModal({
-  open,
-  onClose,
-  groupId,
-  championshipId,
-  members,
-  assignedUserIds,
-  onCreated,
+  open, onClose, groupId, championshipId, members, assignedUserIds, onCreated,
 }: {
   open: boolean;
   onClose: () => void;
@@ -248,24 +270,20 @@ function AddTeamModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (selectedIds.size === 0) { setError("Selecione ao menos 1 jogador"); return; }
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const res = await fetch(`/api/groups/${groupId}/championships/${championshipId}/teams`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          color,
+          name: name.trim(), color,
           playerIds: Array.from(selectedIds),
           captainId: captainId ?? undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Erro ao criar time"); return; }
-      reset();
-      onCreated();
-      onClose();
+      reset(); onCreated(); onClose();
     } catch {
       setError("Erro de conexão");
     } finally {
@@ -273,23 +291,17 @@ function AddTeamModal({
     }
   }
 
-  const availableMembers = members.filter(m => !assignedUserIds.has(m.id));
-
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { reset(); onClose(); } }}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Adicionar Time</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Adicionar Time</DialogTitle></DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
             <Label htmlFor="t-name">Nome do Time *</Label>
             <Input
-              id="t-name"
-              placeholder="Ex: Los Galácticos"
-              value={name}
-              onChange={e => setName(e.target.value)}
+              id="t-name" placeholder="Ex: Los Galácticos"
+              value={name} onChange={e => setName(e.target.value)}
               required minLength={1}
             />
           </div>
@@ -299,9 +311,7 @@ function AddTeamModal({
             <div className="flex flex-wrap gap-2">
               {TEAM_COLORS.map(c => (
                 <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
+                  key={c} type="button" onClick={() => setColor(c)}
                   className="w-7 h-7 rounded-full border-2 transition-all"
                   style={{
                     backgroundColor: c,
@@ -316,7 +326,7 @@ function AddTeamModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Jogadores {availableMembers.length === 0 && members.length > 0 ? "(todos já alocados)" : ""}</Label>
+            <Label>Jogadores {assignedUserIds.size > 0 && members.filter(m => !assignedUserIds.has(m.id)).length === 0 ? "(todos já alocados)" : ""}</Label>
             <div className="rounded-lg border divide-y max-h-52 overflow-y-auto">
               {members.length === 0 ? (
                 <p className="text-sm text-muted-foreground p-3">Nenhum membro no grupo</p>
@@ -329,11 +339,9 @@ function AddTeamModal({
                     <div key={m.id} className={`flex items-center justify-between px-3 py-2 ${isAssigned ? "opacity-40" : ""}`}>
                       <label className="flex items-center gap-2 cursor-pointer flex-1">
                         <input
-                          type="checkbox"
-                          checked={isSelected}
+                          type="checkbox" checked={isSelected}
                           onChange={() => !isAssigned && toggle(m.id)}
-                          disabled={isAssigned}
-                          className="rounded"
+                          disabled={isAssigned} className="rounded"
                         />
                         <span className="text-sm">{m.name}</span>
                         {isAssigned && <span className="text-xs text-muted-foreground">(em outro time)</span>}
@@ -364,15 +372,12 @@ function AddTeamModal({
 
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
+              <AlertCircle className="h-4 w-4 shrink-0" />{error}
             </div>
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { reset(); onClose(); }}>
-              Cancelar
-            </Button>
+            <Button type="button" variant="outline" onClick={() => { reset(); onClose(); }}>Cancelar</Button>
             <Button type="submit" disabled={loading || !name.trim()}>
               {loading ? "Criando..." : "Criar Time"}
             </Button>
@@ -384,17 +389,20 @@ function AddTeamModal({
 }
 
 // ─── Match Result Modal ────────────────────────────────────────────────────────
+// Suporta 3 fluxos: iniciar partida / placar ao vivo / corrigir resultado
 
 function MatchResultModal({
   match,
   groupId,
   championshipId,
+  isAdmin,
   onClose,
   onSaved,
 }: {
   match: MatchData | null;
   groupId: string;
   championshipId: string;
+  isAdmin: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -402,97 +410,198 @@ function MatchResultModal({
   const [awayScore, setAwayScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Quando a partida está finalizada, admin pode entrar em modo de correção
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     if (match) {
       setHomeScore(match.homeScore ?? 0);
       setAwayScore(match.awayScore ?? 0);
       setError("");
+      setEditMode(false);
     }
   }, [match]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function patchMatch(body: Record<string, unknown>) {
+    const res = await fetch(
+      `/api/groups/${groupId}/championships/${championshipId}/matches/${match!.id}`,
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
+    return data;
+  }
+
+  async function handleStart() {
     if (!match) return;
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
-      const res = await fetch(
-        `/api/groups/${groupId}/championships/${championshipId}/matches/${match.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ homeScore, awayScore }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Erro ao salvar resultado"); return; }
-      onSaved();
-      onClose();
-    } catch {
-      setError("Erro de conexão");
+      await patchMatch({ action: "start" });
+      onSaved(); onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro de conexão");
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleSaveScore() {
+    if (!match) return;
+    setLoading(true); setError("");
+    try {
+      await patchMatch({ homeScore, awayScore });
+      onSaved(); onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro de conexão");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!match) return null;
+
+  const isScheduled = match.status === "scheduled";
+  const isPlaying   = match.status === "playing";
+  const isFinished  = match.status === "finished";
+  const showEdit    = isFinished && isAdmin && !editMode;
+  const showScoreForm = isScheduled || isPlaying || (isFinished && editMode);
+
   return (
     <Dialog open={!!match} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Registrar Resultado</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {isPlaying && <Radio className="h-4 w-4 text-red-500 animate-pulse" />}
+            {isPlaying ? "Placar ao vivo" : isFinished && !editMode ? "Resultado" : "Registrar Resultado"}
+          </DialogTitle>
           <DialogDescription>
-            {match?.homeTeamName} × {match?.awayTeamName}
+            {match.homeTeamName} × {match.awayTeamName}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+        <div className="space-y-5 pt-1">
+          {/* Scores */}
           <div className="flex items-center gap-4">
+            {/* Home */}
             <div className="flex-1 space-y-1.5 text-center">
               <div className="flex items-center justify-center gap-1.5">
-                <TeamColorDot color={match?.homeTeamColor ?? "#666"} />
-                <Label className="font-medium">{match?.homeTeamName}</Label>
+                <TeamColorDot color={match.homeTeamColor ?? "#666"} />
+                <span className="text-sm font-medium truncate max-w-[80px]">{match.homeTeamName}</span>
               </div>
-              <Input
-                type="number"
-                min={0}
-                max={99}
-                value={homeScore}
-                onChange={e => setHomeScore(Number(e.target.value))}
-                className="text-center text-2xl font-bold h-14"
-              />
+              {showScoreForm ? (
+                isPlaying ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setHomeScore(s => Math.max(0, s - 1))}
+                      className="w-8 h-8 rounded-full border text-lg font-bold flex items-center justify-center hover:bg-muted transition-colors"
+                    >−</button>
+                    <span className="text-3xl font-bold tabular-nums w-8 text-center">{homeScore}</span>
+                    <button
+                      type="button"
+                      onClick={() => setHomeScore(s => s + 1)}
+                      className="w-8 h-8 rounded-full border text-lg font-bold flex items-center justify-center hover:bg-muted transition-colors"
+                    >+</button>
+                  </div>
+                ) : (
+                  <Input
+                    type="number" min={0} max={99}
+                    value={homeScore}
+                    onChange={e => setHomeScore(Number(e.target.value))}
+                    className="text-center text-2xl font-bold h-14"
+                  />
+                )
+              ) : (
+                <p className="text-3xl font-bold tabular-nums text-center">{match.homeScore ?? 0}</p>
+              )}
             </div>
+
             <span className="text-2xl font-bold text-muted-foreground">×</span>
+
+            {/* Away */}
             <div className="flex-1 space-y-1.5 text-center">
               <div className="flex items-center justify-center gap-1.5">
-                <TeamColorDot color={match?.awayTeamColor ?? "#666"} />
-                <Label className="font-medium">{match?.awayTeamName}</Label>
+                <TeamColorDot color={match.awayTeamColor ?? "#666"} />
+                <span className="text-sm font-medium truncate max-w-[80px]">{match.awayTeamName}</span>
               </div>
-              <Input
-                type="number"
-                min={0}
-                max={99}
-                value={awayScore}
-                onChange={e => setAwayScore(Number(e.target.value))}
-                className="text-center text-2xl font-bold h-14"
-              />
+              {showScoreForm ? (
+                isPlaying ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAwayScore(s => Math.max(0, s - 1))}
+                      className="w-8 h-8 rounded-full border text-lg font-bold flex items-center justify-center hover:bg-muted transition-colors"
+                    >−</button>
+                    <span className="text-3xl font-bold tabular-nums w-8 text-center">{awayScore}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAwayScore(s => s + 1)}
+                      className="w-8 h-8 rounded-full border text-lg font-bold flex items-center justify-center hover:bg-muted transition-colors"
+                    >+</button>
+                  </div>
+                ) : (
+                  <Input
+                    type="number" min={0} max={99}
+                    value={awayScore}
+                    onChange={e => setAwayScore(Number(e.target.value))}
+                    className="text-center text-2xl font-bold h-14"
+                  />
+                )
+              ) : (
+                <p className="text-3xl font-bold tabular-nums text-center">{match.awayScore ?? 0}</p>
+              )}
             </div>
           </div>
 
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
+              <AlertCircle className="h-4 w-4 shrink-0" />{error}
             </div>
           )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Confirmar Resultado"}
-            </Button>
+          {/* Actions */}
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            {showEdit && (
+              <>
+                <Button variant="outline" onClick={onClose} className="sm:flex-1">Fechar</Button>
+                <Button variant="outline" onClick={() => setEditMode(true)} className="sm:flex-1">
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />Corrigir
+                </Button>
+              </>
+            )}
+            {isScheduled && (
+              <>
+                <Button type="button" variant="outline" onClick={onClose} className="sm:flex-1">Cancelar</Button>
+                <Button
+                  type="button" variant="outline" onClick={handleStart}
+                  disabled={loading} className="sm:flex-1"
+                >
+                  <Play className="h-3.5 w-3.5 mr-1.5" />
+                  {loading ? "..." : "Iniciar"}
+                </Button>
+                <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
+                  {loading ? "Salvando..." : "Confirmar"}
+                </Button>
+              </>
+            )}
+            {isPlaying && (
+              <>
+                <Button type="button" variant="outline" onClick={onClose} className="sm:flex-1">Cancelar</Button>
+                <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
+                  {loading ? "Finalizando..." : "Finalizar Partida"}
+                </Button>
+              </>
+            )}
+            {isFinished && editMode && (
+              <>
+                <Button type="button" variant="outline" onClick={() => setEditMode(false)} className="sm:flex-1">Cancelar</Button>
+                <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
+                  {loading ? "Salvando..." : "Salvar Correção"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -556,36 +665,79 @@ function StandingsTable({ standings }: { standings: StandingData[] }) {
   );
 }
 
+// ─── Top Scorers ───────────────────────────────────────────────────────────────
+
+function TopScorersSection({ scorers }: { scorers: TopScorer[] }) {
+  if (scorers.length === 0) return null;
+  const max = scorers[0].goals;
+
+  return (
+    <div className="mt-6 pt-5 border-t">
+      <h3 className="text-sm font-semibold flex items-center gap-2 mb-4">
+        <Goal className="h-4 w-4 text-primary" />
+        Artilheiros
+      </h3>
+      <div className="space-y-2.5">
+        {scorers.slice(0, 5).map((s, i) => (
+          <div key={s.user_id} className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground w-4 text-right tabular-nums">{i + 1}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-sm font-medium truncate">{s.user_name}</span>
+                <div className="flex items-center gap-1">
+                  <TeamColorDot color={s.team_color} />
+                  <span className="text-xs text-muted-foreground">{s.team_name}</span>
+                </div>
+              </div>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${(s.goals / max) * 100}%` }}
+                />
+              </div>
+            </div>
+            <span className="text-sm font-bold tabular-nums shrink-0">
+              {s.goals} {s.goals === 1 ? "gol" : "gols"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Bracket View (single elimination) ────────────────────────────────────────
 
 function EliminationMatchCard({
-  match: m,
-  isAdmin,
-  onClick,
+  match: m, canManage, onClick,
 }: {
   match: MatchData;
-  isAdmin: boolean;
+  canManage: boolean;
   onClick: () => void;
 }) {
   const isFinished = m.status === "finished";
-  const isTBD = !m.homeTeamId || !m.awayTeamId;
-  const canEdit = isAdmin && !isFinished && !isTBD;
+  const isPlaying  = m.status === "playing";
+  const isTBD      = !m.homeTeamId || !m.awayTeamId;
+  const canClick   = canManage && !isTBD;
 
   const homeWon = isFinished && m.homeScore != null && m.awayScore != null && m.homeScore > m.awayScore;
   const awayWon = isFinished && m.homeScore != null && m.awayScore != null && m.awayScore > m.homeScore;
 
   return (
     <Card
-      className={`w-44 shrink-0 ${canEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
-        ${isFinished ? "border-primary/30" : ""}`}
-      onClick={canEdit ? onClick : undefined}
+      className={`w-44 shrink-0 ${canClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+        ${isFinished ? "border-primary/30" : ""} ${isPlaying ? "border-red-400 dark:border-red-600" : ""}`}
+      onClick={canClick ? onClick : undefined}
     >
       <CardContent className="p-0">
-        {/* Home team row */}
-        <div
-          className={`flex items-center justify-between gap-1 px-3 py-2 border-b
-            ${homeWon ? "bg-green-50 dark:bg-green-950/30" : ""}
-            ${!m.homeTeamId ? "opacity-50" : ""}`}
+        {isPlaying && (
+          <div className="px-3 py-1 border-b flex justify-center">
+            <LiveBadge />
+          </div>
+        )}
+        <div className={`flex items-center justify-between gap-1 px-3 py-2 border-b
+          ${homeWon ? "bg-green-50 dark:bg-green-950/30" : ""}
+          ${!m.homeTeamId ? "opacity-50" : ""}`}
         >
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {m.homeTeamColor && <TeamColorDot color={m.homeTeamColor} />}
@@ -593,18 +745,16 @@ function EliminationMatchCard({
               {m.homeTeamName ?? "A definir"}
             </span>
           </div>
-          {isFinished && (
+          {(isFinished || isPlaying) && (
             <span className={`tabular-nums text-sm font-bold shrink-0 ${homeWon ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}`}>
-              {m.homeScore}
+              {m.homeScore ?? 0}
             </span>
           )}
         </div>
 
-        {/* Away team row */}
-        <div
-          className={`flex items-center justify-between gap-1 px-3 py-2
-            ${awayWon ? "bg-green-50 dark:bg-green-950/30" : ""}
-            ${!m.awayTeamId ? "opacity-50" : ""}`}
+        <div className={`flex items-center justify-between gap-1 px-3 py-2
+          ${awayWon ? "bg-green-50 dark:bg-green-950/30" : ""}
+          ${!m.awayTeamId ? "opacity-50" : ""}`}
         >
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {m.awayTeamColor && <TeamColorDot color={m.awayTeamColor} />}
@@ -612,15 +762,14 @@ function EliminationMatchCard({
               {m.awayTeamName ?? "A definir"}
             </span>
           </div>
-          {isFinished && (
+          {(isFinished || isPlaying) && (
             <span className={`tabular-nums text-sm font-bold shrink-0 ${awayWon ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}`}>
-              {m.awayScore}
+              {m.awayScore ?? 0}
             </span>
           )}
         </div>
 
-        {/* Footer */}
-        {(isFinished || canEdit) && (
+        {(isFinished || canClick) && (
           <div className="px-3 py-1 border-t flex items-center justify-center">
             {isFinished
               ? <span className="text-[10px] text-muted-foreground">Finalizado</span>
@@ -633,29 +782,24 @@ function EliminationMatchCard({
 }
 
 function BracketView({
-  rounds,
-  isAdmin,
-  onMatchClick,
+  rounds, canManage, onMatchClick,
 }: {
   rounds: RoundData[];
-  isAdmin: boolean;
+  canManage: boolean;
   onMatchClick: (m: MatchData) => void;
 }) {
   if (rounds.length === 0) {
     return <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma rodada gerada.</div>;
   }
-
-  // Max matches in round 1 determines bracket height
   const maxMatches = rounds[0]?.matches.length ?? 1;
 
   return (
     <div className="overflow-x-auto pb-4">
       <div className="flex gap-6 min-w-max items-start">
-        {rounds.map((r) => {
+        {rounds.map(r => {
           const matchCount = r.matches.length;
-          // Vertical gap between matches grows with each round to center them
           const gapFactor = maxMatches / matchCount;
-          const cardHeight = 88; // approx px per card
+          const cardHeight = 88;
           const baseGap = 12;
           const gap = Math.round((gapFactor - 1) * (cardHeight + baseGap) + baseGap);
 
@@ -665,11 +809,9 @@ function BracketView({
                 {r.round_name ?? `Rodada ${r.round_number}`}
               </p>
               <div className="flex flex-col" style={{ gap }}>
-                {r.matches.map((m) => (
+                {r.matches.map(m => (
                   <EliminationMatchCard
-                    key={m.id}
-                    match={m}
-                    isAdmin={isAdmin}
+                    key={m.id} match={m} canManage={canManage}
                     onClick={() => onMatchClick(m)}
                   />
                 ))}
@@ -682,15 +824,77 @@ function BracketView({
   );
 }
 
+// ─── Match Card (round-robin) ──────────────────────────────────────────────────
+
+function MatchCard({
+  match: m, canManage, onClick,
+}: {
+  match: MatchData;
+  canManage: boolean;
+  onClick: () => void;
+}) {
+  const isFinished = m.status === "finished";
+  const isPlaying  = m.status === "playing";
+  const isTBD      = !m.homeTeamId || !m.awayTeamId;
+  const canClick   = canManage && !isTBD;
+
+  return (
+    <Card
+      className={`${canClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+        ${isPlaying ? "border-red-400 dark:border-red-600" : ""}`}
+      onClick={canClick ? onClick : undefined}
+    >
+      <CardContent className="p-3">
+        {isPlaying && (
+          <div className="flex justify-center mb-2">
+            <LiveBadge />
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+            <span className={`font-medium text-sm truncate ${!m.homeTeamId ? "text-muted-foreground italic" : ""}`}>
+              {m.homeTeamName ?? "A definir"}
+            </span>
+            {m.homeTeamColor && <TeamColorDot color={m.homeTeamColor} />}
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {(isFinished || isPlaying) ? (
+              <>
+                <span className="font-bold tabular-nums w-5 text-center">{m.homeScore ?? 0}</span>
+                <span className="text-muted-foreground text-xs">×</span>
+                <span className="font-bold tabular-nums w-5 text-center">{m.awayScore ?? 0}</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground text-xs px-2">vs</span>
+            )}
+          </div>
+
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            {m.awayTeamColor && <TeamColorDot color={m.awayTeamColor} />}
+            <span className={`font-medium text-sm truncate ${!m.awayTeamId ? "text-muted-foreground italic" : ""}`}>
+              {m.awayTeamName ?? "A definir"}
+            </span>
+          </div>
+
+          {isFinished ? (
+            <Badge variant="outline" className="text-[10px] shrink-0">Fim</Badge>
+          ) : canClick ? (
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Rounds Tab ────────────────────────────────────────────────────────────────
 
 function RoundsTab({
-  rounds,
-  isAdmin,
-  onMatchClick,
+  rounds, canManage, onMatchClick,
 }: {
   rounds: RoundData[];
-  isAdmin: boolean;
+  canManage: boolean;
   onMatchClick: (m: MatchData) => void;
 }) {
   if (rounds.length === 0) {
@@ -711,7 +915,7 @@ function RoundsTab({
           </div>
           <div className="space-y-2">
             {r.matches.map(m => (
-              <MatchCard key={m.id} match={m} isAdmin={isAdmin} onClick={() => onMatchClick(m)} />
+              <MatchCard key={m.id} match={m} canManage={canManage} onClick={() => onMatchClick(m)} />
             ))}
           </div>
         </div>
@@ -720,56 +924,61 @@ function RoundsTab({
   );
 }
 
-function MatchCard({ match: m, isAdmin, onClick }: { match: MatchData; isAdmin: boolean; onClick: () => void }) {
-  const isFinished = m.status === "finished";
-  const isTBD = !m.homeTeamId || !m.awayTeamId;
-  const canEdit = isAdmin && !isFinished && !isTBD;
+// ─── Meus Jogos Tab ────────────────────────────────────────────────────────────
+
+function MyMatchesTab({
+  rounds, myTeamIds, canManage, onMatchClick,
+}: {
+  rounds: RoundData[];
+  myTeamIds: Set<string>;
+  canManage: boolean;
+  onMatchClick: (m: MatchData) => void;
+}) {
+  const myRounds = rounds
+    .map(r => ({
+      ...r,
+      matches: r.matches.filter(m =>
+        myTeamIds.has(m.homeTeamId ?? "") || myTeamIds.has(m.awayTeamId ?? "")
+      ),
+    }))
+    .filter(r => r.matches.length > 0);
+
+  if (myTeamIds.size === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground text-sm">
+        Você não está em nenhum time neste campeonato.
+      </div>
+    );
+  }
+
+  if (myRounds.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground text-sm">
+        Nenhuma partida encontrada para o seu time.
+      </div>
+    );
+  }
 
   return (
-    <Card
-      className={`${canEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
-      onClick={canEdit ? onClick : undefined}
-    >
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2">
-          {/* Home team */}
-          <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-            <span className={`font-medium text-sm truncate ${!m.homeTeamId ? "text-muted-foreground italic" : ""}`}>
-              {m.homeTeamName ?? "A definir"}
-            </span>
-            {m.homeTeamColor && <TeamColorDot color={m.homeTeamColor} />}
-          </div>
-
-          {/* Score / vs */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {isFinished ? (
-              <>
-                <span className="font-bold tabular-nums w-5 text-center">{m.homeScore}</span>
-                <span className="text-muted-foreground text-xs">×</span>
-                <span className="font-bold tabular-nums w-5 text-center">{m.awayScore}</span>
-              </>
-            ) : (
-              <span className="text-muted-foreground text-xs px-2">vs</span>
+    <div className="space-y-6">
+      {myRounds.map(r => (
+        <div key={r.id}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              {r.round_name ?? `Rodada ${r.round_number}`}
+            </h3>
+            {r.scheduled_at && (
+              <span className="text-xs text-muted-foreground">{formatDateShort(r.scheduled_at)}</span>
             )}
           </div>
-
-          {/* Away team */}
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            {m.awayTeamColor && <TeamColorDot color={m.awayTeamColor} />}
-            <span className={`font-medium text-sm truncate ${!m.awayTeamId ? "text-muted-foreground italic" : ""}`}>
-              {m.awayTeamName ?? "A definir"}
-            </span>
+          <div className="space-y-2">
+            {r.matches.map(m => (
+              <MatchCard key={m.id} match={m} canManage={canManage} onClick={() => onMatchClick(m)} />
+            ))}
           </div>
-
-          {/* Status / action */}
-          {isFinished ? (
-            <Badge variant="outline" className="text-[10px] shrink-0">Fim</Badge>
-          ) : canEdit ? (
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          ) : null}
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 }
 
@@ -779,12 +988,9 @@ function TeamsTab({ teams }: { teams: TeamData[] }) {
   if (teams.length === 0) {
     return <div className="text-center py-10 text-muted-foreground text-sm">Nenhum time cadastrado.</div>;
   }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {teams.map(t => (
-        <TeamCard key={t.id} team={t} />
-      ))}
+      {teams.map(t => <TeamCard key={t.id} team={t} />)}
     </div>
   );
 }
@@ -792,13 +998,7 @@ function TeamsTab({ teams }: { teams: TeamData[] }) {
 // ─── Draft Panel ───────────────────────────────────────────────────────────────
 
 function DraftPanel({
-  championship,
-  groupId,
-  teams,
-  members,
-  isAdmin,
-  onTeamAdded,
-  onGenerated,
+  championship, groupId, teams, members, isAdmin, onTeamAdded, onGenerated,
 }: {
   championship: ChampionshipData;
   groupId: string;
@@ -817,8 +1017,7 @@ function DraftPanel({
   const assignedUserIds = new Set(teams.flatMap(t => t.players.map(p => p.userId)));
 
   async function handleGenerateRounds() {
-    setGenerating(true);
-    setGenError("");
+    setGenerating(true); setGenError("");
     try {
       const res = await fetch(
         `/api/groups/${groupId}/championships/${championship.id}/generate-rounds`,
@@ -830,14 +1029,12 @@ function DraftPanel({
       router.refresh();
       onGenerated();
     } catch {
-      setGenError("Erro de conexão");
-      setGenerating(false);
+      setGenError("Erro de conexão"); setGenerating(false);
     }
   }
 
   return (
     <div>
-      {/* Draft notice */}
       <div className="rounded-lg border border-dashed p-4 mb-6 bg-muted/40">
         <div className="flex items-start gap-3">
           <Trophy className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -850,7 +1047,6 @@ function DraftPanel({
         </div>
       </div>
 
-      {/* Teams header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold flex items-center gap-2">
           <Users className="h-4 w-4" />
@@ -858,8 +1054,7 @@ function DraftPanel({
         </h2>
         {isAdmin && (
           <Button size="sm" variant="outline" onClick={() => setShowAddTeam(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Adicionar Time
+            <Plus className="h-4 w-4 mr-1" />Adicionar Time
           </Button>
         )}
       </div>
@@ -872,28 +1067,21 @@ function DraftPanel({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {teams.map(t => (
             <TeamCard
-              key={t.id}
-              team={t}
-              isAdmin={isAdmin}
-              groupId={groupId}
-              championshipId={championship.id}
+              key={t.id} team={t}
+              isAdmin={isAdmin} groupId={groupId} championshipId={championship.id}
               onDeleted={() => { router.refresh(); onTeamAdded(); }}
             />
           ))}
         </div>
       )}
 
-      {/* Generate rounds button */}
       {isAdmin && (
         <div className="flex flex-col items-center gap-2">
           <Button
-            size="lg"
-            disabled={teams.length < 2}
-            onClick={() => setShowConfirm(true)}
-            className="w-full max-w-sm"
+            size="lg" disabled={teams.length < 2}
+            onClick={() => setShowConfirm(true)} className="w-full max-w-sm"
           >
-            <Play className="h-4 w-4 mr-2" />
-            Iniciar Campeonato
+            <Play className="h-4 w-4 mr-2" />Iniciar Campeonato
           </Button>
           {teams.length < 2 && (
             <p className="text-xs text-muted-foreground">
@@ -903,18 +1091,13 @@ function DraftPanel({
         </div>
       )}
 
-      {/* Add team modal */}
       <AddTeamModal
-        open={showAddTeam}
-        onClose={() => setShowAddTeam(false)}
-        groupId={groupId}
-        championshipId={championship.id}
-        members={members}
-        assignedUserIds={assignedUserIds}
+        open={showAddTeam} onClose={() => setShowAddTeam(false)}
+        groupId={groupId} championshipId={championship.id}
+        members={members} assignedUserIds={assignedUserIds}
         onCreated={() => { router.refresh(); onTeamAdded(); }}
       />
 
-      {/* Confirm generate rounds */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -922,22 +1105,21 @@ function DraftPanel({
             <DialogDescription>
               {championship.format === "single_elimination"
                 ? `Bracket de eliminatórias com ${teams.length} times. ${Math.ceil(Math.log2(teams.length))} rodadas até a final.`
-                : `Serão geradas ${teams.length % 2 === 0 ? teams.length - 1 : teams.length} rodadas com ${Math.floor(teams.length / 2)} partidas cada. Os eventos serão criados automaticamente no calendário do grupo.`}
+                : `Serão geradas ${teams.length % 2 === 0 ? teams.length - 1 : teams.length} rodadas com ${Math.floor(teams.length / 2)} partidas cada. Os eventos serão criados no calendário do grupo.`}
             </DialogDescription>
           </DialogHeader>
 
           {championship.startsAt && (
             <p className="text-sm text-muted-foreground">
               Início: {new Date(championship.startsAt).toLocaleDateString("pt-BR", {
-                day: "2-digit", month: "long", year: "numeric"
+                day: "2-digit", month: "long", year: "numeric",
               })}.
             </p>
           )}
 
           {genError && (
             <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {genError}
+              <AlertCircle className="h-4 w-4 shrink-0" />{genError}
             </div>
           )}
 
@@ -956,39 +1138,56 @@ function DraftPanel({
 // ─── Main Championship Detail Component ────────────────────────────────────────
 
 export function ChampionshipDetail({
-  groupId,
-  championship,
-  teams,
-  members,
-  initialRounds,
-  initialStandings,
-  isAdmin,
-  currentUserId,
+  groupId, championship, teams, members,
+  initialRounds, initialStandings, isAdmin, currentUserId,
 }: Props) {
   const router = useRouter();
-  const [rounds, setRounds] = useState<RoundData[]>(initialRounds);
+  const [rounds, setRounds]       = useState<RoundData[]>(initialRounds);
   const [standings, setStandings] = useState<StandingData[]>(initialStandings);
+  const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
   const defaultTab = championship.format === "single_elimination" ? "bracket" : "standings";
   const [tab, setTab] = useState(defaultTab);
 
-  // Poll standings every 15s when active
+  // IDs dos times do usuário atual (para "Meus Jogos")
+  const myTeamIds = useMemo(
+    () => new Set(teams.filter(t => t.players.some(p => p.userId === currentUserId)).map(t => t.id)),
+    [teams, currentUserId]
+  );
+
+  // Usuário pode gerenciar partidas: admin OU capitão de algum time
+  const canManageMatches = useMemo(
+    () => isAdmin || teams.some(t => t.players.some(p => p.userId === currentUserId && p.isCaptain)),
+    [isAdmin, teams, currentUserId]
+  );
+
+  // Polling adaptativo: 5s quando há partida ao vivo, 15s caso contrário
+  const hasLiveMatch = rounds.some(r => r.matches.some(m => m.status === "playing"));
+
   const fetchStandings = useCallback(async () => {
     try {
       const res = await fetch(`/api/groups/${groupId}/championships/${championship.id}/standings`);
       if (!res.ok) return;
       const data = await res.json();
       setStandings(data.standings ?? []);
+      setTopScorers(data.topScorers ?? []);
     } catch { /* ignore */ }
   }, [groupId, championship.id]);
 
+  // Busca artilheiros na montagem
   useEffect(() => {
-    if (championship.status !== "active") return;
-    const id = setInterval(fetchStandings, 15000);
-    return () => clearInterval(id);
+    if (championship.status !== "draft") {
+      void fetchStandings();
+    }
   }, [championship.status, fetchStandings]);
 
-  // Refresh rounds after result saved
+  useEffect(() => {
+    if (championship.status !== "active") return;
+    const interval = hasLiveMatch ? 5000 : 15000;
+    const id = setInterval(fetchStandings, interval);
+    return () => clearInterval(id);
+  }, [championship.status, hasLiveMatch, fetchStandings]);
+
   async function refreshRounds() {
     try {
       const res = await fetch(`/api/groups/${groupId}/championships/${championship.id}/rounds`);
@@ -996,7 +1195,7 @@ export function ChampionshipDetail({
       const data = await res.json();
       setRounds(data.rounds ?? []);
     } catch { /* ignore */ }
-    fetchStandings();
+    void fetchStandings();
     router.refresh();
   }
 
@@ -1010,6 +1209,11 @@ export function ChampionshipDetail({
             <Badge variant={STATUS_VARIANT[championship.status] ?? "outline"}>
               {STATUS_LABEL[championship.status] ?? championship.status}
             </Badge>
+            {hasLiveMatch && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                <Radio className="h-3 w-3 animate-pulse" />Partida ao vivo
+              </span>
+            )}
           </div>
           {championship.description && (
             <p className="text-sm text-muted-foreground mt-1">{championship.description}</p>
@@ -1030,50 +1234,69 @@ export function ChampionshipDetail({
         </div>
       </div>
 
-      {/* Finished banner */}
-      {championship.status === "finished" && (
-        <div className="rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border border-amber-200 dark:border-amber-800 p-4 mb-6 flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-amber-500 shrink-0" />
-          <div>
-            <p className="font-semibold text-sm">Campeonato Encerrado!</p>
-            {standings[0] && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Campeão: <strong>{standings[0].team_name}</strong> com {standings[0].points} pontos
+      {/* Banner de campeão */}
+      {championship.status === "finished" && standings[0] && (() => {
+        const champion = standings[0];
+        return (
+          <div
+            className="rounded-xl p-5 mb-6 flex flex-col items-center text-center gap-2 border"
+            style={{
+              background: `linear-gradient(135deg, ${champion.team_color}22 0%, ${champion.team_color}11 100%)`,
+              borderColor: `${champion.team_color}55`,
+            }}
+          >
+            <Trophy className="h-10 w-10" style={{ color: champion.team_color }} />
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Campeão</p>
+            <p className="text-2xl font-extrabold" style={{ color: champion.team_color }}>
+              {champion.team_name}
+            </p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+              <span><strong className="text-foreground">{champion.points}</strong> pts</span>
+              <span>·</span>
+              <span><strong className="text-foreground">{champion.wins}</strong>V <strong className="text-foreground">{champion.draws}</strong>E <strong className="text-foreground">{champion.losses}</strong>D</span>
+              <span>·</span>
+              <span><strong className="text-foreground">{champion.goals_for}</strong> gols</span>
+            </div>
+            {topScorers[0] && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Artilheiro: <strong className="text-foreground">{topScorers[0].user_name}</strong> ({topScorers[0].goals} gols)
               </p>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Draft mode */}
       {championship.status === "draft" && (
         <DraftPanel
-          championship={championship}
-          groupId={groupId}
-          teams={teams}
-          members={members}
-          isAdmin={isAdmin}
-          onTeamAdded={() => {}}
-          onGenerated={() => {}}
+          championship={championship} groupId={groupId}
+          teams={teams} members={members} isAdmin={isAdmin}
+          onTeamAdded={() => {}} onGenerated={() => {}}
         />
       )}
 
-      {/* Active / Finished mode — single elimination */}
+      {/* Single elimination */}
       {(championship.status === "active" || championship.status === "finished") &&
         championship.format === "single_elimination" && (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="bracket">Chaveamento</TabsTrigger>
+            {myTeamIds.size > 0 && <TabsTrigger value="my-matches">Meus Jogos</TabsTrigger>}
             <TabsTrigger value="teams">Times</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bracket">
-            <BracketView
-              rounds={rounds}
-              isAdmin={isAdmin}
-              onMatchClick={m => setSelectedMatch(m)}
-            />
+            <BracketView rounds={rounds} canManage={canManageMatches} onMatchClick={m => setSelectedMatch(m)} />
           </TabsContent>
+
+          {myTeamIds.size > 0 && (
+            <TabsContent value="my-matches">
+              <MyMatchesTab
+                rounds={rounds} myTeamIds={myTeamIds}
+                canManage={canManageMatches} onMatchClick={m => setSelectedMatch(m)}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="teams">
             <TeamsTab teams={teams} />
@@ -1081,13 +1304,14 @@ export function ChampionshipDetail({
         </Tabs>
       )}
 
-      {/* Active / Finished mode — round robin */}
+      {/* Round-robin */}
       {(championship.status === "active" || championship.status === "finished") &&
         championship.format !== "single_elimination" && (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="standings">Classificação</TabsTrigger>
             <TabsTrigger value="rounds">Rodadas</TabsTrigger>
+            {myTeamIds.size > 0 && <TabsTrigger value="my-matches">Meus Jogos</TabsTrigger>}
             <TabsTrigger value="teams">Times</TabsTrigger>
           </TabsList>
 
@@ -1106,17 +1330,23 @@ export function ChampionshipDetail({
               </CardHeader>
               <CardContent className="pt-0">
                 <StandingsTable standings={standings} />
+                <TopScorersSection scorers={topScorers} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="rounds">
-            <RoundsTab
-              rounds={rounds}
-              isAdmin={isAdmin}
-              onMatchClick={m => setSelectedMatch(m)}
-            />
+            <RoundsTab rounds={rounds} canManage={canManageMatches} onMatchClick={m => setSelectedMatch(m)} />
           </TabsContent>
+
+          {myTeamIds.size > 0 && (
+            <TabsContent value="my-matches">
+              <MyMatchesTab
+                rounds={rounds} myTeamIds={myTeamIds}
+                canManage={canManageMatches} onMatchClick={m => setSelectedMatch(m)}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="teams">
             <TeamsTab teams={teams} />
@@ -1124,11 +1354,11 @@ export function ChampionshipDetail({
         </Tabs>
       )}
 
-      {/* Match result modal */}
       <MatchResultModal
         match={selectedMatch}
         groupId={groupId}
         championshipId={championship.id}
+        isAdmin={isAdmin}
         onClose={() => setSelectedMatch(null)}
         onSaved={refreshRounds}
       />

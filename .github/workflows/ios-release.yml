@@ -18,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       app_version:
-        description: "Versão do app (ex: 5.0.0)"
+        description: "Versão do app (ex: 5.1.0)"
         required: true
-        default: "5.0.0"
+        default: "5.1.0"
       build_number:
         description: "CFBundleVersion — deve ser MAIOR que o último no TestFlight (ex: 2, 3...). Vazio = usa run_number do CI."
         required: false

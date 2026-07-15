@@ -2,6 +2,14 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-15
+
+### fix
+- Corrigido crash na página de standings, melhorias de performance no SSR, e implementação do cancelamento de partidas e campeonatos.
+  - Arquivos: `src/app/(app)/groups/[groupId]/championships/[championshipId]/page.tsx`, `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/generate-rounds/route.ts`, `src/components/championships/championship-detail.tsx`
+  - Evidência: alterações nos métodos de consulta, inclusão de ações de cancelamento e melhorias de performance
+  - Confiança: alta
+
 ## 2026-07-14
 
 ### chore

@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-15
 
+### chore
+- Atualizado o valor padrão da versão do aplicativo para 5.1.0 na configuração do fluxo de trabalho de release do iOS
+  - Arquivos: `.github/workflows/ios-release.yml`
+  - Confiança: alta
+
+## 2026-07-15
+
 ### fix
 - Corrigido crash na página de standings, melhorias de performance no SSR, e implementação do cancelamento de partidas e campeonatos.
   - Arquivos: `src/app/(app)/groups/[groupId]/championships/[championshipId]/page.tsx`, `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/route.ts`, `src/app/api/groups/[groupId]/championships/[championshipId]/generate-rounds/route.ts`, `src/components/championships/championship-detail.tsx`

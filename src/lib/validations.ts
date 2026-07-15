@@ -131,7 +131,7 @@ export const createChampionshipTeamSchema = z.object({
 });
 
 export const updateChampionshipMatchSchema = z.object({
-  action: z.enum(["start"]).optional(),
+  action: z.enum(["start", "cancel"]).optional(),
   homeScore: z.number().int().min(0).optional(),
   awayScore: z.number().int().min(0).optional(),
   playedAt: z.string().datetime().optional(),

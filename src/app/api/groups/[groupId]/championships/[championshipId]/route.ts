@@ -71,6 +71,38 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    // ── action: cancel ────────────────────────────────────────────────────────
+    if (body.action === "cancel") {
+      if (existing.status === "cancelled") {
+        return NextResponse.json({ error: "Campeonato já cancelado" }, { status: 400 });
+      }
+      await sql`
+        UPDATE championships SET status = 'cancelled', updated_at = NOW()
+        WHERE id = ${championshipId} AND group_id = ${groupId}
+      `;
+      await sql`
+        UPDATE championship_matches SET status = 'cancelled', updated_at = NOW()
+        WHERE status NOT IN ('finished', 'cancelled')
+          AND round_id IN (
+            SELECT cr.id FROM championship_rounds cr
+            JOIN championship_phases cp ON cp.id = cr.phase_id
+            WHERE cp.championship_id = ${championshipId}
+          )
+      `;
+      await sql`
+        UPDATE events SET status = 'cancelled', updated_at = NOW()
+        WHERE championship_match_id IN (
+          SELECT cm.id FROM championship_matches cm
+          JOIN championship_rounds cr ON cr.id = cm.round_id
+          JOIN championship_phases cp ON cp.id = cr.phase_id
+          WHERE cp.championship_id = ${championshipId}
+        )
+      `;
+      logger.info({ championshipId, userId: user.id }, "Championship cancelled");
+      return NextResponse.json({ success: true });
+    }
+
     const parsed = updateChampionshipSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

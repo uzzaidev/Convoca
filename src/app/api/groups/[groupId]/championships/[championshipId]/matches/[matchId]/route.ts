@@ -146,6 +146,34 @@ export async function PATCH(
       return NextResponse.json({ match: started });
     }
 
+    // ── action: cancel ────────────────────────────────────────────────────────
+    if (d.action === "cancel") {
+      if (existing.status === "finished") {
+        return NextResponse.json(
+          { error: "Partida já encerrada não pode ser cancelada" },
+          { status: 400 }
+        );
+      }
+      if (existing.status === "cancelled") {
+        return NextResponse.json(
+          { error: "Partida já cancelada" },
+          { status: 400 }
+        );
+      }
+      const [cancelled] = await sql`
+        UPDATE championship_matches SET
+          status     = 'cancelled',
+          updated_at = NOW()
+        WHERE id = ${matchId}
+        RETURNING *
+      `;
+      if (cancelled.event_id) {
+        await sql`UPDATE events SET status = 'cancelled', updated_at = NOW() WHERE id = ${cancelled.event_id}`;
+      }
+      logger.info({ matchId, userId: user.id }, "Championship match cancelled");
+      return NextResponse.json({ match: cancelled });
+    }
+
     // ── Registrar/corrigir resultado ──────────────────────────────────────────
     if (d.homeScore === undefined || d.awayScore === undefined) {
       return NextResponse.json(

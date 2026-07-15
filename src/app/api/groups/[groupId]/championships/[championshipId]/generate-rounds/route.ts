@@ -55,6 +55,9 @@ export async function POST(
     const defaultTime = body.defaultEventStartTime ?? "20:00";
     const [hour, minute] = defaultTime.split(":").map(Number);
 
+    // singleDay: todas as rodadas no mesmo dia, espaçadas por duração da partida + 15 min de intervalo
+    const singleDay: boolean = body.singleDay === true;
+
     const teamIds = (teams as unknown as { id: string }[]).map(t => t.id);
 
     // ── Activate championship ──────────────────────────────────────────────────
@@ -107,8 +110,14 @@ export async function POST(
         ? new Date(roundSchedules[roundNumber])
         : (() => {
             const d = new Date(baseDate);
-            d.setDate(d.getDate() + i * 7);
-            d.setHours(hour, minute, 0, 0);
+            if (singleDay) {
+              // Mesmo dia: espaça rodadas por duração da partida + 15 min de intervalo
+              const gapMinutes = ((champ.match_duration_minutes as number) + 15) * i;
+              d.setHours(hour, minute + gapMinutes, 0, 0);
+            } else {
+              d.setDate(d.getDate() + i * 7);
+              d.setHours(hour, minute, 0, 0);
+            }
             return d;
           })();
 

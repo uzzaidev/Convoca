@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Trophy, Plus, Play, AlertCircle, Users, ChevronRight,
-  Crown, Star, Trash2, Radio, Pencil, Goal,
+  Crown, Star, Trash2, Radio, Pencil, Goal, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,18 +79,18 @@ type RoundData = {
 };
 
 type StandingData = {
-  championship_id: string;
-  team_id: string;
-  team_name: string;
-  team_color: string;
-  played: number;
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  gamesPlayed: number;
   wins: number;
   draws: number;
   losses: number;
-  goals_for: number;
-  goals_against: number;
-  goal_diff: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDiff: number;
   points: number;
+  position?: number;
 };
 
 type TopScorer = {
@@ -109,6 +109,7 @@ type Props = {
   members: MemberOption[];
   initialRounds: RoundData[];
   initialStandings: StandingData[];
+  initialTopScorers: TopScorer[];
   isAdmin: boolean;
   currentUserId: string;
 };
@@ -410,8 +411,8 @@ function MatchResultModal({
   const [awayScore, setAwayScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // Quando a partida está finalizada, admin pode entrar em modo de correção
   const [editMode, setEditMode] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   useEffect(() => {
     if (match) {
@@ -419,6 +420,7 @@ function MatchResultModal({
       setAwayScore(match.awayScore ?? 0);
       setError("");
       setEditMode(false);
+      setConfirmCancel(false);
     }
   }, [match]);
 
@@ -442,6 +444,20 @@ function MatchResultModal({
       setError(e instanceof Error ? e.message : "Erro de conexão");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCancelMatch() {
+    if (!match) return;
+    setLoading(true); setError("");
+    try {
+      await patchMatch({ action: "cancel" });
+      onSaved(); onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro de conexão");
+    } finally {
+      setLoading(false);
+      setConfirmCancel(false);
     }
   }
 
@@ -559,7 +575,24 @@ function MatchResultModal({
             </div>
           )}
 
+          {/* Confirmação inline de cancelamento */}
+          {confirmCancel && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+              <p className="text-sm font-medium text-destructive">Cancelar esta partida?</p>
+              <p className="text-xs text-muted-foreground">Esta ação não afeta a classificação. A partida será marcada como cancelada.</p>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={() => setConfirmCancel(false)} className="flex-1">
+                  Voltar
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleCancelMatch} disabled={loading} className="flex-1">
+                  {loading ? "..." : "Confirmar Cancelamento"}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
+          {!confirmCancel && (
           <DialogFooter className="flex-col gap-2 sm:flex-row">
             {showEdit && (
               <>
@@ -571,7 +604,13 @@ function MatchResultModal({
             )}
             {isScheduled && (
               <>
-                <Button type="button" variant="outline" onClick={onClose} className="sm:flex-1">Cancelar</Button>
+                {isAdmin && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto">
+                    Cancelar partida
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
                 <Button
                   type="button" variant="outline" onClick={handleStart}
                   disabled={loading} className="sm:flex-1"
@@ -586,7 +625,13 @@ function MatchResultModal({
             )}
             {isPlaying && (
               <>
-                <Button type="button" variant="outline" onClick={onClose} className="sm:flex-1">Cancelar</Button>
+                {isAdmin && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto">
+                    Cancelar partida
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
                 <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
                   {loading ? "Finalizando..." : "Finalizar Partida"}
                 </Button>
@@ -601,6 +646,7 @@ function MatchResultModal({
               </>
             )}
           </DialogFooter>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -637,25 +683,25 @@ function StandingsTable({ standings }: { standings: StandingData[] }) {
         </TableHeader>
         <TableBody>
           {standings.map((s, i) => (
-            <TableRow key={s.team_id} className={i === 0 ? "bg-primary/5" : ""}>
+            <TableRow key={s.teamId} className={i === 0 ? "bg-primary/5" : ""}>
               <TableCell className="text-center font-medium text-muted-foreground">
                 {i === 0 ? <Crown className="h-4 w-4 text-amber-500 mx-auto" /> : i + 1}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <TeamColorDot color={s.team_color} />
-                  <span className="font-medium">{s.team_name}</span>
+                  <TeamColorDot color={s.teamColor} />
+                  <span className="font-medium">{s.teamName}</span>
                 </div>
               </TableCell>
               <TableCell className="text-center font-bold tabular-nums">{s.points}</TableCell>
-              <TableCell className="text-center tabular-nums text-muted-foreground">{s.played}</TableCell>
+              <TableCell className="text-center tabular-nums text-muted-foreground">{s.gamesPlayed}</TableCell>
               <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">{s.wins}</TableCell>
               <TableCell className="text-center tabular-nums text-muted-foreground">{s.draws}</TableCell>
               <TableCell className="text-center tabular-nums text-destructive">{s.losses}</TableCell>
-              <TableCell className="text-center tabular-nums">{s.goals_for}</TableCell>
-              <TableCell className="text-center tabular-nums">{s.goals_against}</TableCell>
+              <TableCell className="text-center tabular-nums">{s.goalsFor}</TableCell>
+              <TableCell className="text-center tabular-nums">{s.goalsAgainst}</TableCell>
               <TableCell className="text-center tabular-nums font-medium">
-                {s.goal_diff > 0 ? `+${s.goal_diff}` : s.goal_diff}
+                {s.goalDiff > 0 ? `+${s.goalDiff}` : s.goalDiff}
               </TableCell>
             </TableRow>
           ))}
@@ -995,6 +1041,166 @@ function TeamsTab({ teams }: { teams: TeamData[] }) {
   );
 }
 
+// ─── Draw Teams Modal ─────────────────────────────────────────────────────────
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function DrawTeamsModal({
+  open, onClose, groupId, championshipId, members, assignedUserIds, onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  groupId: string;
+  championshipId: string;
+  members: MemberOption[];
+  assignedUserIds: Set<string>;
+  onCreated: () => void;
+}) {
+  const availableMembers = members.filter(m => !assignedUserIds.has(m.id));
+  const maxTeams = Math.max(2, Math.floor(availableMembers.length / 1));
+  const [numTeams, setNumTeams] = useState(Math.min(2, maxTeams));
+  const [preview, setPreview] = useState<{ name: string; color: string; players: MemberOption[] }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function buildPreview(n: number) {
+    const shuffled = shuffleArray(availableMembers);
+    const teams = Array.from({ length: n }, (_, i) => ({
+      name: `Time ${i + 1}`,
+      color: TEAM_COLORS[i % TEAM_COLORS.length],
+      players: [] as MemberOption[],
+    }));
+    shuffled.forEach((m, i) => { teams[i % n].players.push(m); });
+    return teams.filter(t => t.players.length > 0);
+  }
+
+  useEffect(() => {
+    if (open) setPreview(buildPreview(numTeams));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  function handleNumChange(n: number) {
+    setNumTeams(n);
+    setPreview(buildPreview(n));
+  }
+
+  function handleReshuffle() {
+    setPreview(buildPreview(numTeams));
+  }
+
+  async function handleConfirm() {
+    if (preview.length === 0) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/teams`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            teams: preview.map(t => ({
+              name: t.name,
+              color: t.color,
+              playerIds: t.players.map(p => p.id),
+            })),
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao criar times"); return; }
+      onCreated();
+      onClose();
+    } catch {
+      setError("Erro de conexão");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function reset() { setError(""); setPreview([]); }
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) { reset(); onClose(); } }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Sortear Times</DialogTitle>
+          <DialogDescription>
+            {availableMembers.length} jogador{availableMembers.length !== 1 ? "es" : ""} disponíve{availableMembers.length !== 1 ? "is" : "l"} para sorteio.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
+          <div className="flex items-center gap-3">
+            <Label className="shrink-0">Número de times</Label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleNumChange(Math.max(2, numTeams - 1))}
+                disabled={numTeams <= 2}
+                className="w-8 h-8 rounded-full border font-bold flex items-center justify-center hover:bg-muted disabled:opacity-40"
+              >−</button>
+              <span className="w-6 text-center font-bold tabular-nums">{numTeams}</span>
+              <button
+                type="button"
+                onClick={() => handleNumChange(Math.min(maxTeams, numTeams + 1))}
+                disabled={numTeams >= maxTeams}
+                className="w-8 h-8 rounded-full border font-bold flex items-center justify-center hover:bg-muted disabled:opacity-40"
+              >+</button>
+            </div>
+          </div>
+
+          {preview.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Pré-visualização</p>
+                <Button type="button" size="sm" variant="ghost" onClick={handleReshuffle} className="text-xs h-7">
+                  Sortear novamente
+                </Button>
+              </div>
+              <div className="rounded-lg border divide-y max-h-60 overflow-y-auto">
+                {preview.map((team, i) => (
+                  <div key={i} className="p-2.5 flex items-start gap-2">
+                    <span
+                      className="mt-0.5 inline-block w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: team.color }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{team.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {team.players.map(p => p.name).join(", ")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />{error}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => { reset(); onClose(); }}>Cancelar</Button>
+          <Button type="button" onClick={handleConfirm} disabled={loading || preview.length === 0}>
+            {loading ? "Criando times..." : "Confirmar Sorteio"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Draft Panel ───────────────────────────────────────────────────────────────
 
 function DraftPanel({
@@ -1009,9 +1215,11 @@ function DraftPanel({
   onGenerated: () => void;
 }) {
   const [showAddTeam, setShowAddTeam] = useState(false);
+  const [showDrawTeams, setShowDrawTeams] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState("");
+  const [singleDay, setSingleDay] = useState(!!championship.startsAt);
   const router = useRouter();
 
   const assignedUserIds = new Set(teams.flatMap(t => t.players.map(p => p.userId)));
@@ -1021,7 +1229,11 @@ function DraftPanel({
     try {
       const res = await fetch(
         `/api/groups/${groupId}/championships/${championship.id}/generate-rounds`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ singleDay }),
+        }
       );
       const data = await res.json();
       if (!res.ok) { setGenError(data.error ?? "Erro ao gerar rodadas"); setGenerating(false); return; }
@@ -1053,9 +1265,16 @@ function DraftPanel({
           Times ({teams.length})
         </h2>
         {isAdmin && (
-          <Button size="sm" variant="outline" onClick={() => setShowAddTeam(true)}>
-            <Plus className="h-4 w-4 mr-1" />Adicionar Time
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setShowDrawTeams(true)}
+              disabled={members.length < 2}
+              title={members.length < 2 ? "Precisa de ao menos 2 membros no grupo" : "Sortear times automaticamente"}>
+              <Users className="h-4 w-4 mr-1" />Sortear
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowAddTeam(true)}>
+              <Plus className="h-4 w-4 mr-1" />Adicionar Time
+            </Button>
+          </div>
         )}
       </div>
 
@@ -1098,6 +1317,13 @@ function DraftPanel({
         onCreated={() => { router.refresh(); onTeamAdded(); }}
       />
 
+      <DrawTeamsModal
+        open={showDrawTeams} onClose={() => setShowDrawTeams(false)}
+        groupId={groupId} championshipId={championship.id}
+        members={members} assignedUserIds={assignedUserIds}
+        onCreated={() => { router.refresh(); onTeamAdded(); }}
+      />
+
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -1116,6 +1342,21 @@ function DraftPanel({
               })}.
             </p>
           )}
+
+          <label className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-lg border hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={singleDay}
+              onChange={e => setSingleDay(e.target.checked)}
+              className="rounded"
+            />
+            <div>
+              <p className="text-sm font-medium">Torneio de um dia</p>
+              <p className="text-xs text-muted-foreground">
+                Todas as rodadas no mesmo dia, espaçadas por {championship.matchDurationMinutes + 15} min
+              </p>
+            </div>
+          </label>
 
           {genError && (
             <div className="flex items-center gap-2 text-sm text-destructive">
@@ -1139,13 +1380,15 @@ function DraftPanel({
 
 export function ChampionshipDetail({
   groupId, championship, teams, members,
-  initialRounds, initialStandings, isAdmin, currentUserId,
+  initialRounds, initialStandings, initialTopScorers, isAdmin, currentUserId,
 }: Props) {
   const router = useRouter();
   const [rounds, setRounds]       = useState<RoundData[]>(initialRounds);
   const [standings, setStandings] = useState<StandingData[]>(initialStandings);
-  const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
+  const [topScorers, setTopScorers] = useState<TopScorer[]>(initialTopScorers);
   const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
+  const [cancelingChamp, setCancelingChamp] = useState(false);
+  const [cancelChampLoading, setCancelChampLoading] = useState(false);
   const defaultTab = championship.format === "single_elimination" ? "bracket" : "standings";
   const [tab, setTab] = useState(defaultTab);
 
@@ -1193,10 +1436,39 @@ export function ChampionshipDetail({
       const res = await fetch(`/api/groups/${groupId}/championships/${championship.id}/rounds`);
       if (!res.ok) return;
       const data = await res.json();
-      setRounds(data.rounds ?? []);
+      const newRounds: RoundData[] = data.rounds ?? [];
+      setRounds(newRounds);
+
+      // Só força SSR reload quando não há mais partidas pendentes (campeonato pode ter encerrado)
+      const stillPending = newRounds.some(r =>
+        r.matches.some(m =>
+          (m.status === "scheduled" || m.status === "playing") &&
+          m.homeTeamId && m.awayTeamId
+        )
+      );
+      if (!stillPending) {
+        router.refresh();
+      }
     } catch { /* ignore */ }
     void fetchStandings();
-    router.refresh();
+  }
+
+  async function handleCancelChampionship() {
+    setCancelChampLoading(true);
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championship.id}`,
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "cancel" }) }
+      );
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "Erro ao cancelar campeonato"); return; }
+      router.refresh();
+    } catch {
+      alert("Erro de conexão");
+    } finally {
+      setCancelChampLoading(false);
+      setCancelingChamp(false);
+    }
   }
 
   return (
@@ -1232,7 +1504,34 @@ export function ChampionshipDetail({
             )}
           </div>
         </div>
+        {isAdmin && (championship.status === "draft" || championship.status === "active") && (
+          <Button
+            size="sm" variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive shrink-0"
+            onClick={() => setCancelingChamp(true)}
+          >
+            <X className="h-3.5 w-3.5 mr-1" />Cancelar
+          </Button>
+        )}
       </div>
+
+      {/* Dialog cancelar campeonato */}
+      <Dialog open={cancelingChamp} onOpenChange={setCancelingChamp}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Cancelar campeonato?</DialogTitle>
+            <DialogDescription>
+              Esta ação cancelará o campeonato <strong>{championship.name}</strong> e todas as partidas pendentes. Partidas já finalizadas são mantidas. Não é possível desfazer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelingChamp(false)}>Voltar</Button>
+            <Button variant="destructive" onClick={handleCancelChampionship} disabled={cancelChampLoading}>
+              {cancelChampLoading ? "Cancelando..." : "Confirmar Cancelamento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Banner de campeão */}
       {championship.status === "finished" && standings[0] && (() => {
@@ -1241,21 +1540,21 @@ export function ChampionshipDetail({
           <div
             className="rounded-xl p-5 mb-6 flex flex-col items-center text-center gap-2 border"
             style={{
-              background: `linear-gradient(135deg, ${champion.team_color}22 0%, ${champion.team_color}11 100%)`,
-              borderColor: `${champion.team_color}55`,
+              background: `linear-gradient(135deg, ${champion.teamColor}22 0%, ${champion.teamColor}11 100%)`,
+              borderColor: `${champion.teamColor}55`,
             }}
           >
-            <Trophy className="h-10 w-10" style={{ color: champion.team_color }} />
+            <Trophy className="h-10 w-10" style={{ color: champion.teamColor }} />
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Campeão</p>
-            <p className="text-2xl font-extrabold" style={{ color: champion.team_color }}>
-              {champion.team_name}
+            <p className="text-2xl font-extrabold" style={{ color: champion.teamColor }}>
+              {champion.teamName}
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
               <span><strong className="text-foreground">{champion.points}</strong> pts</span>
               <span>·</span>
               <span><strong className="text-foreground">{champion.wins}</strong>V <strong className="text-foreground">{champion.draws}</strong>E <strong className="text-foreground">{champion.losses}</strong>D</span>
               <span>·</span>
-              <span><strong className="text-foreground">{champion.goals_for}</strong> gols</span>
+              <span><strong className="text-foreground">{champion.goalsFor}</strong> gols</span>
             </div>
             {topScorers[0] && (
               <p className="text-xs text-muted-foreground mt-1">

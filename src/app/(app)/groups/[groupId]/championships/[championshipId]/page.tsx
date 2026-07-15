@@ -10,6 +10,7 @@ import {
   type TeamData,
   type MemberOption,
 } from "@/components/championships/championship-detail";
+import { rowToStanding, type ChampionshipStandingRow } from "@/types/championship";
 
 type RouteParams = { params: Promise<{ groupId: string; championshipId: string }> };
 
@@ -26,44 +27,43 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
   `;
   if (!champ) notFound();
 
-  const teamsRows = await sql`
-    SELECT
-      ct.id,
-      ct.name,
-      ct.color,
-      ct.seed,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id', ctp.id,
-            'userId', ctp.user_id,
-            'userName', u.name,
-            'isCaptain', ctp.is_captain
-          ) ORDER BY ctp.created_at
-        ) FILTER (WHERE ctp.id IS NOT NULL),
-        '[]'
-      ) AS players
-    FROM championship_teams ct
-    LEFT JOIN championship_team_players ctp ON ctp.championship_team_id = ct.id
-    LEFT JOIN users u ON u.id = ctp.user_id
-    WHERE ct.championship_id = ${championshipId} AND ct.is_bye = FALSE
-    GROUP BY ct.id
-    ORDER BY ct.seed NULLS LAST, ct.created_at
-  `;
+  const isNotDraft = champ.status !== "draft";
 
-  // Group members for team builder
-  const membersRows = await sql`
-    SELECT u.id, u.name
-    FROM group_members gm
-    JOIN users u ON u.id = gm.user_id
-    WHERE gm.group_id = ${groupId}
-    ORDER BY u.name
-  `;
-
-  // Rounds + matches (only if active/finished)
-  const roundsRows =
-    champ.status !== "draft"
-      ? await sql`
+  // Parallelizar todas as queries independentes
+  const [teamsRows, membersRows, roundsRows, standingsRows, topScorersRows] = await Promise.all([
+    sql`
+      SELECT
+        ct.id,
+        ct.name,
+        ct.color,
+        ct.seed,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', ctp.id,
+              'userId', ctp.user_id,
+              'userName', u.name,
+              'isCaptain', ctp.is_captain
+            ) ORDER BY ctp.created_at
+          ) FILTER (WHERE ctp.id IS NOT NULL),
+          '[]'
+        ) AS players
+      FROM championship_teams ct
+      LEFT JOIN championship_team_players ctp ON ctp.championship_team_id = ct.id
+      LEFT JOIN users u ON u.id = ctp.user_id
+      WHERE ct.championship_id = ${championshipId} AND ct.is_bye = FALSE
+      GROUP BY ct.id
+      ORDER BY ct.seed NULLS LAST, ct.created_at
+    `,
+    sql`
+      SELECT u.id, u.name
+      FROM group_members gm
+      JOIN users u ON u.id = gm.user_id
+      WHERE gm.group_id = ${groupId}
+      ORDER BY u.name
+    `,
+    isNotDraft
+      ? sql`
           SELECT
             cr.id,
             cr.round_number,
@@ -97,18 +97,45 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
           GROUP BY cr.id, cr.round_number, cr.name, cr.scheduled_at
           ORDER BY cr.round_number
         `
-      : [];
-
-  // Initial standings (only if active/finished)
-  const standingsRows =
-    champ.status !== "draft"
-      ? await sql`
+      : Promise.resolve([]),
+    isNotDraft
+      ? sql`
           SELECT *
           FROM mv_championship_standings
           WHERE championship_id = ${championshipId}
           ORDER BY points DESC, wins DESC, goal_diff DESC, goals_for DESC, team_name
         `
-      : [];
+      : Promise.resolve([]),
+    isNotDraft
+      ? sql`
+          SELECT
+            u.id        AS user_id,
+            u.name      AS user_name,
+            u.image     AS user_image,
+            ct.name     AS team_name,
+            ct.color    AS team_color,
+            COUNT(*)    AS goals
+          FROM event_actions ea
+          JOIN events e ON e.id = ea.event_id
+          JOIN championship_matches cm ON cm.event_id = e.id
+          JOIN championship_rounds cr ON cr.id = cm.round_id
+          JOIN championship_phases cp ON cp.id = cr.phase_id
+          JOIN users u ON u.id = ea.actor_user_id
+          JOIN championship_team_players ctp ON ctp.user_id = u.id
+          JOIN championship_teams ct ON ct.id = ctp.championship_team_id
+            AND ct.championship_id = ${championshipId}
+          WHERE cp.championship_id = ${championshipId}
+            AND ea.action_type = 'goal'
+          GROUP BY u.id, u.name, u.image, ct.name, ct.color
+          ORDER BY goals DESC, u.name
+          LIMIT 10
+        `
+      : Promise.resolve([]),
+  ]);
+
+  const initialStandings = (standingsRows as unknown as ChampionshipStandingRow[]).map(
+    (r, i) => rowToStanding(r, i + 1)
+  );
 
   const isAdmin = group.userRole === "admin" || !!group.isSystemAdmin;
 
@@ -147,7 +174,8 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
           teams={teamsRows as unknown as TeamData[]}
           members={membersRows as unknown as MemberOption[]}
           initialRounds={roundsRows as unknown as any[]}
-          initialStandings={standingsRows as unknown as any[]}
+          initialStandings={initialStandings}
+          initialTopScorers={topScorersRows as unknown as any[]}
           isAdmin={isAdmin}
           currentUserId={user.id}
         />

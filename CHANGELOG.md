@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-16
 
+### fix
+- Tornou a constraint `chk_player_identity` idempotente na tabela `championship_team_players`, garantindo que a restrição seja aplicada apenas uma vez.  
+  - Arquivos: `src/db/migrations/20260716_championship_guest_players.sql`  
+  - Evidência: uso de bloco PL/pgSQL com tratamento de exceção para `duplicate_object`  
+  - Confiança: alta
+
+## 2026-07-16
+
 ### feat
 - Adiciona jogadores avulsos ao campeonato "FUTLIPPE + CHURRASCO" criando três times com jogadores predefinidos
   - Arquivos: `src/db/migrations/20260716_futlippe_players.sql`

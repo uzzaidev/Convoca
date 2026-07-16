@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-16
 
+### feat
+- Implementada deep linking via Universal Links e App Links, incluindo configurações em `next.config.ts` e rotas específicas para arquivos `apple-app-site-association` e `assetlinks.json`. Arquivos afetados: `next.config.ts`, `src/app/api/well-known/aasa/route.ts`, `src/app/api/well-known/assetlinks/route.ts`. Confiança: alta
+
+### feat
+- Adicionado suporte a links de convite com código na URL, incluindo página de convite em `src/app/invite/[code]/page.tsx` e atualização de componentes relacionados para usar o padrão `/invite/{code}`. Arquivos afetados: `src/app/invite/[code]/page.tsx`, `src/components/groups/invites-manager.tsx`, `src/components/groups/join-group-form.tsx`. Confiança: alta
+
+## 2026-07-16
+
 ### fix
 - Tornou a constraint `chk_player_identity` idempotente na tabela `championship_team_players`, garantindo que a restrição seja aplicada apenas uma vez.  
   - Arquivos: `src/db/migrations/20260716_championship_guest_players.sql`  

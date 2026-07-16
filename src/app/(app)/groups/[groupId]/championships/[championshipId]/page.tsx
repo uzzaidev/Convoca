@@ -9,6 +9,7 @@ import {
   type ChampionshipData,
   type TeamData,
   type MemberOption,
+  type ParticipantData,
 } from "@/components/championships/championship-detail";
 import { rowToStanding, type ChampionshipStandingRow } from "@/types/championship";
 
@@ -30,7 +31,7 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
   const isNotDraft = champ.status !== "draft";
 
   // Parallelizar todas as queries independentes
-  const [teamsRows, membersRows, roundsRows, standingsRows, topScorersRows] = await Promise.all([
+  const [teamsRows, membersRows, participantsRows, roundsRows, standingsRows, topScorersRows] = await Promise.all([
     sql`
       SELECT
         ct.id,
@@ -42,7 +43,8 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
             json_build_object(
               'id', ctp.id,
               'userId', ctp.user_id,
-              'userName', u.name,
+              'guestName', ctp.guest_name,
+              'userName', COALESCE(u.name, ctp.guest_name),
               'isCaptain', ctp.is_captain
             ) ORDER BY ctp.created_at
           ) FILTER (WHERE ctp.id IS NOT NULL),
@@ -61,6 +63,17 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
       JOIN users u ON u.id = gm.user_id
       WHERE gm.group_id = ${groupId}
       ORDER BY u.name
+    `,
+    sql`
+      SELECT
+        cp.id,
+        cp.user_id    AS "userId",
+        cp.guest_name AS "guestName",
+        COALESCE(u.name, cp.guest_name) AS "userName"
+      FROM championship_participants cp
+      LEFT JOIN users u ON u.id = cp.user_id
+      WHERE cp.championship_id = ${championshipId}
+      ORDER BY cp.created_at
     `,
     isNotDraft
       ? sql`
@@ -173,6 +186,7 @@ export default async function ChampionshipDetailPage({ params }: RouteParams) {
           championship={championship}
           teams={teamsRows as unknown as TeamData[]}
           members={membersRows as unknown as MemberOption[]}
+          initialParticipants={participantsRows as unknown as ParticipantData[]}
           initialRounds={roundsRows as unknown as any[]}
           initialStandings={initialStandings}
           initialTopScorers={topScorersRows as unknown as any[]}

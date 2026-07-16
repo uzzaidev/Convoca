@@ -74,6 +74,46 @@ export async function GET(
   }
 }
 
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Params }
+) {
+  try {
+    const { groupId } = await params;
+    const user = await requireAuth();
+
+    await requireGroupAccess(groupId, user, {
+      minRole: "admin",
+      adminErrorMessage: "Apenas admins podem excluir o grupo",
+      requireActiveGroup: false,
+    });
+
+    const [group] = await sql`
+      SELECT id, name FROM groups WHERE id = ${groupId} AND deleted_at IS NULL
+    `;
+    if (!group) {
+      return NextResponse.json({ error: "Grupo não encontrado" }, { status: 404 });
+    }
+
+    await sql`
+      UPDATE groups SET deleted_at = NOW(), updated_at = NOW()
+      WHERE id = ${groupId} AND deleted_at IS NULL
+    `;
+
+    logger.info({ groupId, userId: user.id }, "Group soft-deleted");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("autenticado")) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+    if (error instanceof GroupAccessError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    logger.error(error, "Error deleting group");
+    return NextResponse.json({ error: "Erro ao excluir grupo" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Params }

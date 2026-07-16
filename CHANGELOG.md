@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-16
 
 ### feat
+- Implementada página /download com redirecionamento inteligente para App Store ou Play Store
+  - Arquivos: `src/app/download/page.tsx`
+  - Confiança: alta
+
+## 2026-07-16
+
+### feat
 - Implementada exclusão de grupo por admin com confirmação de nome
   - Arquivos: `src/app/api/groups/[groupId]/route.ts`, `src/components/groups/group-settings-tabs.tsx`
   - Evidência: adição da rota DELETE com validação de permissão e lógica de soft delete; interface de confirmação na UI

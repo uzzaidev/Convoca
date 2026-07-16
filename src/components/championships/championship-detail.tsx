@@ -40,6 +40,13 @@ export type ChampionshipData = {
 
 export type MemberOption = { id: string; name: string };
 
+export type ParticipantData = {
+  id: string;
+  userId: string | null;
+  guestName: string | null;
+  userName: string;
+};
+
 export type TeamPlayer = {
   id: string;
   userId: string | null;
@@ -108,6 +115,7 @@ type Props = {
   championship: ChampionshipData;
   teams: TeamData[];
   members: MemberOption[];
+  initialParticipants: ParticipantData[];
   initialRounds: RoundData[];
   initialStandings: StandingData[];
   initialTopScorers: TopScorer[];
@@ -159,6 +167,95 @@ function LiveBadge() {
       <Radio className="h-2.5 w-2.5 animate-pulse" />
       Ao vivo
     </span>
+  );
+}
+
+// ─── Participants Panel ────────────────────────────────────────────────────────
+
+function ParticipantsPanel({
+  groupId, championshipId, participants, isAdmin, onChanged,
+}: {
+  groupId: string;
+  championshipId: string;
+  participants: ParticipantData[];
+  isAdmin: boolean;
+  onChanged: (p: ParticipantData[]) => void;
+}) {
+  const [input, setInput] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleAdd() {
+    const name = input.trim();
+    if (!name) return;
+    setAdding(true); setError("");
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/participants`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ guestName: name }) }
+      );
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro"); setAdding(false); return; }
+      if (data.participant) onChanged([...participants, data.participant]);
+      setInput("");
+    } catch {
+      setError("Erro de conexão");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleRemove(id: string) {
+    const res = await fetch(
+      `/api/groups/${groupId}/championships/${championshipId}/participants/${id}`,
+      { method: "DELETE" }
+    );
+    if (res.ok) onChanged(participants.filter(p => p.id !== id));
+  }
+
+  return (
+    <div className="rounded-lg border p-4 mb-2">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-sm flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Inscritos ({participants.length})
+        </h2>
+      </div>
+
+      {participants.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {participants.map(p => (
+            <span key={p.id} className="flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded-full">
+              {!p.userId && <Link2 className="h-3 w-3 text-muted-foreground/50" />}
+              {p.userName}
+              {isAdmin && (
+                <button type="button" onClick={() => handleRemove(p.id)} className="ml-0.5">
+                  <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground italic mb-3">Nenhum inscrito ainda.</p>
+      )}
+
+      {isAdmin && (
+        <div className="flex gap-2">
+          <Input
+            placeholder="Apelido do jogador..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+            className="h-8 text-sm"
+          />
+          <Button type="button" size="sm" onClick={handleAdd} disabled={adding || !input.trim()} className="h-8">
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+    </div>
   );
 }
 
@@ -1333,31 +1430,31 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 function DrawTeamsModal({
-  open, onClose, groupId, championshipId, members, assignedUserIds, onCreated,
+  open, onClose, groupId, championshipId, participants, assignedUserIds, onCreated,
 }: {
   open: boolean;
   onClose: () => void;
   groupId: string;
   championshipId: string;
-  members: MemberOption[];
+  participants: ParticipantData[];
   assignedUserIds: Set<string>;
   onCreated: () => void;
 }) {
-  const availableMembers = members.filter(m => !assignedUserIds.has(m.id));
-  const maxTeams = Math.max(2, Math.floor(availableMembers.length / 1));
-  const [numTeams, setNumTeams] = useState(Math.min(2, maxTeams));
-  const [preview, setPreview] = useState<{ name: string; color: string; players: MemberOption[] }[]>([]);
+  const available = participants.filter(p => !p.userId || !assignedUserIds.has(p.userId));
+  const maxTeams = Math.max(2, available.length);
+  const [numTeams, setNumTeams] = useState(Math.min(3, maxTeams));
+  const [preview, setPreview] = useState<{ name: string; color: string; players: ParticipantData[] }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   function buildPreview(n: number) {
-    const shuffled = shuffleArray(availableMembers);
+    const shuffled = shuffleArray(available);
     const teams = Array.from({ length: n }, (_, i) => ({
       name: `Time ${i + 1}`,
       color: TEAM_COLORS[i % TEAM_COLORS.length],
-      players: [] as MemberOption[],
+      players: [] as ParticipantData[],
     }));
-    shuffled.forEach((m, i) => { teams[i % n].players.push(m); });
+    shuffled.forEach((p, i) => { teams[i % n].players.push(p); });
     return teams.filter(t => t.players.length > 0);
   }
 
@@ -1388,7 +1485,8 @@ function DrawTeamsModal({
             teams: preview.map(t => ({
               name: t.name,
               color: t.color,
-              playerIds: t.players.map(p => p.id),
+              playerIds: t.players.filter(p => !!p.userId).map(p => p.userId as string),
+              guestNames: t.players.filter(p => !p.userId && !!p.guestName).map(p => p.guestName as string),
             })),
           }),
         }
@@ -1412,7 +1510,7 @@ function DrawTeamsModal({
         <DialogHeader>
           <DialogTitle>Sortear Times</DialogTitle>
           <DialogDescription>
-            {availableMembers.length} jogador{availableMembers.length !== 1 ? "es" : ""} disponíve{availableMembers.length !== 1 ? "is" : "l"} para sorteio.
+            {available.length} jogador{available.length !== 1 ? "es" : ""} disponíve{available.length !== 1 ? "is" : "l"} para sorteio.
           </DialogDescription>
         </DialogHeader>
 
@@ -1454,7 +1552,7 @@ function DrawTeamsModal({
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{team.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {team.players.map(p => p.name).join(", ")}
+                        {team.players.map(p => p.userName).join(", ")}
                       </p>
                     </div>
                   </div>
@@ -1484,12 +1582,14 @@ function DrawTeamsModal({
 // ─── Draft Panel ───────────────────────────────────────────────────────────────
 
 function DraftPanel({
-  championship, groupId, teams, members, isAdmin, onTeamAdded, onGenerated,
+  championship, groupId, teams, members, participants, setParticipants, isAdmin, onTeamAdded, onGenerated,
 }: {
   championship: ChampionshipData;
   groupId: string;
   teams: TeamData[];
   members: MemberOption[];
+  participants: ParticipantData[];
+  setParticipants: React.Dispatch<React.SetStateAction<ParticipantData[]>>;
   isAdmin: boolean;
   onTeamAdded: () => void;
   onGenerated: () => void;
@@ -1539,7 +1639,17 @@ function DraftPanel({
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      {/* ── Inscritos ─────────────────────────────────────────────────────── */}
+      <ParticipantsPanel
+        groupId={groupId}
+        championshipId={championship.id}
+        participants={participants}
+        isAdmin={isAdmin}
+        onChanged={setParticipants}
+      />
+
+      {/* ── Times ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-4 mt-6">
         <h2 className="font-semibold flex items-center gap-2">
           <Users className="h-4 w-4" />
           Times ({teams.length})
@@ -1547,8 +1657,8 @@ function DraftPanel({
         {isAdmin && (
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowDrawTeams(true)}
-              disabled={members.length < 2}
-              title={members.length < 2 ? "Precisa de ao menos 2 membros no grupo" : "Sortear times automaticamente"}>
+              disabled={participants.length < 2 && members.length < 2}
+              title={participants.length < 2 && members.length < 2 ? "Adicione inscritos primeiro" : "Sortear times automaticamente"}>
               <Users className="h-4 w-4 mr-1" />Sortear
             </Button>
             <Button size="sm" variant="outline" onClick={() => setShowAddTeam(true)}>
@@ -1601,7 +1711,8 @@ function DraftPanel({
       <DrawTeamsModal
         open={showDrawTeams} onClose={() => setShowDrawTeams(false)}
         groupId={groupId} championshipId={championship.id}
-        members={members} assignedUserIds={assignedUserIds}
+        participants={participants.length > 0 ? participants : members.map(m => ({ id: m.id, userId: m.id, guestName: null, userName: m.name }))}
+        assignedUserIds={assignedUserIds}
         onCreated={() => { router.refresh(); onTeamAdded(); }}
       />
 
@@ -1660,10 +1771,11 @@ function DraftPanel({
 // ─── Main Championship Detail Component ────────────────────────────────────────
 
 export function ChampionshipDetail({
-  groupId, championship, teams, members,
+  groupId, championship, teams, members, initialParticipants,
   initialRounds, initialStandings, initialTopScorers, isAdmin, currentUserId,
 }: Props) {
   const router = useRouter();
+  const [participants, setParticipants] = useState<ParticipantData[]>(initialParticipants);
   const [rounds, setRounds]       = useState<RoundData[]>(initialRounds);
   const [standings, setStandings] = useState<StandingData[]>(initialStandings);
   const [topScorers, setTopScorers] = useState<TopScorer[]>(initialTopScorers);
@@ -1850,7 +1962,9 @@ export function ChampionshipDetail({
       {championship.status === "draft" && (
         <DraftPanel
           championship={championship} groupId={groupId}
-          teams={teams} members={members} isAdmin={isAdmin}
+          teams={teams} members={members}
+          participants={participants} setParticipants={setParticipants}
+          isAdmin={isAdmin}
           onTeamAdded={() => {}} onGenerated={() => {}}
         />
       )}

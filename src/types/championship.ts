@@ -57,7 +57,8 @@ export type ChampionshipTeamRow = {
 export type ChampionshipTeamPlayerRow = {
   id: string;
   championship_team_id: string;
-  user_id: string;
+  user_id: string | null;
+  guest_name: string | null;
   is_captain: boolean;
   created_at: string;
 };
@@ -136,10 +137,11 @@ export type ChampionshipTeam = {
 export type ChampionshipTeamPlayer = {
   id: string;
   championshipTeamId: string;
-  userId: string;
+  userId: string | null;
+  guestName: string | null;
   isCaptain: boolean;
   // enriched
-  userName?: string;
+  userName?: string | null;
   userImage?: string | null;
 };
 

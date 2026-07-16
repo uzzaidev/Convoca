@@ -38,7 +38,8 @@ export async function GET(
             json_build_object(
               'id',        ctp.id,
               'userId',    ctp.user_id,
-              'userName',  u.name,
+              'guestName', ctp.guest_name,
+              'userName',  COALESCE(u.name, ctp.guest_name),
               'userImage', u.image,
               'isCaptain', ctp.is_captain
             ) ORDER BY ctp.created_at
@@ -110,33 +111,35 @@ export async function POST(
 
       const d = parsed.data;
 
-      // Validate all playerIds are members of the group
-      const memberCheck = await sql`
-        SELECT user_id FROM group_members
-        WHERE group_id = ${groupId} AND user_id = ANY(${d.playerIds})
-      `;
-      if (memberCheck.length !== d.playerIds.length) {
-        return NextResponse.json(
-          { error: `Todos os jogadores devem ser membros do grupo` },
-          { status: 400 }
-        );
-      }
+      // Validate registered playerIds are members of the group
+      if (d.playerIds.length > 0) {
+        const memberCheck = await sql`
+          SELECT user_id FROM group_members
+          WHERE group_id = ${groupId} AND user_id = ANY(${d.playerIds})
+        `;
+        if (memberCheck.length !== d.playerIds.length) {
+          return NextResponse.json(
+            { error: `Todos os jogadores devem ser membros do grupo` },
+            { status: 400 }
+          );
+        }
 
-      // Check no player is already on another team in this championship
-      const conflict = await sql`
-        SELECT ctp.user_id, u.name
-        FROM championship_team_players ctp
-        JOIN championship_teams ct ON ct.id = ctp.championship_team_id
-        JOIN users u ON u.id = ctp.user_id
-        WHERE ct.championship_id = ${championshipId}
-          AND ctp.user_id = ANY(${d.playerIds})
-      `;
-      if (conflict.length > 0) {
-        const names = (conflict as unknown as { name: string }[]).map(r => r.name).join(", ");
-        return NextResponse.json(
-          { error: `Jogadores já estão em outro time: ${names}` },
-          { status: 400 }
-        );
+        // Check no registered player is already on another team in this championship
+        const conflict = await sql`
+          SELECT ctp.user_id, u.name
+          FROM championship_team_players ctp
+          JOIN championship_teams ct ON ct.id = ctp.championship_team_id
+          JOIN users u ON u.id = ctp.user_id
+          WHERE ct.championship_id = ${championshipId}
+            AND ctp.user_id = ANY(${d.playerIds})
+        `;
+        if (conflict.length > 0) {
+          const names = (conflict as unknown as { name: string }[]).map(r => r.name).join(", ");
+          return NextResponse.json(
+            { error: `Jogadores já estão em outro time: ${names}` },
+            { status: 400 }
+          );
+        }
       }
 
       const [team] = await sql`
@@ -145,19 +148,18 @@ export async function POST(
         RETURNING *
       `;
 
-      if (d.playerIds.length > 0) {
-        const playerRows = d.playerIds.map((uid: string) => ({
-          championship_team_id: team.id,
-          user_id: uid,
-          is_captain: uid === (d.captainId ?? null),
-        }));
+      for (const uid of d.playerIds) {
+        await sql`
+          INSERT INTO championship_team_players (championship_team_id, user_id, is_captain)
+          VALUES (${team.id}, ${uid}, ${uid === (d.captainId ?? null)})
+        `;
+      }
 
-        for (const p of playerRows) {
-          await sql`
-            INSERT INTO championship_team_players (championship_team_id, user_id, is_captain)
-            VALUES (${p.championship_team_id}, ${p.user_id}, ${p.is_captain})
-          `;
-        }
+      for (const guestName of d.guestNames) {
+        await sql`
+          INSERT INTO championship_team_players (championship_team_id, guest_name, is_captain)
+          VALUES (${team.id}, ${guestName}, FALSE)
+        `;
       }
 
       createdTeams.push(team);

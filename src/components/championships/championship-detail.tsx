@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Trophy, Plus, Play, AlertCircle, Users, ChevronRight,
-  Crown, Star, Trash2, Radio, Pencil, Goal, X,
+  Crown, Star, Trash2, Radio, Pencil, Goal, X, UserPlus, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,8 @@ export type MemberOption = { id: string; name: string };
 
 export type TeamPlayer = {
   id: string;
-  userId: string;
+  userId: string | null;
+  guestName: string | null;
   userName: string;
   isCaptain: boolean;
 };
@@ -161,6 +162,102 @@ function LiveBadge() {
   );
 }
 
+// ─── Link Player Dialog ────────────────────────────────────────────────────────
+
+function LinkPlayerDialog({
+  open, onClose, groupId, championshipId, teamId, playerId, guestName, onLinked,
+}: {
+  open: boolean;
+  onClose: () => void;
+  groupId: string;
+  championshipId: string;
+  teamId: string;
+  playerId: string;
+  guestName: string;
+  onLinked: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) { setQuery(""); setResults([]); setError(""); }
+  }, [open]);
+
+  useEffect(() => {
+    if (query.length < 2) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setResults(data.users ?? []);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  async function handleLink(userId: string) {
+    setLinking(true); setError("");
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/teams/${teamId}/players/${playerId}/link`,
+        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId }) }
+      );
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao vincular"); setLinking(false); return; }
+      onLinked(); onClose();
+    } catch {
+      setError("Erro de conexão"); setLinking(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Vincular "{guestName}"</DialogTitle>
+          <DialogDescription>Busque o usuário cadastrado para vincular a este jogador.</DialogDescription>
+        </DialogHeader>
+        <Input
+          placeholder="Nome ou e-mail..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          autoFocus
+        />
+        {searching && <p className="text-xs text-muted-foreground">Buscando...</p>}
+        {results.length > 0 && (
+          <div className="rounded-lg border divide-y max-h-48 overflow-y-auto">
+            {results.map(u => (
+              <button
+                key={u.id}
+                type="button"
+                disabled={linking}
+                onClick={() => handleLink(u.id)}
+                className="w-full text-left px-3 py-2 hover:bg-muted transition-colors"
+              >
+                <p className="text-sm font-medium">{u.name}</p>
+                <p className="text-xs text-muted-foreground">{u.email}</p>
+              </button>
+            ))}
+          </div>
+        )}
+        {query.length >= 2 && !searching && results.length === 0 && (
+          <p className="text-xs text-muted-foreground">Nenhum usuário encontrado</p>
+        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={linking}>Cancelar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Team Card (draft mode) ────────────────────────────────────────────────────
 
 function TeamCard({
@@ -169,14 +266,17 @@ function TeamCard({
   groupId,
   championshipId,
   onDeleted,
+  onLinked,
 }: {
   team: TeamData;
   isAdmin?: boolean;
   groupId?: string;
   championshipId?: string;
   onDeleted?: () => void;
+  onLinked?: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [linkTarget, setLinkTarget] = useState<TeamPlayer | null>(null);
 
   async function handleDelete() {
     if (!groupId || !championshipId || !onDeleted) return;
@@ -222,7 +322,18 @@ function TeamCard({
           {team.players.map(p => (
             <div key={p.id} className="flex items-center gap-1.5 text-sm text-muted-foreground">
               {p.isCaptain && <Star className="h-3 w-3 text-amber-500 fill-amber-500" />}
-              <span>{p.userName}</span>
+              {!p.userId && <Link2 className="h-3 w-3 text-muted-foreground/50" />}
+              <span className={!p.userId ? "italic text-muted-foreground/70" : ""}>{p.userName}</span>
+              {isAdmin && !p.userId && groupId && championshipId && onLinked && (
+                <button
+                  type="button"
+                  onClick={() => setLinkTarget(p)}
+                  className="ml-auto text-xs text-primary hover:underline flex items-center gap-0.5"
+                  title="Vincular a usuário"
+                >
+                  <UserPlus className="h-3 w-3" />
+                </button>
+              )}
             </div>
           ))}
           {team.players.length === 0 && (
@@ -230,6 +341,18 @@ function TeamCard({
           )}
         </div>
       </CardContent>
+      {groupId && championshipId && onLinked && linkTarget && !linkTarget.userId && (
+        <LinkPlayerDialog
+          open={!!linkTarget}
+          onClose={() => setLinkTarget(null)}
+          groupId={groupId}
+          championshipId={championshipId}
+          teamId={team.id}
+          playerId={linkTarget.id}
+          guestName={linkTarget.guestName ?? linkTarget.userName}
+          onLinked={() => { setLinkTarget(null); onLinked(); }}
+        />
+      )}
     </Card>
   );
 }
@@ -251,12 +374,14 @@ function AddTeamModal({
   const [color, setColor] = useState(TEAM_COLORS[0]);
   const [captainId, setCaptainId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [guestNames, setGuestNames] = useState<string[]>([]);
+  const [guestInput, setGuestInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   function reset() {
     setName(""); setColor(TEAM_COLORS[0]); setCaptainId(null);
-    setSelectedIds(new Set()); setError("");
+    setSelectedIds(new Set()); setGuestNames([]); setGuestInput(""); setError("");
   }
 
   function toggle(id: string) {
@@ -268,9 +393,16 @@ function AddTeamModal({
     });
   }
 
+  function addGuest() {
+    const n = guestInput.trim();
+    if (!n) return;
+    setGuestNames(prev => [...prev, n]);
+    setGuestInput("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedIds.size === 0) { setError("Selecione ao menos 1 jogador"); return; }
+    if (selectedIds.size === 0 && guestNames.length === 0) { setError("Adicione ao menos 1 jogador"); return; }
     setLoading(true); setError("");
     try {
       const res = await fetch(`/api/groups/${groupId}/championships/${championshipId}/teams`, {
@@ -279,6 +411,7 @@ function AddTeamModal({
         body: JSON.stringify({
           name: name.trim(), color,
           playerIds: Array.from(selectedIds),
+          guestNames,
           captainId: captainId ?? undefined,
         }),
       });
@@ -371,6 +504,35 @@ function AddTeamModal({
             )}
           </div>
 
+          {/* Jogadores avulsos (sem cadastro) */}
+          <div className="space-y-2">
+            <Label>Jogadores sem cadastro <span className="text-muted-foreground font-normal">(apelido)</span></Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Apelido do jogador..."
+                value={guestInput}
+                onChange={e => setGuestInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addGuest(); } }}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addGuest} disabled={!guestInput.trim()}>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {guestNames.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {guestNames.map((n, i) => (
+                  <span key={i} className="flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded-full">
+                    <Link2 className="h-3 w-3 text-muted-foreground/60" />
+                    {n}
+                    <button type="button" onClick={() => setGuestNames(prev => prev.filter((_, j) => j !== i))}>
+                      <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4 shrink-0" />{error}
@@ -392,7 +554,7 @@ function AddTeamModal({
 // ─── Match Result Modal ────────────────────────────────────────────────────────
 // Suporta 3 fluxos: iniciar partida / placar ao vivo / corrigir resultado
 
-type GoalEntry = { side: "home" | "away"; scorerId: string; assisterId: string; loading: boolean };
+type GoalEntry = { side: "home" | "away"; scorerId: string | null; assisterId: string | null; loading: boolean };
 
 function MatchResultModal({
   match,
@@ -432,7 +594,7 @@ function MatchResultModal({
 
   function getTeamPlayers(teamId: string | null) {
     if (!teamId) return [];
-    return teams.find(t => t.id === teamId)?.players ?? [];
+    return (teams.find(t => t.id === teamId)?.players ?? []).filter(p => !!p.userId);
   }
 
   async function handleRegisterGoal() {
@@ -1340,7 +1502,7 @@ function DraftPanel({
   const [singleDay, setSingleDay] = useState(!!championship.startsAt);
   const router = useRouter();
 
-  const assignedUserIds = new Set(teams.flatMap(t => t.players.map(p => p.userId)));
+  const assignedUserIds = new Set(teams.flatMap(t => t.players.map(p => p.userId).filter((id): id is string => !!id)));
 
   async function handleGenerateRounds() {
     setGenerating(true); setGenError("");
@@ -1407,6 +1569,7 @@ function DraftPanel({
               key={t.id} team={t}
               isAdmin={isAdmin} groupId={groupId} championshipId={championship.id}
               onDeleted={() => { router.refresh(); onTeamAdded(); }}
+              onLinked={() => { router.refresh(); onTeamAdded(); }}
             />
           ))}
         </div>

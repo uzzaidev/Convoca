@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-16
 
 ### feat
+- Adiciona jogadores avulsos ao campeonato "FUTLIPPE + CHURRASCO" criando três times com jogadores predefinidos
+  - Arquivos: `src/db/migrations/20260716_futlippe_players.sql`
+  - Confiança: alta
+
+## 2026-07-16
+
+### feat
 - Implementada funcionalidade para vincular jogadores avulsos (sem cadastro) a times em campeonatos. Arquivos: `route.ts`, `championship-detail.tsx`. Confiança: alta
 
 ## 2026-07-16

@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-16
+
+### feat
+- Implementada nova tela de loading para páginas de campeonato, evento e grupo, com skeletons animados para melhorar a experiência do usuário durante carregamentos pesados.
+  - Arquivos: `src/app/(app)/groups/[groupId]/championships/loading.tsx`, `src/app/(app)/groups/[groupId]/events/loading.tsx`, `src/app/(app)/groups/[groupId]/loading.tsx`, `src/app/(app)/groups/[groupId]/page.tsx`
+  - Confiança: alta
+
 ## 2026-07-15
 
 ### chore

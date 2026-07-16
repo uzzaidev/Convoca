@@ -4,6 +4,18 @@ const isMobileBuild = process.env.CAPACITOR_BUILD === "true";
 
 const nextConfig: NextConfig = {
   output: isMobileBuild ? "export" : undefined,
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/apple-app-site-association",
+        destination: "/api/well-known/aasa",
+      },
+      {
+        source: "/.well-known/assetlinks.json",
+        destination: "/api/well-known/assetlinks",
+      },
+    ];
+  },
   images: {
     unoptimized: isMobileBuild,
   },

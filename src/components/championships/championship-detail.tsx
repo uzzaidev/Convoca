@@ -392,11 +392,14 @@ function AddTeamModal({
 // ─── Match Result Modal ────────────────────────────────────────────────────────
 // Suporta 3 fluxos: iniciar partida / placar ao vivo / corrigir resultado
 
+type GoalEntry = { side: "home" | "away"; scorerId: string; assisterId: string; loading: boolean };
+
 function MatchResultModal({
   match,
   groupId,
   championshipId,
   isAdmin,
+  teams,
   onClose,
   onSaved,
 }: {
@@ -404,6 +407,7 @@ function MatchResultModal({
   groupId: string;
   championshipId: string;
   isAdmin: boolean;
+  teams: TeamData[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -413,6 +417,7 @@ function MatchResultModal({
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [goalEntry, setGoalEntry] = useState<GoalEntry | null>(null);
 
   useEffect(() => {
     if (match) {
@@ -421,8 +426,41 @@ function MatchResultModal({
       setError("");
       setEditMode(false);
       setConfirmCancel(false);
+      setGoalEntry(null);
     }
   }, [match]);
+
+  function getTeamPlayers(teamId: string | null) {
+    if (!teamId) return [];
+    return teams.find(t => t.id === teamId)?.players ?? [];
+  }
+
+  async function handleRegisterGoal() {
+    if (!match || !goalEntry || !goalEntry.scorerId) return;
+    setGoalEntry(g => g && ({ ...g, loading: true }));
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/matches/${match.id}/goals`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            teamSide: goalEntry.side,
+            scorerId: goalEntry.scorerId,
+            assisterId: goalEntry.assisterId || undefined,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao registrar gol"); setGoalEntry(g => g && ({ ...g, loading: false })); return; }
+      if (goalEntry.side === "home") setHomeScore(data.homeScore);
+      else setAwayScore(data.awayScore);
+      setGoalEntry(null);
+    } catch {
+      setError("Erro de conexão");
+      setGoalEntry(g => g && ({ ...g, loading: false }));
+    }
+  }
 
   async function patchMatch(body: Record<string, unknown>) {
     const res = await fetch(
@@ -568,6 +606,86 @@ function MatchResultModal({
               )}
             </div>
           </div>
+
+          {/* Registro de gol por jogador (apenas durante partida em andamento) */}
+          {isPlaying && isAdmin && !confirmCancel && (
+            <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+              {!goalEntry ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGoalEntry({ side: "home", scorerId: "", assisterId: "", loading: false })}
+                    className="flex-1 text-xs font-medium py-2 px-3 rounded-md border bg-background hover:bg-muted transition-colors flex items-center justify-center gap-1"
+                  >
+                    ⚽ Gol <span className="truncate max-w-[60px]">{match.homeTeamName}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGoalEntry({ side: "away", scorerId: "", assisterId: "", loading: false })}
+                    className="flex-1 text-xs font-medium py-2 px-3 rounded-md border bg-background hover:bg-muted transition-colors flex items-center justify-center gap-1"
+                  >
+                    ⚽ Gol <span className="truncate max-w-[60px]">{match.awayTeamName}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    ⚽ Gol — {goalEntry.side === "home" ? match.homeTeamName : match.awayTeamName}
+                  </p>
+                  {/* Scorer */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Quem marcou?</p>
+                    <div className="flex flex-wrap gap-1">
+                      {getTeamPlayers(goalEntry.side === "home" ? match.homeTeamId : match.awayTeamId).map(p => (
+                        <button
+                          key={p.userId}
+                          type="button"
+                          onClick={() => setGoalEntry(g => g && ({ ...g, scorerId: p.userId, assisterId: g.assisterId === p.userId ? "" : g.assisterId }))}
+                          className={`text-xs px-2 py-1 rounded-full border transition-colors ${goalEntry.scorerId === p.userId ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+                        >
+                          {p.userName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Assister */}
+                  {goalEntry.scorerId && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Assistência? <span className="italic">(opcional)</span></p>
+                      <div className="flex flex-wrap gap-1">
+                        {getTeamPlayers(goalEntry.side === "home" ? match.homeTeamId : match.awayTeamId)
+                          .filter(p => p.userId !== goalEntry.scorerId)
+                          .map(p => (
+                            <button
+                              key={p.userId}
+                              type="button"
+                              onClick={() => setGoalEntry(g => g && ({ ...g, assisterId: g.assisterId === p.userId ? "" : p.userId }))}
+                              className={`text-xs px-2 py-1 rounded-full border transition-colors ${goalEntry.assisterId === p.userId ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+                            >
+                              {p.userName}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    <button type="button" onClick={() => setGoalEntry(null)}
+                      className="text-xs px-3 py-1.5 rounded-md border bg-background hover:bg-muted transition-colors">
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!goalEntry.scorerId || goalEntry.loading}
+                      onClick={handleRegisterGoal}
+                      className="flex-1 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {goalEntry.loading ? "Registrando..." : "Confirmar Gol"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive">
@@ -1658,6 +1776,7 @@ export function ChampionshipDetail({
         groupId={groupId}
         championshipId={championship.id}
         isAdmin={isAdmin}
+        teams={teams}
         onClose={() => setSelectedMatch(null)}
         onSaved={refreshRounds}
       />

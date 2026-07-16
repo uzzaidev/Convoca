@@ -126,8 +126,11 @@ export const createChampionshipTeamSchema = z.object({
   name: z.string().min(1, "Nome obrigatório").max(100),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Cor inválida (hex #RRGGBB)").default("#6b7280"),
   seed: z.number().int().min(1).optional(),
-  playerIds: z.array(z.string().uuid()).min(1, "Time precisa de ao menos 1 jogador"),
+  playerIds: z.array(z.string().uuid()).default([]),
+  guestNames: z.array(z.string().min(1).max(100)).default([]),
   captainId: z.string().uuid().optional(),
+}).refine(d => d.playerIds.length + d.guestNames.length >= 1, {
+  message: "Time precisa de ao menos 1 jogador",
 });
 
 export const updateChampionshipMatchSchema = z.object({

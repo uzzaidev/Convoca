@@ -16,11 +16,11 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
-export function JoinGroupForm() {
+export function JoinGroupForm({ initialCode }: { initialCode?: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode?.toUpperCase() ?? "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

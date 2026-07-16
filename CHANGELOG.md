@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-16
 
 ### feat
+- Implementada exclusão de grupo por admin com confirmação de nome
+  - Arquivos: `src/app/api/groups/[groupId]/route.ts`, `src/components/groups/group-settings-tabs.tsx`
+  - Evidência: adição da rota DELETE com validação de permissão e lógica de soft delete; interface de confirmação na UI
+  - Confiança: alta
+
+## 2026-07-16
+
+### feat
 - Implementada nova tela de loading para páginas de campeonato, evento e grupo, com skeletons animados para melhorar a experiência do usuário durante carregamentos pesados.
   - Arquivos: `src/app/(app)/groups/[groupId]/championships/loading.tsx`, `src/app/(app)/groups/[groupId]/events/loading.tsx`, `src/app/(app)/groups/[groupId]/loading.tsx`, `src/app/(app)/groups/[groupId]/page.tsx`
   - Confiança: alta

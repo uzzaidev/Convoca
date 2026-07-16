@@ -5,6 +5,11 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-16
 
 ### feat
+- Implementada funcionalidade para vincular jogadores avulsos (sem cadastro) a times em campeonatos. Arquivos: `route.ts`, `championship-detail.tsx`. Confiança: alta
+
+## 2026-07-16
+
+### feat
 - Implementada funcionalidade para registrar gols individuais com artilheiro e assistência em partidas de campeonato
   - Arquivos: `src/app/api/groups/[groupId]/championships/[championshipId]/matches/[matchId]/goals/route.ts`, `src/components/championships/championship-detail.tsx`
   - Evidência: adição de endpoint POST para registro de gols e atualização do componente de detalhes do campeonato

@@ -193,7 +193,12 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
         </div>
 
         <div className="container mx-auto max-w-4xl px-4 py-8">
-          <GroupStatusNotice status={group.status} reason={group.statusReason} />
+          <GroupStatusNotice
+            status={group.status}
+            reason={group.statusReason}
+            groupId={group.id}
+            isAdmin={group.userRole === "admin"}
+          />
           {group.status === "pending_payment" && group.userRole === "admin" && (
             <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
               <p className="text-sm text-muted-foreground">

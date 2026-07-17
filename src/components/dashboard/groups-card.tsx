@@ -53,11 +53,16 @@ export function GroupsCard({ groups }: GroupsCardProps) {
       </CardHeader>
       <CardContent>
         {groups.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            <p className="mb-4">Você ainda não faz parte de nenhum grupo.</p>
-            <Button asChild variant="outline">
-              <Link href="/groups/new">Criar seu primeiro grupo</Link>
-            </Button>
+          <div className="py-8 text-center text-muted-foreground space-y-3">
+            <p>Você ainda não faz parte de nenhum grupo.</p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button asChild variant="default" size="sm">
+                <Link href="/groups/new">Criar grupo</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/groups/join">Entrar com código de convite</Link>
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-border">

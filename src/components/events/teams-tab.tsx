@@ -146,9 +146,13 @@ export function TeamsTab({
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum time sorteado ainda</p>
-            {isAdmin && (
-              <p className="text-sm mt-2">Use o botão acima para sortear os times</p>
+            {isAdmin ? (
+              <>
+                <p className="font-medium">Nenhum time sorteado ainda</p>
+                <p className="text-sm mt-2">Confirme os check-ins dos jogadores e use o botão acima para sortear.</p>
+              </>
+            ) : (
+              <p>Aguardando o admin sortear os times.</p>
             )}
           </CardContent>
         </Card>

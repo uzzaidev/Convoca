@@ -151,9 +151,10 @@ export function StatsTab({ eventId, teams }: StatsTabProps) {
   if (actions.length === 0) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
+        <CardContent className="py-12 text-center text-muted-foreground space-y-1">
           <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Nenhuma estatística registrada ainda</p>
+          <p className="font-medium">Nenhuma estatística ainda</p>
+          <p className="text-sm">Registre gols e assistências em Ao Vivo para ver as stats.</p>
         </CardContent>
       </Card>
     );

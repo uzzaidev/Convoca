@@ -39,15 +39,28 @@ registerTool({
       description?: string;
     }
   ) => {
-    // Verificar que o membro pertence ao grupo
     const memberCheck = await sql<{ user_id: string }[]>`
       SELECT user_id FROM group_members
       WHERE group_id = ${ctx.groupId} AND user_id = ${args.user_id}
     `;
     if (!memberCheck[0]) throw new Error("Membro não encontrado no grupo");
 
+    // Chave determinística: previne duplicatas quando o agente resubmete
+    // a mesma cobrança (double-click, retry de rede) dentro da mesma sessão.
+    // NULLs em PostgreSQL não conflitam no UNIQUE index parcial.
+    const idempotencyKey = [
+      ctx.userId,
+      ctx.groupId,
+      args.user_id,
+      args.type,
+      args.amount_cents,
+      args.due_date,
+      args.event_id ?? "",
+    ].join(":");
+
+    // ON CONFLICT retorna a linha existente sem inserir novamente
     const rows = await sql`
-      INSERT INTO charges (group_id, user_id, event_id, type, amount_cents, due_date, status, description)
+      INSERT INTO charges (group_id, user_id, event_id, type, amount_cents, due_date, status, description, idempotency_key)
       VALUES (
         ${ctx.groupId},
         ${args.user_id},
@@ -56,8 +69,11 @@ registerTool({
         ${args.amount_cents},
         ${args.due_date},
         'pending',
-        ${args.description ?? null}
+        ${args.description ?? null},
+        ${idempotencyKey}
       )
+      ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL
+      DO UPDATE SET description = charges.description
       RETURNING id, type, amount_cents, due_date, status
     `;
     return rows[0];

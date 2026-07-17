@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-17
 
 ### feat
+- Adicionou textos e botões explicativos em várias telas vazias para melhorar a orientação do usuário, incluindo componentes como `groups-card.tsx`, `upcoming-events-card.tsx`, `match-timeline.tsx`, `stats-tab.tsx`, `teams-tab.tsx`, `rankings-card.tsx`, `group/upcoming-events-card.tsx` e `invites-manager.tsx`.
+  - Arquivos: `src/components/dashboard/groups-card.tsx`, `src/components/dashboard/upcoming-events-card.tsx`, `src/components/events/match-timeline.tsx`, `src/components/events/stats-tab.tsx`, `src/components/events/teams-tab.tsx`, `src/components/group/rankings-card.tsx`, `src/components/group/upcoming-events-card.tsx`, `src/components/groups/invites-manager.tsx`
+  - Confiança: alta
+
+## 2026-07-17
+
+### feat
 - Corrigidos contratos de tracking e adicionados novos funis de analytics em várias páginas e componentes, incluindo cadastro, convite, chat, entrada do agente e formulário de RSVP.
   - Arquivos: `src/lib/mobile/analytics.ts`, `src/app/auth/signup/page.tsx`, `src/app/invite/[code]/invite-tracker.tsx`, `src/app/invite/[code]/page.tsx`, `src/components/agent/ChatInterface.tsx`, `src/components/agent/FloatingAgentBubble.tsx`, `src/components/events/event-rsvp-form.tsx`, `src/components/groups/join-group-form.tsx`
   - Confiança: alta

@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, FormEvent, useEffect, Suspense } from "react";
-import { trackSignUpStarted, trackSignUpCompleted } from "@/lib/mobile/analytics";
+import { useState, FormEvent, useEffect, useRef, Suspense } from "react";
+import {
+  trackSignUpPageViewed,
+  trackSignUpFormStarted,
+  trackSignUpSubmitted,
+  trackSignUpCompleted,
+  trackSignUpFailed,
+} from "@/lib/mobile/analytics";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,10 +28,17 @@ function SignUpContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const formStartedRef = useRef(false);
 
   useEffect(() => {
-    void trackSignUpStarted();
+    void trackSignUpPageViewed();
   }, []);
+
+  function trackFormStart() {
+    if (formStartedRef.current) return;
+    formStartedRef.current = true;
+    void trackSignUpFormStarted();
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,6 +55,7 @@ function SignUpContent() {
     }
 
     setIsLoading(true);
+    void trackSignUpSubmitted();
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -53,7 +67,9 @@ function SignUpContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Erro ao criar conta");
+        const reason = data.error || "Erro ao criar conta";
+        setError(reason);
+        void trackSignUpFailed({ reason });
         setIsLoading(false);
         return;
       }
@@ -115,7 +131,7 @@ function SignUpContent() {
                   type="text"
                   placeholder="Seu nome completo"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { trackFormStart(); setName(e.target.value); }}
                   required
                   disabled={isLoading}
                   className="border-gray-300 focus:border-green-600 focus:ring-green-600"

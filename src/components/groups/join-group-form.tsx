@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { trackInviteJoinCompleted } from "@/lib/mobile/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,12 +42,16 @@ export function JoinGroupForm({ initialCode }: { initialCode?: string }) {
         throw new Error(data.error || "Erro ao entrar no grupo");
       }
 
+      void trackInviteJoinCompleted({
+        hadCodePrefilled: !!initialCode,
+        source: "join_form",
+      });
+
       toast({
         title: "Você entrou no grupo!",
         description: `Bem-vindo ao grupo ${data.group.name}`,
       });
 
-      // Redirect to the group page
       router.push(`/groups/${data.group.id}`);
     } catch (error) {
       toast({

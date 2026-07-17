@@ -11,6 +11,11 @@ import {
   useAgentChatStore,
   selectGroupChat,
 } from "@/lib/stores/agent-chat-store";
+import {
+  trackAgentMessageSent,
+  trackAgentToolProposed,
+  trackAgentToolConfirmed,
+} from "@/lib/mobile/analytics";
 
 export type { MessageRole, SseEventType, Message, ConfirmationPayload } from "@/lib/stores/agent-chat-store";
 
@@ -21,7 +26,7 @@ interface Props {
   initialConversationId?: string;
 }
 
-export function ChatInterface({ groupId }: Props) {
+export function ChatInterface({ groupId, role }: Props) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -40,11 +45,20 @@ export function ChatInterface({ groupId }: Props) {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  const prevConfirmationRef = useRef(confirmation);
+  useEffect(() => {
+    if (confirmation && !prevConfirmationRef.current) {
+      void trackAgentToolProposed({ toolName: confirmation.tool, groupRole: role });
+    }
+    prevConfirmationRef.current = confirmation;
+  }, [confirmation, role]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
     setInput("");
+    void trackAgentMessageSent({ groupRole: role });
     void sendMessage(groupId, text);
   };
 
@@ -54,6 +68,7 @@ export function ChatInterface({ groupId }: Props) {
       const text = input.trim();
       if (!text) return;
       setInput("");
+      void trackAgentMessageSent({ groupRole: role });
       void sendMessage(groupId, text);
     }
   };
@@ -91,7 +106,10 @@ export function ChatInterface({ groupId }: Props) {
           <ConfirmationCard
             tool={confirmation.tool}
             arguments={confirmation.arguments}
-            onConfirm={() => confirmStore(groupId)}
+            onConfirm={() => {
+              void trackAgentToolConfirmed({ toolName: confirmation.tool, groupRole: role });
+              confirmStore(groupId);
+            }}
             onCancel={() => cancelStore(groupId)}
           />
         )}

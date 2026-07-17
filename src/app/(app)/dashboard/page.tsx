@@ -10,6 +10,7 @@ import { PendingPaymentsCard } from "@/components/dashboard/pending-payments-car
 import { PitchBackground } from "@/components/ui/pitch-background";
 import { Plus, Users, MapPin, Clock, ArrowRight, Calendar } from "lucide-react";
 import { type GroupStatus } from "@/lib/group-status";
+import { DashboardTour } from "@/components/tour/DashboardTour";
 
 type Group = {
   id: string;
@@ -144,13 +145,13 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" data-tour="entrar-grupo">
               <Link href="/groups/join" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Entrar em Grupo
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild data-tour="criar-grupo">
               <Link href="/groups/new" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Criar Grupo
@@ -307,6 +308,8 @@ export default async function DashboardPage() {
           <UpcomingEventsCard events={upcomingEvents} />
         </div>
       </div>
+
+      <DashboardTour hasGroups={groups.length > 0} />
     </div>
   );
 }

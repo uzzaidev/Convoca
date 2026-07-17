@@ -11,6 +11,7 @@ import { EventTabs } from "@/components/events/event-tabs";
 import { AdminPlayerManager } from "@/components/events/admin-player-manager";
 import Link from "next/link";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
+import { EventTour } from "@/components/tour/EventTour";
 
 type RouteParams = {
   params: Promise<{ eventId: string }>;
@@ -203,7 +204,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
         </div>
 
         {/* Cabeçalho do evento */}
-        <div className="mb-6">
+        <div className="mb-6" data-tour="event-info">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Calendar className="h-4 w-4" />
             {formatDate(event.starts_at)}
@@ -265,6 +266,7 @@ export default async function EventRsvpPage({ params }: RouteParams) {
         </div>
 
         {/* Sistema de Abas */}
+        <div data-tour="event-tabs">
         <EventTabs
           eventId={eventId}
           groupId={event.group_id}
@@ -280,7 +282,10 @@ export default async function EventRsvpPage({ params }: RouteParams) {
           currentUserId={user.id}
           appMode={appMode}
         />
+        </div>
       </div>
+
+      <EventTour isAdmin={isAdmin} />
     </div>
   );
 }

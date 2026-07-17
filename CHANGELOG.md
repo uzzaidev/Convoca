@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-17
 
 ### fix
+- Corrigida violação das Rules of Hooks ao usar hooks condicionalmente em `FloatingAgentBubble`. Agora o hook `useEffect` é chamado apenas em renderizações válidas, evitando erro de hooks.
+  - Arquivos: `src/components/agent/FloatingAgentBubble.tsx`
+  - Evidência: uso condicional do hook `useEffect` foi removido, garantindo sua chamada incondicional
+  - Confiança: alta
+
+## 2026-07-17
+
+### fix
 - Movido o import do CSS do driver.js para o arquivo `globals.css` para evitar erro no React.
   - Arquivos: `src/app/globals.css`, `src/components/tour/GroupTour.tsx`
   - Evidência: alteração na importação do CSS, removendo do componente e adicionando ao global

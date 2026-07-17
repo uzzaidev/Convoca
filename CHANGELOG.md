@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-17
 
 ### feat
+- Implementou um tour de onboarding para a página de grupo usando driver.js, com passos específicos para administradores e membros.
+  - Arquivos: `src/components/tour/GroupTour.tsx`, `src/components/tour/group-tour-theme.css`, `src/app/(app)/groups/[groupId]/page.tsx`
+  - Evidência: adição do componente GroupTour, configuração dos passos e integração na página
+  - Confiança: alta
+
+## 2026-07-17
+
+### feat
 - Adicionou textos e botões explicativos em várias telas vazias para melhorar a orientação do usuário, incluindo componentes como `groups-card.tsx`, `upcoming-events-card.tsx`, `match-timeline.tsx`, `stats-tab.tsx`, `teams-tab.tsx`, `rankings-card.tsx`, `group/upcoming-events-card.tsx` e `invites-manager.tsx`.
   - Arquivos: `src/components/dashboard/groups-card.tsx`, `src/components/dashboard/upcoming-events-card.tsx`, `src/components/events/match-timeline.tsx`, `src/components/events/stats-tab.tsx`, `src/components/events/teams-tab.tsx`, `src/components/group/rankings-card.tsx`, `src/components/group/upcoming-events-card.tsx`, `src/components/groups/invites-manager.tsx`
   - Confiança: alta

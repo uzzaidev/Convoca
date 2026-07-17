@@ -31,16 +31,17 @@ export function FloatingAgentBubble({ groups }: Props) {
     [groupId, groups]
   );
 
-  if (!groupId || !group || isChatPage) return null;
-
-  const role: "admin" | "member" = group.role === "admin" ? "admin" : "member";
+  const role: "admin" | "member" = group?.role === "admin" ? "admin" : "member";
 
   const trackedRef = useRef(false);
   useEffect(() => {
+    if (!groupId || !group || isChatPage) return;
     if (trackedRef.current) return;
     trackedRef.current = true;
     void trackAgentEntrypointViewed({ groupRole: role });
-  }, [role]);
+  }, [groupId, group, isChatPage, role]);
+
+  if (!groupId || !group || isChatPage) return null;
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);

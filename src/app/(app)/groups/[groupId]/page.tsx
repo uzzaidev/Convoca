@@ -12,6 +12,7 @@ import { Settings, Plus, ChevronLeft, DollarSign, MapPin, Clock, ArrowRight, Tro
 import { getGroupAccessContext } from "@/lib/group-access";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
+import { GroupTour } from "@/components/tour/GroupTour";
 import { PaymentButton } from "@/components/groups/payment-button";
 import { PitchBackground } from "@/components/ui/pitch-background";
 import {
@@ -653,7 +654,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
             </Button>
             {isAdmin && (
               <>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" data-tour="configuracoes">
                   <Link href={`/groups/${groupId}/settings`}>
                     <Settings className="h-4 w-4 mr-2" />
                     Configurações
@@ -665,7 +666,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
                     Pagamentos
                   </Link>
                 </Button>
-                <Button asChild size="sm">
+                <Button asChild size="sm" data-tour="criar-evento">
                   <Link href={`/groups/${groupId}/events/new`}>
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Evento
@@ -739,7 +740,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
         )}
 
         {/* Próximas Partidas */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour="proximas-partidas">
           <UpcomingEventsCard
             events={upcomingEvents}
             groupId={groupId}
@@ -755,7 +756,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
             </div>
 
             {/* Rankings com Tabs */}
-            <div className="mb-8">
+            <div className="mb-8" data-tour="rankings">
               <RankingsCard
                 topScorers={stats.topScorers}
                 topAssisters={stats.topAssisters}
@@ -785,6 +786,8 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           <RecentMatchesCard matches={stats.recentMatches} groupId={groupId} />
         </div>
       </div>
+
+      <GroupTour isAdmin={isAdmin} />
     </div>
   );
 }

@@ -2,6 +2,44 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-17
+
+### feat
+- Implementada coluna de `idempotency_key` na tabela `charges` para prevenir duplicatas na criação de cobranças pelo agente.
+  - Arquivos: `src/db/migrations/20260717_charges_idempotency_key.sql`, `src/lib/agent/tools/write-finance.ts`
+  - Evidência: adição de coluna e índice único com condição de não nulos
+  - Confiança: alta
+
+### fix
+- Preservado código de convite no fluxo de login e cadastro na página de signin/signup.
+  - Arquivos: `src/app/auth/signin/page.tsx`, `src/app/auth/signup/page.tsx`
+  - Evidência: ajustes no uso de `callbackUrl` e redirecionamentos
+  - Confiança: alta
+
+### feat
+- Adicionado componente `GroupStatusNotice` com mensagens específicas para grupos em análise, incluindo ações para administradores.
+  - Arquivos: `src/components/groups/group-status-notice.tsx`
+  - Evidência: implementação de condição para status "pending" com conteúdo diferenciado
+  - Confiança: alta
+
+### fix
+- Atualizado componente de página de convite para exibir links de login ou cadastro com callback para a URL de entrada.
+  - Arquivos: `src/app/invite/[code]/page.tsx`
+  - Evidência: alteração na estrutura de links de navegação
+  - Confiança: alta
+
+### refactor
+- Modificado o componente de SignInPage para usar `Suspense` e separar o conteúdo de renderização.
+  - Arquivos: `src/app/auth/signin/page.tsx`
+  - Evidência: introdução de componente `SignInContent` envolvido por `Suspense`
+  - Confiança: alta
+
+### refactor
+- Modificado o componente de SignUpPage para usar `Suspense` e separar o conteúdo de renderização.
+  - Arquivos: `src/app/auth/signup/page.tsx`
+  - Evidência: introdução de componente `SignUpContent` envolvido por `Suspense`
+  - Confiança: alta
+
 ## 2026-07-16
 
 ### feat

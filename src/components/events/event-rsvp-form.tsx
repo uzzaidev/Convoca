@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Check, X, Loader2, Goal, Shield, Zap, TrendingUp } from "lucide-react";
-import { trackMatchConfirmed } from "@/lib/mobile/analytics";
+import { trackEventRsvpUpdated } from "@/lib/mobile/analytics";
 
 type Position = "gk" | "defender" | "midfielder" | "forward";
 
@@ -98,9 +98,11 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
             : "Sua confirmação foi removida",
       });
 
-      if (status === "yes") {
-        void trackMatchConfirmed({ isGoalkeeper: preferredPosition === "gk" });
-      }
+      void trackEventRsvpUpdated({
+        rsvpStatus: status as "yes" | "no" | "waitlist",
+        isGoalkeeper: preferredPosition === "gk",
+        source: "event_page",
+      });
 
       router.refresh();
     } catch (error) {

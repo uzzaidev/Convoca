@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { InviteTracker } from "./invite-tracker";
 
 const IOS_URL = "https://apps.apple.com/app/id6783026571";
 const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.uzzai.convoca";
@@ -83,6 +84,8 @@ export default async function InvitePage({ params }: Props) {
         >
           C
         </div>
+
+        <InviteTracker codeLength={code.length} />
 
         {/* Eyebrow */}
         <span className="inline-flex items-center rounded-full bg-pitch-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-eyebrow text-pitch mb-4">

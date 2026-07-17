@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Bot, X } from "lucide-react";
 import { ChatInterface } from "./ChatInterface";
 import type { SidebarGroup } from "@/components/layout/AppSidebar";
+import { trackAgentEntrypointViewed, trackAgentOpened } from "@/lib/mobile/analytics";
 
 interface Props {
   groups: SidebarGroup[];
@@ -34,8 +35,20 @@ export function FloatingAgentBubble({ groups }: Props) {
 
   const role: "admin" | "member" = group.role === "admin" ? "admin" : "member";
 
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (trackedRef.current) return;
+    trackedRef.current = true;
+    void trackAgentEntrypointViewed({ groupRole: role });
+  }, [role]);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (nextOpen) void trackAgentOpened({ groupRole: role });
+  }
+
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <DialogPrimitive.Trigger asChild>
         <button
           type="button"

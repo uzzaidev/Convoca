@@ -5,6 +5,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-17
 
 ### feat
+- Corrigidos contratos de tracking e adicionados novos funis de analytics em várias páginas e componentes, incluindo cadastro, convite, chat, entrada do agente e formulário de RSVP.
+  - Arquivos: `src/lib/mobile/analytics.ts`, `src/app/auth/signup/page.tsx`, `src/app/invite/[code]/invite-tracker.tsx`, `src/app/invite/[code]/page.tsx`, `src/components/agent/ChatInterface.tsx`, `src/components/agent/FloatingAgentBubble.tsx`, `src/components/events/event-rsvp-form.tsx`, `src/components/groups/join-group-form.tsx`
+  - Confiança: alta
+
+## 2026-07-17
+
+### feat
 - Implementada coluna de `idempotency_key` na tabela `charges` para prevenir duplicatas na criação de cobranças pelo agente.
   - Arquivos: `src/db/migrations/20260717_charges_idempotency_key.sql`, `src/lib/agent/tools/write-finance.ts`
   - Evidência: adição de coluna e índice único com condição de não nulos

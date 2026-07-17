@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, Suspense } from "react";
 import { trackSignUpStarted, trackSignUpCompleted } from "@/lib/mobile/analytics";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,24 +10,27 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus } from "lucide-react";
 
-export default function SignUpPage() {
+function SignUpContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const utmSource = searchParams.get("utm_source") ?? undefined;
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-
-  useEffect(() => {
-    void trackSignUpStarted();
-  }, []);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    void trackSignUpStarted();
+  }, []);
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    // Validações
     if (password !== confirmPassword) {
       setError("As senhas não coincidem");
       return;
@@ -43,14 +46,8 @@ export default function SignUpPage() {
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email: email.toLowerCase(),
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email: email.toLowerCase(), password }),
       });
 
       const data = await response.json();
@@ -61,18 +58,23 @@ export default function SignUpPage() {
         return;
       }
 
-      // Captura utm_source da URL para atribuição de aquisição
-      const utmSource = new URLSearchParams(window.location.search).get("utm_source") ?? undefined;
       void trackSignUpCompleted({ acquisitionSource: utmSource });
 
-      // Redirecionar para login
-      router.push("/auth/signin?message=Conta criada com sucesso! Faça login para continuar.");
+      const params = new URLSearchParams({
+        message: "Conta criada com sucesso! Faça login para continuar.",
+      });
+      if (callbackUrl) params.set("callbackUrl", callbackUrl);
+      router.push(`/auth/signin?${params.toString()}`);
     } catch (error) {
       console.error("Signup error:", error);
       setError("Erro ao criar conta. Tente novamente.");
       setIsLoading(false);
     }
   }
+
+  const signinHref = callbackUrl
+    ? `/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/auth/signin";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy via-navy-light to-green-dark relative overflow-hidden">
@@ -194,7 +196,7 @@ export default function SignUpPage() {
 
               <div className="mt-4">
                 <Button asChild variant="outline" className="w-full border-navy text-navy hover:bg-navy hover:text-white">
-                  <Link href="/auth/signin">
+                  <Link href={signinHref}>
                     Fazer login
                   </Link>
                 </Button>
@@ -213,5 +215,13 @@ export default function SignUpPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <SignUpContent />
+    </Suspense>
   );
 }

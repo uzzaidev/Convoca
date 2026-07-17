@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-17
 
+### feat
+- Adicionados tours de onboarding no dashboard e na página de evento para usuários com ou sem grupos.  
+  - Arquivos: `src/components/tour/DashboardTour.tsx`, `src/components/tour/EventTour.tsx`  
+  - Confiança: alta
+
+## 2026-07-17
+
 ### fix
 - Corrigida violação das Rules of Hooks ao usar hooks condicionalmente em `FloatingAgentBubble`. Agora o hook `useEffect` é chamado apenas em renderizações válidas, evitando erro de hooks.
   - Arquivos: `src/components/agent/FloatingAgentBubble.tsx`

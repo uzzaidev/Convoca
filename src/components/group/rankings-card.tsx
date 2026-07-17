@@ -519,7 +519,7 @@ export function RankingsCard({
     if (generalRanking.length === 0) {
       return (
         <p className="text-center text-muted-foreground py-8">
-          Ainda não há dados suficientes para o ranking geral
+          O ranking aparece após a primeira pelada finalizada com ações registradas.
         </p>
       );
     }
@@ -720,7 +720,7 @@ export function RankingsCard({
     if (playerFrequency.length === 0) {
       return (
         <p className="text-center text-muted-foreground py-8">
-          Nenhum dado de frequência disponível
+          Frequência aparece após a primeira pelada finalizada.
         </p>
       );
     }
@@ -963,12 +963,12 @@ export function RankingsCard({
                     </DialogTitle>
                     <DialogDescription>Top 10 goleadores do grupo</DialogDescription>
                   </DialogHeader>
-                  {renderRankingList(scorersData, "Nenhum gol registrado ainda", true)}
+                  {renderRankingList(scorersData, "Registre gols em Ao Vivo para ver artilheiros.", true)}
                 </DialogContent>
               </Dialog>
               </div>
             </div>
-            {renderRankingList(scorersData, "Nenhum gol registrado ainda")}
+            {renderRankingList(scorersData, "Registre gols em Ao Vivo para ver artilheiros.")}
           </TabsContent>
 
           <TabsContent value="garcons" className="space-y-4 mt-0">
@@ -1005,12 +1005,12 @@ export function RankingsCard({
                     </DialogTitle>
                     <DialogDescription>Top 10 assistências do grupo</DialogDescription>
                   </DialogHeader>
-                  {renderRankingList(assistersData, "Nenhuma assistência registrada ainda", true)}
+                  {renderRankingList(assistersData, "Registre assistências em Ao Vivo para ver o ranking.", true)}
                 </DialogContent>
               </Dialog>
               </div>
             </div>
-            {renderRankingList(assistersData, "Nenhuma assistência registrada ainda")}
+            {renderRankingList(assistersData, "Registre assistências em Ao Vivo para ver o ranking.")}
           </TabsContent>
 
           <TabsContent value="goleiros" className="space-y-4 mt-0">
@@ -1047,12 +1047,12 @@ export function RankingsCard({
                     </DialogTitle>
                     <DialogDescription>Top 10 menos vazados do grupo</DialogDescription>
                   </DialogHeader>
-                  {renderRankingList(goalkeepersData, "Nenhum goleiro com jogos registrados ainda", true)}
+                  {renderRankingList(goalkeepersData, "Cadastre goleiros no grupo e registre partidas em Ao Vivo.", true)}
                 </DialogContent>
               </Dialog>
               </div>
             </div>
-            {renderRankingList(goalkeepersData, "Nenhum goleiro com jogos registrados ainda")}
+            {renderRankingList(goalkeepersData, "Cadastre goleiros no grupo e registre partidas em Ao Vivo.")}
           </TabsContent>
 
           <TabsContent value="frequencia" className="space-y-4 mt-0">

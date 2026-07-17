@@ -34,8 +34,9 @@ export function UpcomingEventsCard({ events }: UpcomingEventsCardProps) {
       </CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Nenhuma pelada agendada no momento.</p>
+          <div className="text-center py-8 text-muted-foreground space-y-1">
+            <p>Nenhuma pelada agendada.</p>
+            <p className="text-sm">Entre em um grupo e peça para o admin criar a próxima partida.</p>
           </div>
         ) : (
           <div className="space-y-3">

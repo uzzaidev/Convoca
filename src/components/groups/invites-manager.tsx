@@ -250,8 +250,9 @@ export function InvitesManager({ groupId, groupName, initialInvites }: InvitesMa
       </CardHeader>
       <CardContent>
         {invites.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground space-y-2">
             <p>Nenhum convite criado ainda.</p>
+            <p className="text-sm">Crie um convite e compartilhe o link com a galera pelo WhatsApp.</p>
           </div>
         ) : (
           <Table>

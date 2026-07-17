@@ -72,9 +72,21 @@ export function UpcomingEventsCard({ events, groupId, userRole }: UpcomingEvents
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhuma partida agendada
-          </p>
+          <div className="text-center py-6 text-muted-foreground space-y-3">
+            <p className="text-sm">
+              {isAdmin
+                ? "Nenhuma pelada agendada. Crie a primeira para começar."
+                : "Nenhuma pelada agendada. Aguardando o admin criar a próxima partida."}
+            </p>
+            {isAdmin && groupId && (
+              <Button asChild size="sm" variant="default">
+                <Link href={`/groups/${groupId}/events/new`}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Criar pelada
+                </Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );

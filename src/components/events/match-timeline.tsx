@@ -147,9 +147,12 @@ export function MatchTimeline({
           <CardTitle>Timeline do Jogo</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground space-y-1">
             <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma ação registrada ainda</p>
+            <p className="font-medium">Nenhuma ação registrada</p>
+            {isAdmin && (
+              <p className="text-sm">Use o Painel de Ações para registrar gols, assistências e cartões.</p>
+            )}
           </div>
         </CardContent>
       </Card>

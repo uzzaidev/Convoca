@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-17
 
+### fix
+- Movido o import do CSS do driver.js para o arquivo `globals.css` para evitar erro no React.
+  - Arquivos: `src/app/globals.css`, `src/components/tour/GroupTour.tsx`
+  - Evidência: alteração na importação do CSS, removendo do componente e adicionando ao global
+  - Confiança: alta
+
+## 2026-07-17
+
 ### feat
 - Implementou um tour de onboarding para a página de grupo usando driver.js, com passos específicos para administradores e membros.
   - Arquivos: `src/components/tour/GroupTour.tsx`, `src/components/tour/group-tour-theme.css`, `src/app/(app)/groups/[groupId]/page.tsx`

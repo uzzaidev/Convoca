@@ -121,18 +121,20 @@ export default async function InvitePage({ params }: Props) {
         </div>
 
         {/* Web fallback */}
-        <p className="text-sm text-muted-foreground mb-2">Já tem uma conta?</p>
-        <Link
-          href={`/auth/signin`}
-          className="text-sm font-semibold text-pitch hover:underline"
-        >
-          Entrar pelo navegador →
-        </Link>
-
-        <p className="mt-2 text-xs text-muted-foreground">
-          Após entrar, acesse Configurações → Entrar em Grupo e use o código{" "}
-          <span className="font-mono font-semibold">{code}</span>
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <Link
+            href={`/auth/signin?callbackUrl=${encodeURIComponent(`/groups/join?code=${code}`)}`}
+            className="text-sm font-semibold text-pitch hover:underline"
+          >
+            Já tenho conta → Entrar
+          </Link>
+          <Link
+            href={`/auth/signup?callbackUrl=${encodeURIComponent(`/groups/join?code=${code}`)}`}
+            className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Não tenho conta → Criar conta grátis
+          </Link>
+        </div>
       </div>
     </div>
   );

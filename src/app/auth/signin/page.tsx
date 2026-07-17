@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { PitchBackground } from "@/components/ui/pitch-background";
 
-export default function SignInPage() {
+const SAFE_PREFIXES = ["/groups/", "/events/", "/dashboard", "/profile", "/settings"];
+
+function isSafeCallback(url: string | null): url is string {
+  if (!url || !url.startsWith("/") || url.startsWith("//")) return false;
+  return SAFE_PREFIXES.some((p) => url.startsWith(p));
+}
+
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const message = searchParams.get("message");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -34,7 +45,7 @@ export default function SignInPage() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(isSafeCallback(callbackUrl) ? callbackUrl : "/dashboard");
       router.refresh();
     } catch (err) {
       console.error("Sign-in error:", err);
@@ -42,6 +53,10 @@ export default function SignInPage() {
       setIsLoading(false);
     }
   }
+
+  const signupHref = callbackUrl
+    ? `/auth/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/auth/signup";
 
   return (
     <div className="min-h-screen bg-background grid lg:grid-cols-[1.1fr_1fr]">
@@ -89,7 +104,7 @@ export default function SignInPage() {
             </p>
           </div>
 
-          {/* Value props (real features instead of fake stats) */}
+          {/* Value props */}
           <div className="flex flex-wrap gap-6">
             {[
               { title: "Times", subtitle: "sorteio equilibrado" },
@@ -112,7 +127,7 @@ export default function SignInPage() {
       {/* ───────── Right: form ───────── */}
       <div className="flex flex-col justify-center px-6 py-12 sm:px-12">
         <div className="mx-auto w-full max-w-md">
-          {/* mobile logo (only shows when hero is hidden) */}
+          {/* mobile logo */}
           <div className="mb-6 flex items-center gap-3 lg:hidden">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-md font-display text-xl"
@@ -137,6 +152,12 @@ export default function SignInPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Acesse sua conta pra confirmar a próxima pelada.
           </p>
+
+          {message && (
+            <div className="mt-4 rounded-md border border-pitch/30 bg-pitch/10 px-3 py-2 text-sm text-pitch">
+              {message}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
@@ -219,7 +240,7 @@ export default function SignInPage() {
           <div className="mt-8 flex items-center justify-center gap-2">
             <p className="text-sm text-muted-foreground">Primeira vez por aqui?</p>
             <Link
-              href="/auth/signup"
+              href={signupHref}
               className="text-sm font-semibold text-pitch hover:underline"
             >
               Criar minha conta
@@ -237,5 +258,13 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <SignInContent />
+    </Suspense>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import "driver.js/dist/driver.css";
-import "./group-tour-theme.css";
 
 const TOUR_KEY = "convoca_group_tour_v1";
 

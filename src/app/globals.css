@@ -4,6 +4,8 @@
    Canonical handoff from designer + Convoca custom extras
    ============================================================ */
 
+@import "driver.js/dist/driver.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -272,3 +274,47 @@
   .animate-fade-in { animation: fadeIn .2s ease-in-out; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 }
+
+/* ── driver.js tour theme (Convoca) ───────────────────────── */
+.convoca-tour-popover.driver-popover {
+  --driver-popover-bg: hsl(var(--card));
+  --driver-popover-text-color: hsl(var(--card-foreground));
+  --driver-popover-border-radius: 12px;
+  --driver-popover-arrow-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  max-width: min(360px, calc(100vw - 32px));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.convoca-tour-popover .driver-popover-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: hsl(var(--card-foreground));
+}
+.convoca-tour-popover .driver-popover-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+  margin-top: 6px;
+}
+.convoca-tour-popover .driver-popover-footer button {
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border: 1px solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+}
+.convoca-tour-popover .driver-popover-next-btn {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+.convoca-tour-popover .driver-popover-next-btn:hover { opacity: 0.9; }
+.convoca-tour-popover .driver-popover-progress-text {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+#driver-page-overlay { background: rgba(0, 0, 0, 0.65) !important; }

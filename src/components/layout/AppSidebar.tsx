@@ -39,6 +39,7 @@ import {
   Trophy,
   ClipboardList,
   Home,
+  HelpCircle,
 } from "lucide-react";
 
 export type SidebarGroup = {
@@ -449,6 +450,14 @@ export function AppSidebar({
           href="/settings"
           icon={<Settings2 className="h-4 w-4" />}
           label="Configurações"
+          isCollapsed={isCollapsed}
+          onClick={onLinkClick}
+          exact
+        />
+        <NavItem
+          href="/ajuda"
+          icon={<HelpCircle className="h-4 w-4" />}
+          label="Ajuda"
           isCollapsed={isCollapsed}
           onClick={onLinkClick}
           exact

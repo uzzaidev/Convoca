@@ -2,6 +2,11 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-18
+
+### feat
+- Implementada página de Central de Ajuda com documentação completa, incluindo seções de perguntas frequentes e contato. Arquivos: `src/app/(app)/ajuda/page.tsx`. Confiança: alta
+
 ## 2026-07-17
 
 ### feat

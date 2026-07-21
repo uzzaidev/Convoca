@@ -2,7 +2,9 @@
 
 ## Como abrir
 
-1. Extraia o ZIP.
+No Preview Vercel da branch `feat/ui-rebrand-uzz`: abra `/preview-uzz/`.
+
+1. Extraia o ZIP (local).
 2. Abra `index.html` no navegador.
 3. Clique no ícone ↗ de qualquer golden para abrir a tela em tamanho real.
 4. Para evitar restrições de arquivos locais, também pode usar a extensão **Live Server** no VS Code.

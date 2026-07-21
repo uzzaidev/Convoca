@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-21
+
+### feat
+- Adicionado banner de cookies e cards de download App Store / Play Store na landing page
+  - Arquivos: `.gitignore`
+  - Confiança: alta
+
 ## 2026-07-18
 
 ### feat

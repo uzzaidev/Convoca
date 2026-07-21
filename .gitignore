@@ -83,3 +83,4 @@ docs/presentation/
 
 # Apple private keys
 *.p8
+.env*

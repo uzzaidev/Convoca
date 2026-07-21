@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { CookieConsentBanner } from "@/components/legal/cookie-consent";
 
 export const metadata: Metadata = {
   title: "Convoca - Gestão de Peladas",
@@ -54,7 +53,6 @@ export default function RootLayout({
       <body className="font-body min-h-screen overflow-x-hidden" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
         <Toaster />
-        <CookieConsentBanner />
       </body>
     </html>
   );

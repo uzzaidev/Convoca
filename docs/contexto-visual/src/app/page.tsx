@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PitchBackground } from "@/components/ui/pitch-background";
 import { Jersey } from "@/components/ui/jersey";
-import { StoreDownloadCards } from "@/components/marketing/store-download-cards";
 import {
   Users,
   Calendar,
@@ -140,9 +139,6 @@ export default function HomePage() {
               </a>
               <a href="#como-funciona" className="opacity-80 hover:opacity-100 transition-opacity">
                 Como funciona
-              </a>
-              <a href="#baixar" className="opacity-80 hover:opacity-100 transition-opacity">
-                Baixar app
               </a>
               <a href="#beneficios" className="opacity-80 hover:opacity-100 transition-opacity">
                 Por que Convoca
@@ -620,30 +616,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      </section>
-
-      {/* ───────── DOWNLOAD APP STORES ───────── */}
-      <section id="baixar" className="scroll-mt-20 bg-secondary px-6 py-20 sm:px-12 sm:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge className="mb-3 bg-pitch-50 text-pitch hover:bg-pitch-50">
-            App nativo
-          </Badge>
-          <h2
-            className="font-display tracking-display mb-3"
-            style={{ fontSize: "clamp(28px, 4vw, 48px)", lineHeight: 0.95 }}
-          >
-            BAIXE O CONVOCA
-            <br />
-            NO SEU CELULAR
-          </h2>
-          <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-muted-foreground">
-            Disponível na App Store e no Google Play. Push, confirmação e a
-            pelada na palma da mão.
-          </p>
-          <StoreDownloadCards />
         </div>
       </section>
 

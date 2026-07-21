@@ -1,20 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import {
-  ANDROID_PLAY_STORE_URL,
-  IOS_APP_STORE_URL,
-} from "@/lib/mobile/store-urls";
 
+const IOS_URL = "https://apps.apple.com/app/id6783026571";
+const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.uzzai.convoca";
 const FALLBACK_URL = "https://convoca.uzzai.com.br/produto-convoca";
 
 export default function DownloadPage() {
   useEffect(() => {
     const ua = navigator.userAgent;
     if (/iPad|iPhone|iPod/.test(ua)) {
-      window.location.replace(IOS_APP_STORE_URL);
+      window.location.replace(IOS_URL);
     } else if (/Android/.test(ua)) {
-      window.location.replace(ANDROID_PLAY_STORE_URL);
+      window.location.replace(ANDROID_URL);
     } else {
       window.location.replace(FALLBACK_URL);
     }

@@ -17,6 +17,8 @@ export async function proxy(req: NextRequest) {
     "/excluir-conta",
     "/produto-convoca",
     "/impressum",
+    // Preview estático de layout (branch feat/ui-rebrand-uzz) — sem auth
+    "/preview-uzz",
   ];
 
   // Fast path checks before auth call
@@ -55,5 +57,6 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // preview-uzz = HTML estático em public/ (sócios veem sem login)
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|preview-uzz).*)"],
 };

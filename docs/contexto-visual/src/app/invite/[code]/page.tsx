@@ -4,10 +4,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InviteTracker } from "./invite-tracker";
-import {
-  ANDROID_PLAY_STORE_URL,
-  IOS_APP_STORE_URL,
-} from "@/lib/mobile/store-urls";
+
+const IOS_URL = "https://apps.apple.com/app/id6783026571";
+const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.uzzai.convoca";
 
 type Props = { params: Promise<{ code: string }> };
 
@@ -102,14 +101,14 @@ export default async function InvitePage({ params }: Props) {
         {/* App download buttons */}
         <div className="w-full flex flex-col gap-3 mb-6">
           <a
-            href={IOS_APP_STORE_URL}
+            href={IOS_URL}
             className="flex items-center justify-center gap-3 w-full rounded-xl border border-border bg-foreground text-background py-3.5 px-5 font-semibold text-sm transition-opacity hover:opacity-80"
           >
             <AppleIcon />
             Baixar para iPhone
           </a>
           <a
-            href={ANDROID_PLAY_STORE_URL}
+            href={ANDROID_URL}
             className="flex items-center justify-center gap-3 w-full rounded-xl border border-border bg-foreground text-background py-3.5 px-5 font-semibold text-sm transition-opacity hover:opacity-80"
           >
             <AndroidIcon />

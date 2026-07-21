@@ -19,7 +19,8 @@ No Preview Vercel da branch `feat/ui-rebrand-uzz`: abra `/preview-uzz/`.
 
 ## Decisões de rebranding aplicadas
 
-- App dark UzzAI + verde de campo Convoca.
+- **Identidade de produção Convoca** (Sunday Pelada): cream `#FAF6EE`, navy `#0A1628`, pitch `#1A7A3A`, DM Sans + Bebas Neue.
+- **Layout** (estrutura Uzz): shells, bottom tabs, home = próxima ação — não o visual dark Uzz.
 - Poppins para hierarquia e Exo 2 para labels operacionais.
 - Marketing, Auth e App usam molduras diferentes.
 - Bottom tab bar com hub central “Convocar”.

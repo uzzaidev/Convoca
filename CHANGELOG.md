@@ -4,6 +4,13 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-21
 
+### fix
+- Removido `</section>` duplicado que causava erro na build no arquivo `src/app/page.tsx`  
+  - Evidência: remoção do trecho duplicado no diff  
+  - Confiança: alta
+
+## 2026-07-21
+
 ### feat
 - Adicionado banner de cookies e cards de download App Store / Play Store na landing page
   - Arquivos: `.gitignore`

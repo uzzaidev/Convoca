@@ -172,8 +172,8 @@ export default function HomePage() {
           </div>
         </nav>
 
-        {/* Hero content */}
-        <div className="relative z-[5] mx-auto grid max-w-7xl items-center gap-10 px-6 py-16 text-primary-foreground sm:px-12 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:py-32">
+        {/* Hero content — py menor no topo p/ placar + badges caberem no 1º viewport */}
+        <div className="relative z-[5] mx-auto grid max-w-7xl items-start gap-8 px-6 pb-16 pt-10 text-primary-foreground sm:px-12 sm:pb-20 sm:pt-14 lg:grid-cols-[1.15fr_1fr] lg:gap-10 lg:pb-24 lg:pt-12">
           <div>
             <span className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3.5 py-1.5 backdrop-blur-sm">
               <Flame className="h-3.5 w-3.5 text-pitch-glow" />
@@ -260,8 +260,8 @@ export default function HomePage() {
                 <span className="num font-mono text-xs opacity-60">67:42</span>
               </div>
 
-              {/* score */}
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-6">
+              {/* score — um pouco mais compacto p/ badges caberem abaixo */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4">
                 <div className="text-center">
                   <Jersey
                     number=""
@@ -278,7 +278,7 @@ export default function HomePage() {
                 <div
                   className="num font-display tracking-scoreboard text-center text-pitch-glow"
                   style={{
-                    fontSize: 84,
+                    fontSize: 72,
                     lineHeight: 0.9,
                     textShadow: "0 0 24px rgba(34,197,94,.4)",
                   }}
@@ -353,6 +353,8 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Badges oficiais — logo abaixo do placar, bem visíveis no 1º viewport */}
+            <StoreDownloadCards layout="stack" className="mt-5 items-stretch sm:items-center lg:items-stretch" />
           </div>
         </div>
       </section>
@@ -620,28 +622,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ───────── DOWNLOAD APP STORES ───────── */}
-      <section id="baixar" className="scroll-mt-20 bg-secondary px-6 py-20 sm:px-12 sm:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge className="mb-3 bg-pitch-50 text-pitch hover:bg-pitch-50">
-            App nativo
-          </Badge>
-          <h2
-            className="font-display tracking-display mb-3"
-            style={{ fontSize: "clamp(28px, 4vw, 48px)", lineHeight: 0.95 }}
-          >
-            BAIXE O CONVOCA
-            <br />
-            NO SEU CELULAR
-          </h2>
-          <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-muted-foreground">
-            Disponível na App Store e no Google Play. Push, confirmação e a
-            pelada na palma da mão.
-          </p>
-          <StoreDownloadCards />
         </div>
       </section>
 

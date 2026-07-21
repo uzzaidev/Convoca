@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-21
 
+### feat
+- Adicionados badges oficiais do App Store e Google Play no hero da landing, abaixo do placar. As mudanças envolvem ajustes na estrutura do layout e inclusão dos componentes de badges, garantindo maior visibilidade no primeiro viewport.
+  - Arquivos: `src/app/page.tsx`, `src/components/marketing/store-download-cards.tsx`
+  - Evidência: inclusão do componente `<StoreDownloadCards />` na seção do hero e alterações na estrutura do layout
+  - Confiança: alta
+
+## 2026-07-21
+
 ### fix
 - Excluído `docs/contexto-visual` do typecheck do Next para melhorar o desempenho da compilação
   - Arquivos: `tsconfig.json`

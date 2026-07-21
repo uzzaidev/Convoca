@@ -623,8 +623,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      </section>
-
       {/* ───────── DOWNLOAD APP STORES ───────── */}
       <section id="baixar" className="scroll-mt-20 bg-secondary px-6 py-20 sm:px-12 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">

@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-21
 
 ### fix
+- Excluído `docs/contexto-visual` do typecheck do Next para melhorar o desempenho da compilação
+  - Arquivos: `tsconfig.json`
+  - Evidência: alteração na configuração de `exclude`
+  - Confiança: alta
+
+## 2026-07-21
+
+### fix
 - Removido `</section>` duplicado que causava erro na build no arquivo `src/app/page.tsx`  
   - Evidência: remoção do trecho duplicado no diff  
   - Confiança: alta

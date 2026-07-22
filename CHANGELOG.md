@@ -2,6 +2,13 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-07-22
+
+### chore
+- Atualizado `compileSdkVersion` e `targetSdkVersion` para 36 no projeto Android
+  - Arquivos: `android/variables.gradle`
+  - Confiança: alta
+
 ## 2026-07-21
 
 ### feat

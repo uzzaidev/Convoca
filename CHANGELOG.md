@@ -4,6 +4,24 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-22
 
+### fix
+- Ajustes na configuração do Android para compatibilidade com a versão 2.3, incluindo habilitação de minificação e atualização do arquivo ProGuard.
+  - Arquivos: `android/app/build.gradle`, `android/app/proguard-rules.pro`
+  - Evidência: modificação de `minifyEnabled` para true e atualização das regras de ProGuard
+  - Confiança: alta
+
+### refactor
+- Inclusão da chamada `EdgeToEdge.enable(this)` na `MainActivity` para suporte a layout edge-to-edge.
+  - Arquivos: `android/app/src/main/java/com/convoca/app/MainActivity.java`
+  - Confiança: alta
+
+### style
+- Atualização do tema `AppTheme.NoActionBar` para tornar as barras do sistema transparentes, suportando layout edge-to-edge.
+  - Arquivos: `android/app/src/main/res/values/styles.xml`
+  - Confiança: alta
+
+## 2026-07-22
+
 ### chore
 - Atualizado `compileSdkVersion` e `targetSdkVersion` para 36 no projeto Android
   - Arquivos: `android/variables.gradle`

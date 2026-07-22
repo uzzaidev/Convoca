@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-22
 
 ### fix
+- Corrigido alias `AppTheme` no arquivo `styles.xml` do Android para garantir compatibilidade com o AndroidManifest.xml
+  - Arquivos: `android/app/src/main/res/values/styles.xml`
+  - Evidência: adição do alias `<style name="AppTheme" ... />`
+  - Confiança: alta
+
+## 2026-07-22
+
+### fix
 - Ajustes na configuração do Android para compatibilidade com a versão 2.3, incluindo habilitação de minificação e atualização do arquivo ProGuard.
   - Arquivos: `android/app/build.gradle`, `android/app/proguard-rules.pro`
   - Evidência: modificação de `minifyEnabled` para true e atualização das regras de ProGuard

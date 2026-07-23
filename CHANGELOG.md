@@ -5,6 +5,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 ## 2026-07-23
 
 ### fix
+- Adicionada rota `/download` como rota pública no middleware
+  - Arquivos: `src/proxy.ts`
+  - Evidência: inclusão de "/download" na lista de rotas públicas
+  - Confiança: alta
+
+## 2026-07-23
+
+### fix
 - Corrigido redirecionamento server-side por User-Agent na página de download para dispositivos iOS e Android
   - Arquivos: `src/app/download/page.tsx`
   - Evidência: alteração do método de detecção de dispositivo de client-side para server-side usando headers

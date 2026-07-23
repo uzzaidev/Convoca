@@ -4,6 +4,14 @@ Gerado aautomaticamente por IA a cada push no `main`.
 
 ## 2026-07-23
 
+### feat
+- Implementada funcionalidade de exportação de PDF no componente RankingsCard para plataformas nativas usando Capacitor Filesystem e Share. Agora, o arquivo é salvo no dispositivo e compartilhado via sistema nativo em iOS/Android.
+  - Arquivos: `src/components/group/rankings-card.tsx`
+  - Evidência: uso de Capacitor Filesystem e Share para manipulação e compartilhamento de arquivos em plataformas nativas.
+  - Confiança: alta
+
+## 2026-07-23
+
 ### fix
 - Adicionada rota `/download` como rota pública no middleware
   - Arquivos: `src/proxy.ts`

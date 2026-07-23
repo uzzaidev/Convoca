@@ -1,28 +1,24 @@
-"use client";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
 import {
   ANDROID_PLAY_STORE_URL,
   IOS_APP_STORE_URL,
 } from "@/lib/mobile/store-urls";
 
+export const dynamic = "force-dynamic";
+
 const FALLBACK_URL = "https://convoca.uzzai.com.br/produto-convoca";
 
-export default function DownloadPage() {
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua)) {
-      window.location.replace(IOS_APP_STORE_URL);
-    } else if (/Android/.test(ua)) {
-      window.location.replace(ANDROID_PLAY_STORE_URL);
-    } else {
-      window.location.replace(FALLBACK_URL);
-    }
-  }, []);
+export default async function DownloadPage() {
+  const headersList = await headers();
+  const ua = headersList.get("user-agent") ?? "";
 
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
-      <p style={{ color: "#6b7280", fontSize: 14 }}>Redirecionando...</p>
-    </div>
-  );
+  if (/iPad|iPhone|iPod/i.test(ua)) {
+    redirect(IOS_APP_STORE_URL);
+  } else if (/Android/i.test(ua)) {
+    redirect(ANDROID_PLAY_STORE_URL);
+  } else {
+    redirect(FALLBACK_URL);
+  }
 }

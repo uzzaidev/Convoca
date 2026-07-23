@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isNativePlatform } from "@/lib/mobile/platform-detector";
 
 type PlayerStat = {
   id: string;
@@ -386,7 +387,29 @@ export function RankingsCard({
         alternateRowStyles: { fillColor: [249, 250, 251] },
       });
 
-      doc.save(`ranking-${tabName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
+      const fileName = `ranking-${tabName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`;
+
+      if (isNativePlatform()) {
+        // jsPDF's doc.save() relies on the browser <a download> mechanism, which
+        // the iOS/Android WKWebView inside the Capacitor app doesn't support.
+        // Write the file to disk and hand it to the native share sheet instead.
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const { Share } = await import('@capacitor/share');
+
+        const base64 = doc.output('datauristring').split('base64,')[1];
+        const { uri } = await Filesystem.writeFile({
+          path: fileName,
+          data: base64,
+          directory: Directory.Cache,
+        });
+
+        await Share.share({
+          title: `Ranking - ${tabName}`,
+          url: uri,
+        });
+      } else {
+        doc.save(fileName);
+      }
     } catch (error) {
       console.error('Error exporting PDF:', error);
       alert('Erro ao exportar PDF. Tente novamente.');
@@ -617,7 +640,7 @@ export function RankingsCard({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[60px] text-center sticky left-0 bg-background z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">#</TableHead>
-                  <TableHead className="min-w-[140px] sticky bg-background z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ left: `${STICKY_NAME_LEFT}px` }}>Jogador</TableHead>
+                  <TableHead className="w-[140px] sticky bg-background z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ left: `${STICKY_NAME_LEFT}px` }}>Jogador</TableHead>
                   {visibleColumnsList.map((col) => (
                     <TableHead key={col.key} className={col.key === 'score' ? "text-right min-w-[100px]" : "text-center min-w-[80px]"}>
                       <Button
@@ -657,7 +680,7 @@ export function RankingsCard({
                           {globalIndex + 1}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium sticky bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate max-w-[140px]" style={{ left: `${STICKY_NAME_LEFT}px` }}>
+                      <TableCell className="font-medium sticky bg-background z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate w-[140px]" style={{ left: `${STICKY_NAME_LEFT}px` }}>
                         <span className="block truncate" title={player.name}>{player.name}</span>
                       </TableCell>
                       {visibleColumnsList.map((col) => {

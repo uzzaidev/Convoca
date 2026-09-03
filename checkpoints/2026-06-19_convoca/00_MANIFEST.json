@@ -1,0 +1,61 @@
+{
+  "checkpoint_metadata": {
+    "date": "2026-06-19",
+    "timezone": "UTC-3",
+    "purpose": "Atualização de estado do Convoca: mobile (Capacitor), push (Firebase/FCM), páginas de loja e infra de deploy/secrets",
+    "supersedes": "2026-03-15_convoca (snapshot histórico, mantido)"
+  },
+  "repository": {
+    "commit_hash": "f5e0f16714dc6efd4272308bed64be32cf8454ac",
+    "branch": "main",
+    "last_commit_message": "feat: backend de envio de push via FCM HTTP v1"
+  },
+  "technology_stack": {
+    "framework": { "name": "Next.js", "version": "16.1.1", "architecture": "App Router" },
+    "frontend": { "react": "19.2.0", "typescript": "5.x", "tailwindcss": "3.4.1", "ui_library": "shadcn/ui" },
+    "backend": {
+      "database": "PostgreSQL (Neon Serverless) — raw SQL via postgres lib",
+      "auth": "next-auth@5.0.0-beta.25 (JWT em cookie)",
+      "payments": "stripe",
+      "ai": "openai (agente)",
+      "email": "resend"
+    },
+    "mobile": {
+      "runtime": "Capacitor 7.x (Estratégia B: WebView do site ao vivo + fallback out/index.html)",
+      "app_id": "com.uzzai.convoca",
+      "push": "Firebase Cloud Messaging (projeto convoca-app-uzzai-2b530) via FCM HTTP v1"
+    },
+    "route_protection": "src/proxy.ts (Next 16 renomeou middleware -> proxy)",
+    "deployment": "Vercel (projeto 'convoca', domínio convoca.uzzai.com.br)",
+    "secrets": "Doppler (projeto convoca, config prd) com sync para o env de produção da Vercel"
+  },
+  "counts": {
+    "api_routes": 70,
+    "pages": 27,
+    "migrations": 30,
+    "components_tsx": 84,
+    "db_tables": 26
+  },
+  "notable_changes_since_2026_03_15": [
+    "Mobile: projetos android/ e ios/ gerados, capacitor.config.ts, src/lib/mobile/*, scripts mobile",
+    "Push: src/lib/mobile/fcm.ts (FCM HTTP v1 via jose), /api/mobile/push-token e /api/mobile/push/send, tabela push_tokens (migration 20260610) aplicada",
+    "Firebase configurado (projeto convoca-app-uzzai-2b530, app android com.uzzai.convoca, google-services.json local/gitignored)",
+    "Páginas públicas para lojas: /privacidade, /termos, /lgpd, /suporte, /excluir-conta, e landing /produto-convoca",
+    "Proteção de rotas agora existe via src/proxy.ts (fecha o gap 'middleware ausente' do checkpoint de março)",
+    "Grupo de rotas (app) e novas áreas de API (agent, mcp, plans, stripe) presentes",
+    "Tabelas cresceram de 18 -> 26 no schema",
+    "Infra confirmada: deploy no projeto Vercel 'convoca' (não 'peladeiros'), secrets via Doppler prd -> sync Vercel"
+  ],
+  "gaps_status_update": {
+    "middleware_route_protection": "RESOLVIDO (src/proxy.ts existe)",
+    "tests": "AINDA AUSENTE (0 cobertura)",
+    "pagination": "verificar por endpoint",
+    "migration_tooling": "RESOLVIDO (src/db/migrate.mjs + schema_migrations)"
+  },
+  "related_docs": [
+    "docs/mobile-convoca/PLANO.md",
+    "docs/mobile-convoca/CHECKLIST.md",
+    "docs/playbooks/firebase-push-via-cli/README.md",
+    "checkpoints/2026-06-19_convoca/STATE_UPDATE.md"
+  ]
+}

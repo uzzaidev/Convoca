@@ -2,6 +2,20 @@
 
 Gerado aautomaticamente por IA a cada push no `main`.
 
+## 2026-09-09
+
+### feat
+- Implementado sistema de aviso e controle de pagamento obrigatório via Stripe. A partir de outubro de 2026, todos os grupos precisarão ter uma assinatura Stripe ativa para continuar usando o Convoca. Um modal informativo passa a aparecer automaticamente para qualquer usuário que seja administrador de um grupo ativo sem assinatura cadastrada — o aviso exibe o prazo restante, pode ser dispensado por 7 dias, e direciona para a tela de configuração de pagamento. No painel do super admin (`/admin`), foi adicionada uma nova aba **Assinaturas** que lista todas as assinaturas Stripe com plano, status e período, além de todos os grupos ativos sem assinatura. Por lá é possível estender o acesso manualmente (+N dias de grace period), cancelar ou reativar uma assinatura sem precisar entrar no Stripe.
+
+  **Como testar:**
+  1. Logue com uma conta que seja admin de um grupo **sem** assinatura Stripe — o modal de aviso deve aparecer após ~1,5 segundos.
+  2. Clique em "Lembrar mais tarde" — o modal deve desaparecer e não reaparecer por 7 dias.
+  3. Clique em "Configurar pagamento" — deve redirecionar para `/settings?tab=billing`.
+  4. Acesse `/admin` com o login `luisfboff` e clique na aba **Assinaturas** — deve exibir as assinaturas existentes e a seção de grupos sem assinatura.
+  5. Em um grupo sem assinatura, use o botão **+Grace** para dar 30 dias de extensão — o grupo deve sair da lista "sem assinatura" e o modal não deve mais aparecer para o admin daquele grupo.
+  - Arquivos: `src/components/billing/stripe-payment-notice.tsx`, `src/components/admin/admin-subscriptions-tab.tsx`, `src/app/api/admin/subscriptions/[subscriptionId]/route.ts`, `src/app/api/admin/subscriptions/groups-without-sub/route.ts`, `src/app/api/users/dismiss-stripe-notice/route.ts`, `src/app/(app)/layout.tsx`, `src/lib/subscription.ts`, `src/db/migrations/20260909_stripe_enforcement.sql`
+  - Confiança: alta
+
 ## 2026-07-23
 
 ### feat

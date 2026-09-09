@@ -22,6 +22,7 @@ export interface GroupSubscription {
   current_period_end: string | null;
   trial_end: string | null;
   canceled_at: string | null;
+  grace_until: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +38,23 @@ export async function isGroupSubscriptionActive(groupId: string): Promise<boolea
     LIMIT 1
   `;
   return !!sub;
+}
+
+/**
+ * Verifica se um grupo tem acesso ativo — considera tanto assinatura Stripe ativa/trialing
+ * quanto extensão manual (grace_until) configurada pelo super admin.
+ */
+export async function isGroupSubscriptionActiveOrGrace(groupId: string): Promise<boolean> {
+  const [sub] = await sql`
+    SELECT status, grace_until FROM group_subscriptions
+    WHERE group_id = ${groupId}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  if (!sub) return false;
+  if ((sub.status as string) === 'active' || (sub.status as string) === 'trialing') return true;
+  if (sub.grace_until && new Date(sub.grace_until as string) > new Date()) return true;
+  return false;
 }
 
 /**

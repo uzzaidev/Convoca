@@ -32,13 +32,17 @@ export async function GET(request: NextRequest) {
           gs.current_period_end,
           gs.trial_end,
           gs.canceled_at,
+          gs.grace_until,
           gs.created_at,
           g.name AS group_name,
           u.name AS user_name,
-          u.email AS user_email
+          u.email AS user_email,
+          sp.name AS plan_name,
+          NULL::text AS coupon_code
         FROM group_subscriptions gs
         INNER JOIN groups g ON gs.group_id = g.id
         INNER JOIN users u ON gs.user_id = u.id
+        LEFT JOIN subscription_plans sp ON gs.plan_id = sp.id
         WHERE gs.status = ${status}
         ORDER BY gs.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -59,13 +63,17 @@ export async function GET(request: NextRequest) {
           gs.current_period_end,
           gs.trial_end,
           gs.canceled_at,
+          gs.grace_until,
           gs.created_at,
           g.name AS group_name,
           u.name AS user_name,
-          u.email AS user_email
+          u.email AS user_email,
+          sp.name AS plan_name,
+          NULL::text AS coupon_code
         FROM group_subscriptions gs
         INNER JOIN groups g ON gs.group_id = g.id
         INNER JOIN users u ON gs.user_id = u.id
+        LEFT JOIN subscription_plans sp ON gs.plan_id = sp.id
         ORDER BY gs.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;

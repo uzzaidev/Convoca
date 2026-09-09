@@ -19,6 +19,7 @@ import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { AdminCouponsTab } from "@/components/admin/admin-coupons-tab";
 import { AdminFinanceTab } from "@/components/admin/admin-finance-tab";
 import { AdminPlansTab } from "@/components/admin/admin-plans-tab";
+import { AdminSubscriptionsTab } from "@/components/admin/admin-subscriptions-tab";
 import { formatDate } from "@/lib/utils";
 import { type GroupStatus } from "@/lib/group-status";
 
@@ -181,9 +182,10 @@ export function AdminDashboard({
       </div>
 
       <Tabs defaultValue="groups" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="groups">Grupos</TabsTrigger>
           <TabsTrigger value="users">Contas</TabsTrigger>
+          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="plans">Planos</TabsTrigger>
           <TabsTrigger value="coupons">Cupons</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
@@ -337,6 +339,10 @@ export function AdminDashboard({
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="subscriptions" className="mt-6">
+          <AdminSubscriptionsTab />
         </TabsContent>
 
         <TabsContent value="plans" className="mt-6">

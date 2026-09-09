@@ -3,6 +3,7 @@ import { sql } from "@/db/client";
 import { redirect } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import type { SidebarGroup, SidebarUser } from "@/components/layout/AppSidebar";
+import { StripePaymentNotice } from "@/components/billing/stripe-payment-notice";
 
 export default async function AppGroupLayout({
   children,
@@ -49,8 +50,42 @@ export default async function AppGroupLayout({
     systemRole: user.systemRole ?? "user",
   };
 
+  // Verificar se o usuario eh admin de algum grupo sem assinatura ativa (para o banner)
+  const [stripeNoticeData] = await sql`
+    SELECT
+      u.stripe_notice_dismissed_at,
+      EXISTS (
+        SELECT 1
+        FROM group_members gm2
+        INNER JOIN groups g2 ON g2.id = gm2.group_id
+        WHERE gm2.user_id = ${user.id}
+          AND gm2.role = 'admin'
+          AND g2.deleted_at IS NULL
+          AND g2.status = 'active'
+          AND NOT EXISTS (
+            SELECT 1 FROM group_subscriptions gs
+            WHERE gs.group_id = g2.id
+              AND (
+                gs.status IN ('active', 'trialing')
+                OR (gs.grace_until IS NOT NULL AND gs.grace_until > NOW())
+              )
+          )
+      ) AS has_group_without_subscription
+    FROM users u
+    WHERE u.id = ${user.id}
+  `;
+
+  const hasGroupWithoutSubscription = stripeNoticeData?.has_group_without_subscription === true;
+  const noticeDismissedAt = stripeNoticeData?.stripe_notice_dismissed_at as string | null;
+
   return (
     <AppLayout user={sidebarUser} groups={groups}>
+      {hasGroupWithoutSubscription && (
+        <StripePaymentNotice
+          hasGroupWithoutSubscription={hasGroupWithoutSubscription}
+          noticeDismissedAt={noticeDismissedAt ? String(noticeDismissedAt) : null}
+        />
+      )}
       {children}
     </AppLayout>
   );

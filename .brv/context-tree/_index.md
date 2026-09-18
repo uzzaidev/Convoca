@@ -1,64 +1,61 @@
 ---
-children_hash: 57e25760ced361e0065b3cb20e810fbb9010a5cb54a2fd4836b7b07813ed9139
-compression_ratio: 0.32147937411095306
+children_hash: e612f2c887d2783295123de603800abd0a2d5f11f347b981e7052042a2e0f83b
+compression_ratio: 0.2976605276256844
 condensation_order: 3
 covers: [architecture/_index.md, facts/_index.md, security/_index.md]
-covers_token_total: 2109
+covers_token_total: 2009
 summary_level: d3
-token_count: 678
+token_count: 598
 type: summary
 ---
-# Structural Summary
+# Structural Summary of Knowledge Entries
 
-## Architecture
+## Architecture Overview
+The architecture focuses on billing integration and database portability, emphasizing security and migration readiness.
 
-### Billing
-- **Focus**: Integration with Stripe v21 and multi-plan subscription architecture.
-- **Core Structure**:
-  - **`context.md`**: Overview of billing impacts from Stripe v21.
-  - **`stripe_v21_api_migration.md`**: Migration details and compatibility rules.
-  - **`multi_plan_subscription_system.md`**: Architecture for multi-plan billing.
-- **Key Relationships**:
-  - **Layers**: Migration Layer (invoice handling) and Subscription Architecture (webhook persistence).
-  - **Dependencies**: Stripe pricing, Migration 006.
-- **Important Rules**: Use `invoices.createPreview()`; handle `planId` as optional.
+### Billing System
+- **Key Changes**:
+  - **Invoice API**: Transitioned from `invoices.retrieveUpcoming()` to `invoices.createPreview()`.
+  - **Subscription Management**: Fields `current_period_start` and `current_period_end` moved to `SubscriptionItem`.
+  - **Promotion Codes**: Updated from `PromotionCode.coupon` to `PromotionCode.promotion.coupon`.
 
-### Database
-- **Focus**: Provider abstraction and schema portability.
-- **Overview**: Mostly provider-portable with PostgreSQL access; migration involves switching `DATABASE_URL`.
-- **Child Entries**:
-  - **`provider_migration_diagnosis.md`**: Assesses migration readiness.
-  - **`migration-readiness-is-split-between-code-portability-and-operational-cleanup.md`**: Identifies operational cleanup as a limiting factor.
-- **Key Relationships**: Minimizes code-level lock-in; SQL-based authentication enhances portability.
+- **Related Topics**:
+  - **Multi Plan Subscription System**: Detailed in `architecture/billing/multi_plan_subscription_system.md`.
+  - **Stripe V21 API Migration**: Documented in `architecture/billing/stripe_v21_api_migration.md`.
 
-## Facts
+### Database Architecture
+- **Key Concepts**:
+  - **Provider Abstraction**: Focus on schema portability and credential risks.
+  - **Authentication**: Implemented via NextAuth Credentials using raw SQL against `public.users`.
 
-### Domain Overview
-- **Purpose**: Provides standalone project facts for quick recall.
-- **Scope**: Includes technology choices and operational facts; excludes long-form design rationale.
-- **Ownership**: Managed by Peladeiros engineering.
+- **Migration Considerations**:
+  - Update `DATABASE_URL` and migrate schema/data.
+  - Challenges primarily in configuration and legacy scripts.
+
+## Project Knowledge Summary
+The project knowledge captures essential facts about Peladeiros infrastructure, billing, authentication, and database management.
+
+### Domain: Facts
+- **Purpose**: Standalone project facts for easy recall.
+- **Scope**: Includes technology choices, operational facts, and implementation details.
 
 ### Key Concepts
-- **Infrastructure**: Covers Peladeiros infrastructure and database configurations.
-- **Billing**: Details on Stripe v21 migration and subscription architecture.
-- **Authentication**: Utilizes NextAuth and PostgreSQL features.
+- **Infrastructure**:
+  - No Supabase SDK used; authentication via NextAuth with raw SQL.
+  - User creation and password recovery managed through API routes.
 
-### Project Facts
-- **Core Stack**: PostgreSQL, Stripe v21, focusing on database portability.
-- **Key Entities**: Subscription plans and public.users.
-- **Files**: Includes src/db/client.ts and key API routes.
+### Related Topics
+- **Security**: Risks related to credential exposure in backup scripts.
 
-## Security
+## Security Overview
+The security domain focuses on credential management and exposure mitigation.
 
-### Domain Overview
-- **Purpose**: Focuses on operational security, credential management, and exposure mitigation.
-- **Scope**: Includes credential management risks and secret rotation requirements.
-- **Ownership**: Managed by Peladeiros engineering.
+### Key Points
+- Effective credential management is crucial during migrations.
+- Hardcoded credentials in backup scripts pose significant security risks.
 
-### Key Entries
-- **Credential Management Across Domains**: Highlights risks from hardcoded credentials in backup scripts.
-- **Operational Security in Backup Tooling**: Necessitates credential rotation to mitigate risks.
-- **Provider Portability and Secrets Hygiene**: Emphasizes maintaining secret hygiene during migrations.
+### Operations Overview
+- **Focus**: Tracks operational security findings related to credentials and scripts.
+- **Backup Credential Exposure**: Identified risks linked to hardcoded credentials and migration processes.
 
-### Conclusion
-The architecture emphasizes critical operational practices across billing, database management, and security, highlighting the importance of migration strategies, credential management, and the integration of Stripe v21.
+This summary encapsulates the critical architectural decisions, security considerations, and project facts, providing a clear pathway for further exploration of detailed entries.

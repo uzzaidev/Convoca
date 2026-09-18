@@ -1,9 +1,16 @@
 {
   "curationsSinceDream": 0,
-  "lastDreamAt": "2026-06-23T14:27:06.975Z",
-  "lastDreamLogId": "drm-1782224710033",
-  "pendingMerges": [],
+  "lastDreamAt": "2026-09-18T10:38:07.807Z",
+  "lastDreamLogId": "drm-1789727811571",
+  "pendingMerges": [
+    {
+      "mergeTarget": "facts/project/rlm_curate_workflow_facts.md",
+      "reason": "Content overlaps significantly with rlm_curate_workflow_facts.md; should be merged.",
+      "sourceFile": "facts/project/curate_workflow_rlm_approach.md",
+      "suggestedByDreamId": "drm-1789727811571"
+    }
+  ],
   "staleSummaryPaths": [],
-  "totalDreams": 3,
+  "totalDreams": 4,
   "version": 1
 }

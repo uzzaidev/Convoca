@@ -1,41 +1,44 @@
 ---
-children_hash: 487df67382985447d66b9e477b077c8b15243814b9e49728efde28848332bda0
-compression_ratio: 0.39167169583584793
+children_hash: 251ab6af6eeb0d0242f60d5dd11a38e783886a90806686df9e91451d7f334cae
+compression_ratio: 0.5181305398871877
 condensation_order: 1
-covers: [context.md, migration-readiness-is-split-between-code-portability-and-operational-cleanup.md, provider_migration_diagnosis.md]
-covers_token_total: 1657
+covers: [context.md, provider_migration_diagnosis.md]
+covers_token_total: 1241
 summary_level: d1
-token_count: 649
+token_count: 643
 type: summary
 ---
-## Database
+# Database Architecture Overview
 
-The database domain covers provider abstraction, auth data access, schema portability, and operational credential risk. It frames database provider migration as mostly an operations and configuration problem rather than a core application rewrite, with related security concerns handled in **security/operations**.
+## Topic: Database
+- **Overview**: Focuses on the project database architecture, emphasizing provider-specific coupling, migration readiness, and operational risks.
+- **Key Concepts**:
+  - Database provider abstraction
+  - Authentication data access
+  - Schema portability
+  - Operational credential risk
+- **Related Topics**: See [security/operations](security/operations) for guidance on credential exposure and secret rotation.
 
-### Structural overview
+## Provider Migration Diagnosis
+- **Task**: Document the infrastructure diagnosis regarding database provider migration readiness and authentication/storage dependencies as of March 31, 2026.
+- **Key Findings**:
+  - The application does not rely on Supabase SDK or storage APIs.
+  - Authentication is implemented via NextAuth Credentials using raw SQL against `public.users`.
+  - Password reset functionality depends on `users.reset_token` fields and utilizes Resend for email delivery.
+  - Local configurations and backup scripts still reference Supabase, posing security risks due to hardcoded credentials.
+- **Flow**: 
+  - NextAuth credentials login → raw SQL query to `public.users` → signup route inserts into users → password recovery writes reset token → reset-password validates token and updates password → email delivery via Resend.
+- **Dependencies**: Authentication relies on `src/lib/auth.ts`, the `users` table, and email sending via `src/lib/email.ts`.
+- **Migration Considerations**: 
+  - Updating `DATABASE_URL`, migrating schema and data, auditing Supabase references, and rotating exposed credentials are essential for provider migration.
+- **Highlights**: The application is largely portable across PostgreSQL providers due to its use of generic SQL access, with migration challenges primarily in environment configuration and legacy scripts. 
 
-- **Core stance:** The app is largely provider-portable because it uses generic PostgreSQL access and keeps authentication logic at the application layer.
-- **Migration shape:** Moving between providers is mainly a `DATABASE_URL` switch plus schema/data migration, followed by cleanup of residual provider references.
-- **Main risk area:** Operational leftovers and exposed secrets in backup tooling are the real blockers, not Supabase-specific application dependencies.
-
-### Child entries for drill-down
-
-- **provider_migration_diagnosis.md**
-  - Documents the 2026-03-31 diagnosis of provider migration readiness.
-  - Confirms auth is implemented with **NextAuth Credentials** and raw SQL against `public.users`, not Supabase SDK auth.
-  - Notes password recovery depends on `reset_token` and `reset_token_expiry` fields plus **Resend** email delivery.
-  - Identifies remaining Supabase coupling in local config and backup scripts, including hardcoded backup credentials.
-  - References key files such as `src/lib/auth.ts`, `src/app/api/auth/signup/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/lib/email.ts`, `src/db/client.ts`, and `src/db/backup-supabase.sh/.bat`.
-
-- **migration-readiness-is-split-between-code-portability-and-operational-cleanup.md**
-  - Synthesizes the migration assessment into a single conclusion: code portability is high, operational cleanup is the limiting factor.
-  - Highlights the dependency on standard PostgreSQL features like `uuid-ossp`, `JSONB`, `TEXT[]`, materialized views, `plpgsql`, and triggers.
-  - Emphasizes required migration actions: update `DATABASE_URL`, migrate schema/data, audit provider references, and rotate exposed credentials.
-  - Connects database readiness to security posture through secret hygiene and backup credential exposure.
-
-### Key relationships
-
-- **Database provider abstraction** reduces lock-in at the code level.
-- **Authentication data access** is custom and SQL-based, which supports portability.
-- **Schema portability** depends on standard PostgreSQL features rather than provider-specific APIs.
-- **Operational credential risk** remains a separate concern and overlaps with security/operations guidance.
+## Key Facts
+- **Supabase SDK Usage**: The app does not use Supabase SDK for authentication or storage.
+- **Authentication Implementation**: NextAuth Credentials access `public.users` with raw SQL.
+- **Signup Flow**: User creation occurs via `src/app/api/auth/signup/route.ts`.
+- **Password Recovery**: Utilizes `reset_token` for recovery and sends emails through Resend.
+- **Database Client**: Access is managed through a generic PostgreSQL library.
+- **Migration Steps**: Involves changing `DATABASE_URL` and migrating schema/data.
+- **PostgreSQL Features**: The schema employs standard features like `uuid-ossp`, `JSONB`, and triggers.
+- **Legacy Scripts**: Backup scripts referencing Supabase remain in the project and require updates.

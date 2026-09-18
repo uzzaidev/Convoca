@@ -51,6 +51,7 @@ export default async function GroupSettingsPage({ params }: RouteParams) {
         gm.id,
         gm.user_id,
         gm.role,
+        gm.base_rating,
         gm.is_mensalista,
         gm.monthly_amount_cents,
         gm.joined_at,
@@ -66,6 +67,7 @@ export default async function GroupSettingsPage({ params }: RouteParams) {
       id: string;
       user_id: string;
       role: string;
+      base_rating: number | null;
       is_mensalista: boolean;
       monthly_amount_cents: number;
       joined_at: string;

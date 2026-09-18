@@ -1,54 +1,58 @@
 ---
-children_hash: ddac37a2552557aa37c816dad810c0bea0712c72c2561a77f6596efadbc4ccc8
-compression_ratio: 0.12200040330711837
+children_hash: 666ce561d72573996335edc86a76a5bf3138acf80c4c3b831316f6d716d3c5ed
+compression_ratio: 0.1269948302989436
 condensation_order: 1
-covers: [context.md, curate_workflow_rlm_approach.md, peladeiros_billing_and_stripe_facts.md, peladeiros_infrastructure_facts_2026_03_31.md, project_facts.md, rlm_curate_workflow_facts.md]
-covers_token_total: 4959
+covers: [context.md, curate_workflow_rlm_approach.md, peladeiros_billing_and_stripe_facts.md, peladeiros_infrastructure_facts_2026_03_31.md, project_facts.md]
+covers_token_total: 4449
 summary_level: d1
-token_count: 605
+token_count: 565
 type: summary
 ---
-## Project Overview
+# Project Knowledge Summary
 
-### Key Concepts
-- **Infrastructure and Implementation**: Focus on Peladeiros infrastructure, including Supabase SDK usage, authentication, and database client configurations.
-- **Billing and Stripe Integration**: Details on Stripe v21 migration, multi-plan subscription architecture, and billing diagnostics.
-- **Authentication and Database Portability**: Use of NextAuth Credentials, PostgreSQL features, and provider migration strategies.
+## Overview
+The project knowledge captures key facts about the Peladeiros infrastructure, billing, authentication, and database management, providing a structured reference for implementation choices and architectural decisions.
 
-### Related Topics
-- **Architecture/Database**: Migration diagnosis and database portability.
-- **Security/Operations**: Secret exposure risks and backup credential management.
+## Key Concepts
+- **Infrastructure and Implementation**:
+  - **supabase_sdk_usage**: No Supabase SDK used for auth/storage.
+  - **auth_implementation**: Utilizes NextAuth Credentials with raw SQL queries.
+  - **signup_flow**: User creation via API routes.
+  - **password_recovery**: Managed through token-based email recovery.
+  - **database_client**: Generic PostgreSQL library for database access.
+  - **provider_migration**: Simplified by changing DATABASE_URL.
+  - **postgres_features**: Utilizes standard PostgreSQL features.
+  - **legacy_backup_scripts**: Existing scripts contain hardcoded credentials needing rotation.
 
-## RLM Curation Workflow
+## Related Topics
+- **Architecture**:
+  - **database**: Detailed migration diagnosis and provider migration strategies.
+  - **security**: Risks related to credential exposure in backup scripts.
 
-### Workflow Structure
-- **Single-Pass Processing**: Utilizes precomputed recon results for small contexts, focusing on extraction and organization before curation.
-- **Verification**: Relies on result.applied[].filePath for verification, avoiding raw context printing and repeated recon calls.
+## Curation Workflow
+- **RLM Approach**: 
+  - Consolidates workflow requirements for context extraction and verification.
+  - Emphasizes single-pass execution for small contexts.
+  - Highlights the importance of deduplication and organization of extracted facts.
 
-### Dependencies
-- **Tools**: Uses tools.curation.recon, tools.curation.mapExtract, and tools.curate for processing.
-- **Task Constraints**: Emphasizes single-pass mode and verification through applied file paths.
+## Billing and Stripe Integration
+- **Peladeiros Billing Facts**:
+  - Captures key facts about Stripe integration and billing architecture.
+  - Documents API changes and subscription management strategies.
 
-## Peladeiros Billing and Infrastructure Facts
+## Infrastructure Facts
+- **Assessment Date**: 2026-03-31.
+- **Key Findings**: 
+  - No reliance on Supabase SDK.
+  - Custom authentication flows and exposed credentials in backup tooling.
 
-### Billing and Stripe Facts
-- **API Changes**: Stripe v21 updates, including method renames and field relocations.
-- **Subscription Architecture**: Multi-plan support with optional planId and fallback mechanisms.
+## Project Facts
+- **Snapshot Date**: 2026-05-16.
+- **Core Stack**: 
+  - PostgreSQL with a focus on portability.
+  - Multi-plan billing architecture with fallback mechanisms.
+  - Organized documentation structure across various domains.
 
-### Infrastructure Facts
-- **Auth and Database**: Custom auth flows with NextAuth, generic PostgreSQL access, and exposed credentials in backup scripts.
-- **Backup and Migration**: Legacy Supabase backup scripts and provider migration strategies.
-
-## Project Facts and Documentation
-
-### Project Knowledge
-- **Core Stack**: Includes PostgreSQL, Stripe v21, and Resend, with a focus on database portability and authentication flows.
-- **Documentation Structure**: Organized into domain-specific entries rather than a monolithic README.
-
-### Key Entities and Files
-- **Entities**: Subscription plans, group subscriptions, and public.users.
-- **Files**: Includes src/db/client.ts, backup scripts, and key API routes for billing and authentication.
-
-## Summary
-
-This summary consolidates high-level project facts, RLM curation workflows, and infrastructure details, emphasizing key architectural decisions and relationships across billing, authentication, and database management.
+## Highlights
+- The project emphasizes a modular architecture with a focus on security, billing flexibility, and robust authentication mechanisms.
+- Key entities include subscription plans, user management, and billing APIs, ensuring comprehensive coverage of project requirements.

@@ -1,0 +1,1 @@
+This document outlines the usability enhancements made to player and game management systems, including improvements to forms and editing processes.

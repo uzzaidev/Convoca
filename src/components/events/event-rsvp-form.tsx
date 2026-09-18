@@ -38,12 +38,11 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
     (currentAttendance?.secondary_position as Position) || null
   );
   const [showSecondaryPosition, setShowSecondaryPosition] = useState(
-    !!currentAttendance?.preferred_position
+    !!currentAttendance?.secondary_position
   );
 
   const handlePrimaryPositionSelect = (position: Position) => {
     setPreferredPosition(position);
-    setShowSecondaryPosition(true);
     // Reset secondary if same as new primary
     if (secondaryPosition === position) {
       setSecondaryPosition(null);
@@ -148,14 +147,38 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
         </div>
       </div>
 
-      {/* Step 2: Seleção de posição secundária (conditional) */}
-      {showSecondaryPosition && preferredPosition && (
-        <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
-          <Label className="text-base">2ª Posição (Opcional)</Label>
-          <p className="text-sm text-muted-foreground">
-            Você escolheu {POSITIONS.find(p => p.value === preferredPosition)?.label}.
-            Quer adicionar uma segunda opção?
-          </p>
+      {/* Step 2: Seleção de posição secundária (opcional e expansível) */}
+      {preferredPosition && !showSecondaryPosition && !secondaryPosition && (
+        <div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSecondaryPosition(true)}
+            className="text-xs text-muted-foreground hover:text-foreground h-auto py-1 px-2"
+          >
+            + Adicionar 2ª posição alternativa (opcional)
+          </Button>
+        </div>
+      )}
+
+      {(showSecondaryPosition || secondaryPosition) && preferredPosition && (
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300 rounded-lg border border-dashed p-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">2ª Posição Alternativa (Opcional)</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSecondaryPosition(null);
+                setShowSecondaryPosition(false);
+              }}
+              className="text-xs text-muted-foreground hover:text-destructive h-auto py-0.5 px-2"
+            >
+              Remover 2ª opção
+            </Button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {POSITIONS.filter(pos => pos.value !== preferredPosition).map((pos) => {
               const IconComponent = pos.Icon;
@@ -167,35 +190,20 @@ export function EventRsvpForm({ eventId, currentAttendance, eventStatus }: Event
                   onClick={() =>
                     setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
                   }
-                  className={`p-4 rounded-lg border-2 transition-all text-center ${
+                  className={`p-3 rounded-lg border-2 transition-all text-center ${
                     secondaryPosition === pos.value
                       ? "border-primary bg-primary/10 shadow-md"
                       : "border-muted hover:border-primary/50"
                   } ${isEventFinished ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 >
-                  <div className="flex justify-center mb-2">
-                    <IconComponent className="h-8 w-8" />
+                  <div className="flex justify-center mb-1">
+                    <IconComponent className="h-6 w-6" />
                   </div>
-                  <div className="text-sm font-medium">{pos.label}</div>
+                  <div className="text-xs font-medium">{pos.label}</div>
                 </button>
               );
             })}
           </div>
-          {secondaryPosition ? (
-            <p className="text-xs text-muted-foreground">
-              Clique novamente para remover a 2ª posição
-            </p>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSecondaryPosition(null)}
-              className="w-full sm:w-auto"
-            >
-              Pular (sem 2ª posição)
-            </Button>
-          )}
         </div>
       )}
 

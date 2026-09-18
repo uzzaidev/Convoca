@@ -1,0 +1,6 @@
+- Enhancements made to EventRsvpForm and AdminPlayerManager for better usability.
+- Optional second position feature added to EventRsvpForm.
+- Reutilization of base_rating field for improved member rating functionality.
+- New button and modal for reopening finalized games for editing.
+- Access granted to TeamEditor and AdminPlayerManager for finalized games.
+- Removal of restrictions on player corrections and lineups in finalized events.

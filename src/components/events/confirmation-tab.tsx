@@ -95,8 +95,8 @@ export function ConfirmationTab({
         </CardContent>
       </Card>
 
-      {/* Admin Player Manager - shown only for admins when event is scheduled */}
-      {isAdmin && eventStatus === "scheduled" && (
+      {/* Admin Player Manager - shown for admins when event is not canceled */}
+      {isAdmin && eventStatus !== "canceled" && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

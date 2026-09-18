@@ -44,6 +44,7 @@ type Member = {
   id: string;
   user_id: string;
   role: string;
+  base_rating: number | null;
   is_mensalista: boolean;
   monthly_amount_cents: number;
   joined_at: string;

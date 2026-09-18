@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Play, Square, Loader2 } from "lucide-react";
+import { Play, Square, Loader2, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,42 @@ export function MatchControls({ eventId, eventStatus }: MatchControlsProps) {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [showReopenDialog, setShowReopenDialog] = useState(false);
+
+  const handleReopenMatch = async () => {
+    setIsUpdating(true);
+
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "live" }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Erro ao reabrir jogo");
+      }
+
+      toast({
+        title: "Jogo reaberto!",
+        description: "Agora você pode editar times, jogadores e ações. Finalize novamente quando terminar.",
+      });
+
+      setShowReopenDialog(false);
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao reabrir jogo",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleStartMatch = async () => {
     setIsUpdating(true);
@@ -138,8 +174,21 @@ export function MatchControls({ eventId, eventStatus }: MatchControlsProps) {
             )}
 
             {eventStatus === "finished" && (
-              <div className="text-center text-muted-foreground py-2">
-                Jogo finalizado
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+                <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground" />
+                  Jogo finalizado
+                </div>
+                <Button
+                  onClick={() => setShowReopenDialog(true)}
+                  disabled={isUpdating}
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reabrir Jogo para Edição
+                </Button>
               </div>
             )}
           </div>
@@ -163,6 +212,27 @@ export function MatchControls({ eventId, eventStatus }: MatchControlsProps) {
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
               Finalizar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Reopen Dialog */}
+      <AlertDialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reabrir o jogo para edição?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O status do jogo retornará para &quot;Em Andamento&quot;. Isso permite que você altere times, troque jogadores, ajuste o placar ou lance ações. Quando terminar suas alterações, basta finalizar o jogo novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReopenMatch} disabled={isUpdating}>
+              {isUpdating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Reabrir Jogo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

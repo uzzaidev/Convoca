@@ -98,13 +98,6 @@ export async function POST(
       );
     }
 
-    if (event.status === "finished") {
-      return NextResponse.json(
-        { error: "Este evento jÃ¡ foi finalizado" },
-        { status: 400 }
-      );
-    }
-
     const [userMembership] = await sql`
       SELECT * FROM group_members
       WHERE group_id = ${event.group_id} AND user_id = ${userId}

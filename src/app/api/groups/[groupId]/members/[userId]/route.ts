@@ -45,9 +45,9 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { role, is_mensalista, monthly_amount_cents } = body;
+    const { role, is_mensalista, monthly_amount_cents, base_rating } = body;
 
-    if (role === undefined && is_mensalista === undefined && monthly_amount_cents === undefined) {
+    if (role === undefined && is_mensalista === undefined && monthly_amount_cents === undefined && base_rating === undefined) {
       return NextResponse.json(
         { error: "Nenhum campo para atualizar" },
         { status: 400 }
@@ -56,16 +56,26 @@ export async function PATCH(
 
     if (role !== undefined && !["admin", "member"].includes(role)) {
       return NextResponse.json(
-        { error: "Role invÃ¡lido. Use 'admin' ou 'member'" },
+        { error: "Role inválido. Use 'admin' ou 'member'" },
         { status: 400 }
       );
     }
 
     if (monthly_amount_cents !== undefined && (typeof monthly_amount_cents !== "number" || monthly_amount_cents < 0)) {
       return NextResponse.json(
-        { error: "Valor da mensalidade invÃ¡lido" },
+        { error: "Valor da mensalidade inválido" },
         { status: 400 }
       );
+    }
+
+    if (base_rating !== undefined && base_rating !== null) {
+      const parsedRating = Number(base_rating);
+      if (!Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating > 10) {
+        return NextResponse.json(
+          { error: "A nota deve ser um número inteiro entre 0 e 10 (ou nula)" },
+          { status: 400 }
+        );
+      }
     }
 
     if (role && targetMember.role === "admin" && role === "member") {
@@ -77,7 +87,7 @@ export async function PATCH(
 
       if (parseInt(adminCount.count) <= 1) {
         return NextResponse.json(
-          { error: "NÃ£o Ã© possÃ­vel rebaixar o Ãºltimo admin do grupo. Promova outro membro primeiro." },
+          { error: "Não é possível rebaixar o último admin do grupo. Promova outro membro primeiro." },
           { status: 400 }
         );
       }
@@ -86,18 +96,22 @@ export async function PATCH(
     const effectiveRole = role ?? targetMember.role;
     const effectiveIsMensalista = is_mensalista ?? targetMember.is_mensalista;
     const effectiveMonthlyAmount = monthly_amount_cents ?? targetMember.monthly_amount_cents;
+    const effectiveBaseRating = base_rating !== undefined
+      ? (base_rating === null ? null : Number(base_rating))
+      : targetMember.base_rating;
 
     const [updated] = await sql`
       UPDATE group_members
       SET role = ${effectiveRole},
           is_mensalista = ${effectiveIsMensalista},
-          monthly_amount_cents = ${effectiveMonthlyAmount}
+          monthly_amount_cents = ${effectiveMonthlyAmount},
+          base_rating = ${effectiveBaseRating}
       WHERE group_id = ${groupId} AND user_id = ${userId}
       RETURNING *
     `;
 
     logger.info(
-      { groupId, userId, role: effectiveRole, is_mensalista: effectiveIsMensalista, updatedBy: user.id },
+      { groupId, userId, role: effectiveRole, is_mensalista: effectiveIsMensalista, base_rating: effectiveBaseRating, updatedBy: user.id },
       "Member updated"
     );
 

@@ -3,26 +3,20 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 678,
+      "tokens": 598,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 634,
+      "tokens": 658,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "facts/_index.md",
-      "tokens": 649,
+      "tokens": 609,
       "type": "summary"
-    },
-    {
-      "importance": 50,
-      "path": "architecture/billing/billing-changes-are-constrained-by-stripe-api-compatibility.md",
-      "tokens": 444,
-      "type": "context"
     },
     {
       "importance": 50,
@@ -56,14 +50,14 @@
     },
     {
       "importance": 50,
-      "path": "architecture/database/context.md",
-      "tokens": 101,
+      "path": "architecture/credential-management-across-domains.md",
+      "tokens": 235,
       "type": "context"
     },
     {
       "importance": 50,
-      "path": "architecture/database/migration-readiness-is-split-between-code-portability-and-operational-cleanup.md",
-      "tokens": 416,
+      "path": "architecture/database/context.md",
+      "tokens": 101,
       "type": "context"
     },
     {
@@ -79,21 +73,57 @@
       "type": "context"
     },
     {
-      "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
-      "abstractTokens": 35,
+      "abstractPath": "facts/project/curate_workflow_rlm_approach.abstract.md",
+      "abstractTokens": 43,
       "importance": 50,
-      "path": "facts/project/rlm_curate_workflow_facts.md",
-      "tokens": 35,
+      "path": "facts/project/curate_workflow_rlm_approach.md",
+      "tokens": 43,
       "type": "context"
+    },
+    {
+      "abstractPath": "facts/project/project_facts.abstract.md",
+      "abstractTokens": 50,
+      "importance": 50,
+      "path": "facts/project/project_facts.md",
+      "tokens": 50,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/context.md",
+      "tokens": 136,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/credential-management-across-domains.md",
+      "tokens": 236,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/operations/context.md",
+      "tokens": 93,
+      "type": "context"
+    },
+    {
+      "path": "_archived/architecture/billing/billing-changes-are-constrained-by-stripe-api-compatibility.stub.md",
+      "tokens": 278,
+      "type": "stub"
+    },
+    {
+      "path": "_archived/security/operational-security-in-backup-tooling.stub.md",
+      "tokens": 163,
+      "type": "stub"
     }
   ],
-  "generated_at": "2026-06-23T14:27:06.970Z",
+  "generated_at": "2026-09-18T10:38:07.800Z",
   "lane_tokens": {
-    "contexts": 3996,
-    "stubs": 0,
-    "summaries": 1961
+    "contexts": 3894,
+    "stubs": 441,
+    "summaries": 1865
   },
-  "source_fingerprint": "a10f9bd4371a5c63a1d8eb3b9567cf0928ecf1762480fe70e88b86254df83344",
-  "total_tokens": 5957,
+  "source_fingerprint": "a04d7f6e5c35313168671fcbb49fbd42e8154727a8091ca01f7295cee7b08bac",
+  "total_tokens": 6200,
   "version": 1
 }

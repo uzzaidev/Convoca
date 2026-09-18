@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { UserMinus, Shield, Loader2, UserPlus, Search, Repeat } from "lucide-react";
+import { UserMinus, Shield, Loader2, UserPlus, Search, Repeat, Star, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -48,6 +48,7 @@ type Member = {
   id: string;
   user_id: string;
   role: string;
+  base_rating: number | null;
   is_mensalista: boolean;
   monthly_amount_cents: number;
   joined_at: string;
@@ -78,6 +79,11 @@ export function MembersManager({
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
 
+  // Rating editing state
+  const [ratingMember, setRatingMember] = useState<Member | null>(null);
+  const [newRatingValue, setNewRatingValue] = useState<string>("");
+  const [isSavingRating, setIsSavingRating] = useState(false);
+
   // Add member states
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
@@ -91,6 +97,63 @@ export function MembersManager({
   const [newUserPassword, setNewUserPassword] = useState("");
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(null);
+
+  const handleSaveRating = async () => {
+    if (!ratingMember) return;
+
+    let parsedRating: number | null = null;
+    const trimmed = newRatingValue.trim();
+    if (trimmed !== "") {
+      const num = parseInt(trimmed, 10);
+      if (isNaN(num) || num < 0 || num > 10) {
+        toast({
+          title: "Nota inválida",
+          description: "A nota deve ser um número inteiro de 0 a 10",
+          variant: "destructive",
+        });
+        return;
+      }
+      parsedRating = num;
+    }
+
+    setIsSavingRating(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members/${ratingMember.user_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_rating: parsedRating }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao atualizar nota");
+      }
+
+      setMembers(
+        members.map((m) =>
+          m.user_id === ratingMember.user_id ? { ...m, base_rating: parsedRating } : m
+        )
+      );
+
+      toast({
+        title: "Nota atualizada!",
+        description: parsedRating !== null
+          ? `A nota de ${ratingMember.name} agora é ${parsedRating}.`
+          : `A nota de ${ratingMember.name} foi removida.`,
+      });
+
+      setRatingMember(null);
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar nota",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingRating(false);
+    }
+  };
 
   const handleToggleRole = async (member: Member) => {
     setIsUpdating(member.user_id);
@@ -323,6 +386,7 @@ export function MembersManager({
         id: data.member.id,
         user_id: data.member.user_id,
         role: data.member.role,
+        base_rating: data.member.base_rating ?? null,
         is_mensalista: data.member.is_mensalista ?? false,
         monthly_amount_cents: data.member.monthly_amount_cents ?? 0,
         joined_at: data.member.joined_at,
@@ -401,6 +465,7 @@ export function MembersManager({
         id: data.member.id,
         user_id: data.member.user_id,
         role: data.member.role,
+        base_rating: data.member.base_rating ?? null,
         is_mensalista: data.member.is_mensalista ?? false,
         monthly_amount_cents: data.member.monthly_amount_cents ?? 0,
         joined_at: data.member.joined_at,
@@ -535,6 +600,7 @@ export function MembersManager({
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Mensalista</TableHead>
+                <TableHead>Nota</TableHead>
                 <TableHead>Entrou em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -570,6 +636,29 @@ export function MembersManager({
                       ) : (
                         <Badge variant="outline">Avulso</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRatingMember(member);
+                          setNewRatingValue(
+                            member.base_rating !== null && member.base_rating !== undefined
+                              ? String(member.base_rating)
+                              : ""
+                          );
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-border/80 hover:bg-muted/80 transition-colors cursor-pointer group"
+                        title="Clique para definir/editar a nota de 0 a 10"
+                      >
+                        <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                        <span className="tabular-nums font-semibold">
+                          {member.base_rating !== null && member.base_rating !== undefined
+                            ? member.base_rating
+                            : "Sem nota"}
+                        </span>
+                        <Pencil className="h-2.5 w-2.5 text-muted-foreground opacity-40 group-hover:opacity-100 transition-opacity ml-0.5" />
+                      </button>
                     </TableCell>
                     <TableCell>
                       {format(new Date(member.joined_at), "Pp", { locale: ptBR })}
@@ -712,6 +801,72 @@ export function MembersManager({
                   Criar e Adicionar
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar nota do jogador (0 a 10) */}
+      <Dialog open={!!ratingMember} onOpenChange={(open) => !open && setRatingMember(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+              Nota do Jogador
+            </DialogTitle>
+            <DialogDescription>
+              Defina uma nota de 0 a 10 para <strong>{ratingMember?.name}</strong>. Esta nota é usada para equilibrar os times no sorteio (não obrigatória).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label htmlFor="player-rating">Nota (0 a 10)</Label>
+              <Input
+                id="player-rating"
+                type="number"
+                min={0}
+                max={10}
+                step={1}
+                placeholder="Ex: 7 (ou vazio para sem nota)"
+                value={newRatingValue}
+                onChange={(e) => setNewRatingValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSaveRating();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Deixe o campo vazio para deixar o jogador sem nota.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setNewRatingValue("")}
+              disabled={isSavingRating}
+              className="sm:mr-auto text-xs"
+            >
+              Sem nota
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setRatingMember(null)}
+              disabled={isSavingRating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveRating}
+              disabled={isSavingRating}
+            >
+              {isSavingRating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Salvar Nota
             </Button>
           </DialogFooter>
         </DialogContent>

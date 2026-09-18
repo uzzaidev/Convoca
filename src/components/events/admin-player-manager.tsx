@@ -52,6 +52,7 @@ export function AdminPlayerManager({ eventId, groupMembers }: AdminPlayerManager
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [preferredPosition, setPreferredPosition] = useState<Position | null>(null);
   const [secondaryPosition, setSecondaryPosition] = useState<Position | null>(null);
+  const [showSecondary, setShowSecondary] = useState(false);
 
   // Filter unconfirmed members for the dropdown
   const unconfirmedMembers = groupMembers.filter(m => !m.isConfirmed);
@@ -105,6 +106,7 @@ export function AdminPlayerManager({ eventId, groupMembers }: AdminPlayerManager
       setSelectedUserId("");
       setPreferredPosition(null);
       setSecondaryPosition(null);
+      setShowSecondary(false);
       router.refresh();
     } catch (error) {
       toast({
@@ -226,34 +228,62 @@ export function AdminPlayerManager({ eventId, groupMembers }: AdminPlayerManager
               </div>
             </div>
 
-            {/* Secondary position */}
-            <div className="space-y-2">
-              <Label>2ª Posição (Opcional)</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {POSITIONS.map((pos) => {
-                  const IconComponent = pos.Icon;
-                  return (
-                    <button
-                      key={pos.value}
-                      type="button"
-                      onClick={() =>
-                        setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
-                      }
-                      className={`p-3 rounded-lg border-2 transition-all text-center ${
-                        secondaryPosition === pos.value
-                          ? "border-primary bg-primary/10 shadow-md"
-                          : "border-muted hover:border-primary/50"
-                      }`}
-                    >
-                      <div className="flex justify-center mb-1">
-                        <IconComponent className="h-6 w-6" />
-                      </div>
-                      <div className="text-xs font-medium">{pos.label}</div>
-                    </button>
-                  );
-                })}
+            {/* Secondary position (optional & expandable) */}
+            {!showSecondary && !secondaryPosition ? (
+              <div className="pt-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSecondary(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground h-auto py-1 px-2"
+                >
+                  + Adicionar 2ª posição (opcional)
+                </Button>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2 rounded-lg border border-dashed p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium">2ª Posição (Opcional)</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSecondaryPosition(null);
+                      setShowSecondary(false);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-destructive h-auto py-0.5 px-2"
+                  >
+                    Remover 2ª opção
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {POSITIONS.filter(pos => pos.value !== preferredPosition).map((pos) => {
+                    const IconComponent = pos.Icon;
+                    return (
+                      <button
+                        key={pos.value}
+                        type="button"
+                        onClick={() =>
+                          setSecondaryPosition(secondaryPosition === pos.value ? null : pos.value)
+                        }
+                        className={`p-2.5 rounded-lg border-2 transition-all text-center ${
+                          secondaryPosition === pos.value
+                            ? "border-primary bg-primary/10 shadow-md"
+                            : "border-muted hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex justify-center mb-1">
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        <div className="text-xs font-medium">{pos.label}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

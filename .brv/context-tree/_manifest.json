@@ -81,6 +81,12 @@
       "type": "context"
     },
     {
+      "importance": 50,
+      "path": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md",
+      "tokens": 190,
+      "type": "context"
+    },
+    {
       "abstractPath": "facts/project/project_facts.abstract.md",
       "abstractTokens": 50,
       "importance": 50,
@@ -101,12 +107,6 @@
       "type": "context"
     },
     {
-      "importance": 50,
-      "path": "security/operations/context.md",
-      "tokens": 93,
-      "type": "context"
-    },
-    {
       "path": "_archived/architecture/billing/billing-changes-are-constrained-by-stripe-api-compatibility.stub.md",
       "tokens": 278,
       "type": "stub"
@@ -117,13 +117,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-09-18T10:38:07.800Z",
+  "generated_at": "2026-09-18T14:35:57.357Z",
   "lane_tokens": {
-    "contexts": 3894,
+    "contexts": 3991,
     "stubs": 441,
     "summaries": 1865
   },
-  "source_fingerprint": "a04d7f6e5c35313168671fcbb49fbd42e8154727a8091ca01f7295cee7b08bac",
-  "total_tokens": 6200,
+  "source_fingerprint": "8eff54d12b3033b4e785fd0e706fe4c402b1ca7c5d7f71c4bd3ee0b124a3888e",
+  "total_tokens": 6297,
   "version": 1
 }

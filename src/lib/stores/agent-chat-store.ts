@@ -124,6 +124,24 @@ export const useAgentChatStore = create<AgentChatStore>((set, get) => ({
         signal: controller.signal,
       });
 
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as {
+          message?: string;
+          error?: string;
+        };
+        const errMsg =
+          errorData.message ||
+          errorData.error ||
+          `Erro na requisição (${res.status})`;
+        patch(set, groupId, (prev) => ({
+          ...prev,
+          error: errMsg,
+          previousResponseId: undefined,
+          messages: prev.messages.filter((m) => m.id !== assistantMsgId),
+        }));
+        return;
+      }
+
       if (!res.body) throw new Error("Resposta sem corpo");
 
       const reader = res.body.getReader();
@@ -132,6 +150,7 @@ export const useAgentChatStore = create<AgentChatStore>((set, get) => ({
       let assistantText = "";
       const toolCalls: { tool: string; result?: unknown }[] = [];
       let receivedDone = false;
+      let hasError = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -243,9 +262,11 @@ export const useAgentChatStore = create<AgentChatStore>((set, get) => ({
               break;
 
             case "error":
+              hasError = true;
               patch(set, groupId, (prev) => ({
                 ...prev,
                 error: data.message as string,
+                previousResponseId: undefined,
                 messages: prev.messages.filter((m) => m.id !== assistantMsgId),
               }));
               break;
@@ -253,20 +274,26 @@ export const useAgentChatStore = create<AgentChatStore>((set, get) => ({
         }
       }
 
-      if (!receivedDone) {
-        patch(set, groupId, (prev) => ({
-          ...prev,
-          error: "A resposta foi interrompida inesperadamente. Tente novamente.",
-          messages: prev.messages.map((m) =>
-            m.id === assistantMsgId ? { ...m, pending: false } : m
-          ),
-        }));
+      if (!receivedDone && !hasError) {
+        const currentState = ensure(get().byGroup, groupId);
+        // Se confirmation_required foi emitido, a resposta pausou aguardando o usuário — não é interrupção inesperada
+        if (!currentState.confirmation) {
+          patch(set, groupId, (prev) => ({
+            ...prev,
+            error: "A resposta foi interrompida inesperadamente. Tente novamente.",
+            previousResponseId: undefined,
+            messages: prev.messages.map((m) =>
+              m.id === assistantMsgId ? { ...m, pending: false } : m
+            ),
+          }));
+        }
       }
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         patch(set, groupId, (prev) => ({
           ...prev,
           error: "Falha ao conectar ao agente. Tente novamente.",
+          previousResponseId: undefined,
           messages: prev.messages.filter((m) => m.id !== assistantMsgId),
         }));
       }
@@ -295,6 +322,7 @@ export const useAgentChatStore = create<AgentChatStore>((set, get) => ({
   cancel: (groupId) => {
     patch(set, groupId, (prev) => ({
       ...prev,
+      previousResponseId: undefined,
       confirmation: null,
       messages: [
         ...prev.messages,

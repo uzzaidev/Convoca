@@ -1,0 +1,1 @@
+Este documento aborda soluções para bugs na exportação de PDF mobile e a resiliência no streaming do agente de IA da OpenAI utilizando a Web Share API.

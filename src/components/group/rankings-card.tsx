@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { isNativePlatform } from "@/lib/mobile/platform-detector";
+import { useToast } from "@/components/ui/use-toast";
 
 type PlayerStat = {
   id: string;
@@ -220,6 +221,7 @@ export function RankingsCard({
   groupId,
 }: RankingsCardProps) {
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSeasonChange = (value: string) => {
     if (!groupId) return;
@@ -388,31 +390,97 @@ export function RankingsCard({
       });
 
       const fileName = `ranking-${tabName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`;
+      const pdfBlob = doc.output('blob');
 
       if (isNativePlatform()) {
-        // jsPDF's doc.save() relies on the browser <a download> mechanism, which
-        // the iOS/Android WKWebView inside the Capacitor app doesn't support.
-        // Write the file to disk and hand it to the native share sheet instead.
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const { Share } = await import('@capacitor/share');
+        // App nativo Capacitor (iOS / Android): salvar no cache e abrir Share Sheet nativa
+        try {
+          const { Filesystem, Directory } = await import('@capacitor/filesystem');
+          const { Share } = await import('@capacitor/share');
 
-        const base64 = doc.output('datauristring').split('base64,')[1];
-        const { uri } = await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Cache,
-        });
+          const base64 = doc.output('datauristring').split('base64,')[1];
+          const { uri } = await Filesystem.writeFile({
+            path: fileName,
+            data: base64,
+            directory: Directory.Cache,
+          });
 
-        await Share.share({
-          title: `Ranking - ${tabName}`,
-          url: uri,
-        });
+          await Share.share({
+            title: `Ranking - ${tabName}`,
+            url: uri,
+          });
+        } catch (shareErr: unknown) {
+          const err = shareErr as { name?: string; message?: string };
+          if (
+            err?.name === 'AbortError' ||
+            err?.message?.includes('canceled') ||
+            err?.message?.includes('cancelled')
+          ) {
+            return;
+          }
+          throw shareErr;
+        }
       } else {
-        doc.save(fileName);
+        // Navegador Web móvel (Safari iOS / Chrome Android): usar Web Share API se disponível
+        const pdfFile =
+          typeof File !== 'undefined'
+            ? new File([pdfBlob], fileName, { type: 'application/pdf' })
+            : null;
+
+        if (
+          pdfFile &&
+          typeof navigator !== 'undefined' &&
+          navigator.canShare &&
+          navigator.canShare({ files: [pdfFile] })
+        ) {
+          try {
+            await navigator.share({
+              files: [pdfFile],
+              title: `Ranking - ${tabName}`,
+            });
+            return;
+          } catch (shareErr: unknown) {
+            const err = shareErr as { name?: string; message?: string };
+            if (
+              err?.name === 'AbortError' ||
+              err?.message?.includes('canceled') ||
+              err?.message?.includes('cancelled')
+            ) {
+              // Usuário cancelou ou fechou a share sheet
+              return;
+            }
+            console.warn('navigator.share falhou, tentando fallback por Blob URL:', shareErr);
+          }
+        }
+
+        // Fallback de download via Blob URL para navegadores desktop e web
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 2000);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as { name?: string; message?: string };
+      if (
+        err?.name === 'AbortError' ||
+        err?.message?.includes('canceled') ||
+        err?.message?.includes('cancelled')
+      ) {
+        return;
+      }
       console.error('Error exporting PDF:', error);
-      alert('Erro ao exportar PDF. Tente novamente.');
+      toast({
+        title: 'Erro ao exportar PDF',
+        description: 'Não foi possível gerar o arquivo. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setIsExporting(false);
     }

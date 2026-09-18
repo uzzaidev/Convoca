@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 0,
+  "curationsSinceDream": 1,
   "lastDreamAt": "2026-09-18T10:38:07.807Z",
   "lastDreamLogId": "drm-1789727811571",
   "pendingMerges": [
@@ -10,7 +10,12 @@
       "suggestedByDreamId": "drm-1789727811571"
     }
   ],
-  "staleSummaryPaths": [],
+  "staleSummaryPaths": [
+    {
+      "enqueuedAt": 1789742157328,
+      "path": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md"
+    }
+  ],
   "totalDreams": 4,
   "version": 1
 }

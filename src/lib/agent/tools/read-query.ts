@@ -46,8 +46,9 @@ Exemplo: SELECT u.name, ea.status FROM event_attendance ea JOIN users u ON u.id 
       );
     }
 
-    // Adicionar LIMIT se não houver
-    const withLimit = /\blimit\s+\d+/i.test(q) ? q : `${q} LIMIT 100`;
+    // Adicionar LIMIT se não houver (removendo qualquer ponto-e-vírgula no final)
+    const cleanQ = q.replace(/;+\s*$/, "").trim();
+    const withLimit = /\blimit\s+\d+/i.test(cleanQ) ? cleanQ : `${cleanQ} LIMIT 100`;
 
     const rows = await sql.unsafe(withLimit);
     return rows;

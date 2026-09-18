@@ -149,6 +149,9 @@ export async function POST(req: NextRequest) {
                       always: {
                         tool_names: writeToolNames,
                       },
+                      never: {
+                        tool_names: ["query_data"],
+                      },
                     }
                   : "never",
             },
@@ -163,9 +166,33 @@ export async function POST(req: NextRequest) {
           abortController.abort();
         }, 90_000);
 
-        const response = await openai.responses.create(responseParams, {
-          signal: abortController.signal,
-        });
+        let response;
+        try {
+          response = await openai.responses.create(responseParams, {
+            signal: abortController.signal,
+          });
+        } catch (callErr: unknown) {
+          const errObj = callErr as { code?: string; param?: string; message?: string };
+          const errMsg = errObj?.message ?? "";
+          if (
+            previousResponseId &&
+            (errObj?.code === "previous_response_not_found" ||
+              errObj?.param === "previous_response_id" ||
+              errMsg.includes("previous_response_id") ||
+              errMsg.includes("not found"))
+          ) {
+            logger.warn(
+              { userId: user.id, groupId, previousResponseId },
+              "agent: previous_response_id expirado ou inválido, tentando novamente sem ele"
+            );
+            responseParams.previous_response_id = null;
+            response = await openai.responses.create(responseParams, {
+              signal: abortController.signal,
+            });
+          } else {
+            throw callErr;
+          }
+        }
 
         let fullText = "";
         let lastResponseId: string | undefined;
@@ -197,19 +224,53 @@ export async function POST(req: NextRequest) {
           }
 
           if (evType === "response.output_item.added") {
-            const item = (event as { item?: { type?: string; name?: string; status?: string } }).item;
+            const item = (event as { item?: { type?: string; name?: string; status?: string; arguments?: unknown } }).item;
             if (item?.type === "mcp_call") {
               logger.info({ userId: user.id, groupId, tool: item.name }, "agent: tool chamada");
               send("tool_call", { tool: item.name ?? "unknown", status: "running" });
+            } else if (item?.type === "mcp_approval_request") {
+              logger.info({ userId: user.id, groupId, tool: item.name }, "agent: aprovação necessária (output_item.added)");
+              approvalRequired = true;
+              pendingToolCall = item;
+              let parsedArgs = item.arguments;
+              if (typeof parsedArgs === "string") {
+                try {
+                  parsedArgs = JSON.parse(parsedArgs);
+                } catch {
+                  // manter como string
+                }
+              }
+              send("confirmation_required", {
+                tool: item.name,
+                arguments: parsedArgs,
+                responseId: lastResponseId,
+              });
             }
             continue;
           }
 
           if (evType === "response.output_item.done") {
-            const item = (event as { item?: { type?: string; name?: string; output?: unknown } }).item;
+            const item = (event as { item?: { type?: string; name?: string; output?: unknown; arguments?: unknown } }).item;
             if (item?.type === "mcp_call") {
               logger.info({ userId: user.id, groupId, tool: item.name }, "agent: tool concluída");
               send("tool_result", { tool: item.name ?? "unknown", result: item.output });
+            } else if (item?.type === "mcp_approval_request" && !approvalRequired) {
+              logger.info({ userId: user.id, groupId, tool: item.name }, "agent: aprovação necessária (output_item.done)");
+              approvalRequired = true;
+              pendingToolCall = item;
+              let parsedArgs = item.arguments;
+              if (typeof parsedArgs === "string") {
+                try {
+                  parsedArgs = JSON.parse(parsedArgs);
+                } catch {
+                  // manter como string
+                }
+              }
+              send("confirmation_required", {
+                tool: item.name,
+                arguments: parsedArgs,
+                responseId: lastResponseId,
+              });
             }
             continue;
           }
@@ -222,9 +283,17 @@ export async function POST(req: NextRequest) {
           if (evType === "response.mcp_call_approval_request") {
             approvalRequired = true;
             pendingToolCall = event;
+            let parsedArgs = (event as { arguments?: unknown }).arguments;
+            if (typeof parsedArgs === "string") {
+              try {
+                parsedArgs = JSON.parse(parsedArgs);
+              } catch {
+                // manter como string
+              }
+            }
             send("confirmation_required", {
               tool: (event as { name?: string }).name,
-              arguments: (event as { arguments?: unknown }).arguments,
+              arguments: parsedArgs,
               responseId: lastResponseId,
             });
             continue;

@@ -156,7 +156,7 @@ export function GroupInfoForm({ group }: GroupInfoFormProps) {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              No modo somente controle, o grupo mantem partidas, presencas, times e historico, mas esconde rankings e pontuacao.
+              No modo somente controle, o grupo mantém partidas, presenças, times e histórico, mas esconde rankings e pontuação.
             </p>
           </div>
         </CardContent>

@@ -776,7 +776,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           <div className="mb-8 rounded-lg border bg-white p-6">
             <h2 className="text-xl font-semibold">Controle de partidas</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Este grupo esta no modo somente controle. Rankings, pontuacao e estatisticas competitivas ficam ocultos, enquanto eventos, confirmacoes, times, jogo ao vivo, pagamentos e historico seguem disponiveis.
+              Este grupo está no modo somente controle. Rankings, pontuação e estatísticas competitivas ficam ocultos, enquanto eventos, confirmações, times, jogo ao vivo, pagamentos e histórico seguem disponíveis.
             </p>
           </div>
         )}

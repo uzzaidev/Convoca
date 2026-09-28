@@ -69,21 +69,21 @@ export function StripePaymentNotice({ hasGroupWithoutSubscription, noticeDismiss
               💳
             </div>
             <DialogTitle className="text-lg leading-tight">
-              Pagamento via Stripe em breve obrigatorio
+              Pagamento via Stripe em breve obrigatório
             </DialogTitle>
           </div>
           <DialogDescription className="text-sm text-left space-y-2">
             <p>
               A partir de <strong>outubro de 2026</strong>, o pagamento do Convoca
-              sera aceito <strong>somente pelo Stripe com cartao de credito</strong>.
+              será aceito <strong>somente pelo Stripe com cartão de crédito</strong>.
             </p>
             <p>
-              Seu grupo ainda nao tem uma assinatura configurada. Para garantir o
-              acesso sem interrupcao, configure o pagamento antes do prazo.
+              Seu grupo ainda não tem uma assinatura configurada. Para garantir o
+              acesso sem interrupção, configure o pagamento antes do prazo.
             </p>
             {daysUntilDeadline > 0 && (
               <p className="text-amber-700 font-medium">
-                {daysUntilDeadline} dias restantes ate o prazo.
+                {daysUntilDeadline} dias restantes até o prazo.
               </p>
             )}
           </DialogDescription>

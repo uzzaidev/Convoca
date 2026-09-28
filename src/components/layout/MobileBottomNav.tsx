@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   Home,
-  Calendar,
+  Trophy,
   DollarSign,
   Bot,
   MoreHorizontal,
@@ -25,7 +25,7 @@ interface MobileBottomNavProps {
 type Tab = { href: string; label: string; icon: React.ReactNode; exact?: boolean };
 
 const tabClass =
-  "flex flex-1 flex-col items-center justify-center gap-1 h-16 text-[11px] font-medium transition-colors";
+  "flex flex-1 flex-col items-center justify-center gap-0.5 h-16 text-[11px] font-medium transition-colors";
 
 export function MobileBottomNav({ user, groups }: MobileBottomNavProps) {
   const pathname = usePathname();
@@ -41,16 +41,16 @@ export function MobileBottomNav({ user, groups }: MobileBottomNavProps) {
 
   const tabs: Tab[] = isGroupContext
     ? [
-        { href: `/groups/${groupId}`, label: "Início", icon: <Home className="h-5 w-5" />, exact: true },
-        { href: `/groups/${groupId}/events`, label: "Eventos", icon: <Calendar className="h-5 w-5" /> },
-        { href: `/groups/${groupId}/payments`, label: "Pagamentos", icon: <DollarSign className="h-5 w-5" /> },
-        { href: `/groups/${groupId}/chat`, label: "IA", icon: <Bot className="h-5 w-5" /> },
+        { href: `/groups/${groupId}`, label: "Início", icon: <Home className="h-6 w-6" />, exact: true },
+        { href: `/groups/${groupId}/championships`, label: "Campeonatos", icon: <Trophy className="h-6 w-6" /> },
+        { href: `/groups/${groupId}/payments`, label: "Pagamentos", icon: <DollarSign className="h-6 w-6" /> },
+        { href: `/groups/${groupId}/chat`, label: "IA", icon: <Bot className="h-6 w-6" /> },
       ]
     : [
-        { href: "/dashboard", label: "Início", icon: <Home className="h-5 w-5" />, exact: true },
-        { href: "/groups/new", label: "Novo grupo", icon: <Plus className="h-5 w-5" />, exact: true },
-        { href: "/groups/join", label: "Entrar", icon: <Users className="h-5 w-5" />, exact: true },
-        { href: "/profile", label: "Perfil", icon: <UserCircle className="h-5 w-5" />, exact: true },
+        { href: "/dashboard", label: "Início", icon: <Home className="h-6 w-6" />, exact: true },
+        { href: "/groups/new", label: "Novo grupo", icon: <Plus className="h-6 w-6" />, exact: true },
+        { href: "/groups/join", label: "Entrar", icon: <Users className="h-6 w-6" />, exact: true },
+        { href: "/profile", label: "Perfil", icon: <UserCircle className="h-6 w-6" />, exact: true },
       ];
 
   return (
@@ -71,8 +71,15 @@ export function MobileBottomNav({ user, groups }: MobileBottomNavProps) {
             aria-current={isActive ? "page" : undefined}
             className={cn(tabClass, "min-w-0", isActive ? "text-green-400" : "text-white/60")}
           >
-            {tab.icon}
-            <span className="max-w-full truncate px-1">{tab.label}</span>
+            <span
+              className={cn(
+                "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
+                isActive && "bg-green-400/15",
+              )}
+            >
+              {tab.icon}
+            </span>
+            <span className="max-w-full truncate tracking-tight">{tab.label}</span>
           </Link>
         );
       })}
@@ -83,7 +90,14 @@ export function MobileBottomNav({ user, groups }: MobileBottomNavProps) {
           onClick={() => setIsMoreOpen(true)}
           className={cn(tabClass, isMoreOpen ? "text-green-400" : "text-white/60")}
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <span
+            className={cn(
+              "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
+              isMoreOpen && "bg-green-400/15",
+            )}
+          >
+            <MoreHorizontal className="h-6 w-6" />
+          </span>
           <span>Mais</span>
         </button>
         <SheetContent

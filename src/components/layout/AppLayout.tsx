@@ -1,17 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppSidebar, type SidebarUser, type SidebarGroup } from "./AppSidebar";
+import { MobileBottomNav } from "./MobileBottomNav";
 import { useResizableSidebar } from "@/hooks/useResizableSidebar";
 import { FloatingAgentBubble } from "@/components/agent/FloatingAgentBubble";
 
@@ -27,7 +20,6 @@ export function AppLayout({ user, groups, children }: AppLayoutProps) {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sidebar_collapsed") === "true";
   });
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
   const { width: sidebarWidth, handleMouseDown: handleSidebarResize } =
@@ -38,14 +30,8 @@ export function AppLayout({ user, groups, children }: AppLayoutProps) {
       maxWidth: 340,
     });
 
-  // Fecha mobile drawer ao mudar de rota
-  const prevPathname = useRef(pathname);
-  useEffect(() => {
-    if (prevPathname.current !== pathname) {
-      setIsMobileOpen(false);
-      prevPathname.current = pathname;
-    }
-  }, [pathname]);
+  const currentGroupId = pathname.match(/^\/groups\/([^/]+)/)?.[1];
+  const currentGroup = groups.find((g) => g.id === currentGroupId);
 
   // Detecta desktop
   useEffect(() => {
@@ -98,40 +84,19 @@ export function AppLayout({ user, groups, children }: AppLayoutProps) {
         }}
       >
         {/* Mobile top bar */}
-        <div className="md:hidden sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-navy px-4">
-          <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/10"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="w-[260px] p-0 bg-navy border-r border-white/10"
-            >
-              <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-              <AppSidebar
-                user={user}
-                groups={groups}
-                isCollapsed={false}
-                onToggleCollapse={() => setIsMobileOpen(false)}
-                onLinkClick={() => setIsMobileOpen(false)}
-              />
-            </SheetContent>
-          </Sheet>
-          <span className="text-lg font-bold text-white">Convoca</span>
+        <div className="md:hidden sticky top-0 z-30 flex h-14 items-center border-b bg-navy px-4">
+          <span className="text-lg font-bold text-white truncate">
+            {currentGroup?.name ?? "Convoca"}
+          </span>
         </div>
 
         {/* Page content */}
-        <div className="flex-1 bg-gray-50 overflow-auto">
+        <div className="flex-1 bg-gray-50 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           {children}
         </div>
       </main>
 
+      <MobileBottomNav user={user} groups={groups} />
       <FloatingAgentBubble groups={groups} />
     </div>
   );

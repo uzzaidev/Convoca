@@ -19,7 +19,7 @@ export default async function ChatPage({ params }: RouteParams) {
   const role = ctx.userRole === "admin" ? "admin" : "member";
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom,0px))] md:h-dvh">
       <main className="flex-1 min-h-0 flex flex-col max-w-3xl w-full mx-auto px-4 pb-4">
         <div className="flex-1 min-h-0 border rounded-lg overflow-hidden bg-background mt-4">
           <ChatInterface groupId={groupId} role={role} />

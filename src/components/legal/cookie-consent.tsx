@@ -108,7 +108,7 @@ export function CookieConsentBanner() {
       <button
         type="button"
         onClick={() => setVisible(true)}
-        className="fixed bottom-4 left-4 z-[9997] rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-md backdrop-blur-md hover:bg-card hover:text-foreground"
+        className="fixed bottom-4 left-4 [body:has([data-bottom-nav])_&]:hidden z-[9997] rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-md backdrop-blur-md hover:bg-card hover:text-foreground"
         aria-label="Gerenciar cookies"
         title="Gerenciar cookies"
       >

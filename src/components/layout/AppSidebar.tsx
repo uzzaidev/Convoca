@@ -22,7 +22,7 @@ import {
 import {
   LayoutDashboard,
   Users,
-  Calendar,
+  Cookie,
   Settings,
   Settings2,
   LogOut,
@@ -268,9 +268,9 @@ export function AppSidebar({
               exact
             />
             <NavItem
-              href={`/groups/${currentGroupId}/events`}
-              icon={<Calendar className="h-4 w-4" />}
-              label="Eventos"
+              href={`/groups/${currentGroupId}/championships`}
+              icon={<Trophy className="h-4 w-4" />}
+              label="Campeonatos"
               isCollapsed={isCollapsed}
               onClick={onLinkClick}
             />
@@ -482,6 +482,17 @@ export function AppSidebar({
             />
           </>
         )}
+
+        <button
+          onClick={() => (window as Window & { convocaShowConsent?: () => void }).convocaShowConsent?.()}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-white/60 hover:bg-white/10 hover:text-white transition-all",
+            isCollapsed && "justify-center px-2",
+          )}
+        >
+          <Cookie className="h-4 w-4 flex-shrink-0" />
+          {!isCollapsed && <span>Cookies</span>}
+        </button>
 
         <button
           onClick={() => signOut({ callbackUrl: "/" })}

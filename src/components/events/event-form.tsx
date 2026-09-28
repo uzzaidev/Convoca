@@ -194,9 +194,9 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 items-end">
             <div className="space-y-2">
-              <Label htmlFor="maxPlayers">Máximo de Jogadores *</Label>
+              <Label htmlFor="maxPlayers">Máx. de jogadores *</Label>
               <Input
                 id="maxPlayers"
                 type="number"
@@ -212,7 +212,7 @@ export function EventForm({ groupId, mode, eventId, initialData }: EventFormProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxGoalkeepers">Máximo de Goleiros *</Label>
+              <Label htmlFor="maxGoalkeepers">Máx. de goleiros *</Label>
               <Input
                 id="maxGoalkeepers"
                 type="number"

@@ -289,7 +289,7 @@ export default async function DashboardPage() {
             <div className="cv-stat-trend">agendadas</div>
           </div>
           <div className="cv-stat">
-            <div className="cv-stat-label">Confirmações</div>
+            <div className="cv-stat-label">Presenças</div>
             <div className={`cv-stat-value ${confirmedCount > 0 ? "text-pitch" : ""}`}>
               {confirmedCount}
             </div>

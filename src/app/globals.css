@@ -240,6 +240,11 @@
     font-size: 11.5px;
     color: hsl(var(--muted-foreground));
   }
+  /* 3 cards lado a lado no celular: menos respiro lateral para o rótulo caber */
+  @media (max-width: 639px) {
+    .cv-stat { padding: 12px; }
+    .cv-stat-label { font-size: 10px; letter-spacing: 0.04em; }
+  }
 }
 
 /* ============================================================

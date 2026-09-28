@@ -2,10 +2,10 @@
 // AI Changelog Generator
 // ============================================================================
 // Script Node.js ESM puro (zero dependências externas).
-// Usa fetch nativo do Node 22+ para chamar a GitHub Models API.
+// Usa fetch nativo do Node 22+ para chamar a OpenAI API (GitHub Models foi aposentado).
 //
 // Variáveis de ambiente esperadas:
-//   GH_MODELS_TOKEN — Token OAuth do gh CLI (configurado via `gh auth token | gh secret set GH_MODELS_TOKEN`)
+//   OPENAI_API_KEY  — chave da OpenAI (secret do repo)
 //   BRANCH_NAME     — nome da branch (injetado pelo workflow)
 //
 // Arquivos esperados no diretório de trabalho:
@@ -16,14 +16,14 @@
 
 import { readFile, writeFile } from 'node:fs/promises';
 
-const MODELS_ENDPOINT = 'https://models.github.ai/inference/chat/completions';
-const MODEL = 'openai/gpt-4.1-nano';
+const MODELS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+const MODEL = 'gpt-4.1-nano';
 const MAX_DIFF_CHARS = 16_000; // ~4k tokens — mantém total do prompt abaixo de 8k tokens
 
 async function main() {
-  const token = process.env.GH_MODELS_TOKEN;
+  const token = process.env.OPENAI_API_KEY;
   if (!token) {
-    console.error('GH_MODELS_TOKEN não configurado. Pulando geração de changelog.');
+    console.error('OPENAI_API_KEY não configurado. Pulando geração de changelog.');
     process.exit(0);
   }
 
@@ -58,7 +58,7 @@ async function main() {
     diff,
   ].join('\n');
 
-  console.log(`Chamando GitHub Models API (${MODEL})...`);
+  console.log(`Chamando OpenAI API (${MODEL})...`);
   console.log(`Tamanho do prompt: ~${(userPrompt.length / 1000).toFixed(1)}k chars`);
 
   const response = await fetch(MODELS_ENDPOINT, {
@@ -79,7 +79,7 @@ async function main() {
 
   if (!response.ok) {
     const text = await response.text();
-    console.error(`GitHub Models API erro ${response.status}: ${text}`);
+    console.error(`OpenAI API erro ${response.status}: ${text}`);
     process.exit(1);
   }
 

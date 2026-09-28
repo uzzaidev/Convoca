@@ -132,7 +132,7 @@ export function ChatInterface({ groupId, role }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Digite sua mensagem... (Enter para enviar)"
+          placeholder="Digite sua mensagem..."
           className="resize-none min-h-[44px] max-h-32"
           rows={1}
           disabled={loading || !!confirmation}

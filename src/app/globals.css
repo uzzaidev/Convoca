@@ -248,6 +248,12 @@
 @layer utilities {
   html, body { overflow-x: hidden; max-width: 100vw; }
 
+  /* iOS Safari dá zoom automático ao focar campos com fonte < 16px e a tela
+     fica "desenquadrada". Força 16px no mobile em todos os campos. */
+  @media (max-width: 767px) {
+    input, textarea, select { font-size: 16px !important; }
+  }
+
   .container-responsive {
     width: 100%; max-width: 100vw;
     padding-left: 1rem; padding-right: 1rem;

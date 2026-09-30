@@ -398,17 +398,28 @@ export function RankingsCard({
           const { Filesystem, Directory } = await import('@capacitor/filesystem');
           const { Share } = await import('@capacitor/share');
 
-          const base64 = doc.output('datauristring').split('base64,')[1];
+          // Converte com segurança para base64
+          const buffer = doc.output('arraybuffer');
+          const bytes = new Uint8Array(buffer);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const base64 = window.btoa(binary);
+
           const { uri } = await Filesystem.writeFile({
             path: fileName,
             data: base64,
             directory: Directory.Cache,
           });
 
+          // Capacitor Share suporta `files: [uri]` para envio de arquivos locais no iOS/Android
           await Share.share({
             title: `Ranking - ${tabName}`,
+            files: [uri],
             url: uri,
           });
+          return;
         } catch (shareErr: unknown) {
           const err = shareErr as { name?: string; message?: string };
           if (
@@ -418,43 +429,50 @@ export function RankingsCard({
           ) {
             return;
           }
-          throw shareErr;
+          console.warn('Capacitor native share falhou, tentando fallback web:', shareErr);
         }
-      } else {
-        // Navegador Web móvel (Safari iOS / Chrome Android): usar Web Share API se disponível
-        const pdfFile =
-          typeof File !== 'undefined'
-            ? new File([pdfBlob], fileName, { type: 'application/pdf' })
-            : null;
+      }
 
-        if (
-          pdfFile &&
-          typeof navigator !== 'undefined' &&
-          navigator.canShare &&
-          navigator.canShare({ files: [pdfFile] })
-        ) {
-          try {
-            await navigator.share({
-              files: [pdfFile],
-              title: `Ranking - ${tabName}`,
-            });
+      // Navegador Web móvel (Safari iOS / Chrome Android): tentar Web Share API com File
+      const pdfFile =
+        typeof File !== 'undefined'
+          ? new File([pdfBlob], fileName, { type: 'application/pdf' })
+          : null;
+
+      if (
+        pdfFile &&
+        typeof navigator !== 'undefined' &&
+        navigator.canShare &&
+        navigator.canShare({ files: [pdfFile] })
+      ) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: `Ranking - ${tabName}`,
+          });
+          return;
+        } catch (shareErr: unknown) {
+          const err = shareErr as { name?: string; message?: string };
+          if (
+            err?.name === 'AbortError' ||
+            err?.message?.includes('canceled') ||
+            err?.message?.includes('cancelled')
+          ) {
+            // Usuário cancelou ou fechou a share sheet
             return;
-          } catch (shareErr: unknown) {
-            const err = shareErr as { name?: string; message?: string };
-            if (
-              err?.name === 'AbortError' ||
-              err?.message?.includes('canceled') ||
-              err?.message?.includes('cancelled')
-            ) {
-              // Usuário cancelou ou fechou a share sheet
-              return;
-            }
-            console.warn('navigator.share falhou, tentando fallback por Blob URL:', shareErr);
           }
+          console.warn('navigator.share falhou, tentando fallback por Blob URL:', shareErr);
         }
+      }
 
-        // Fallback de download via Blob URL para navegadores desktop e web
-        const blobUrl = URL.createObjectURL(pdfBlob);
+      // Fallback de download via Blob URL para navegadores desktop e web móvel
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const isMobileWeb = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobileWeb) {
+        // No Safari / Chrome móvel, abrir direto a aba permite ao usuário visualizar e salvar nos Arquivos
+        window.open(blobUrl, '_blank');
+      } else {
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = fileName;
@@ -478,7 +496,7 @@ export function RankingsCard({
       console.error('Error exporting PDF:', error);
       toast({
         title: 'Erro ao exportar PDF',
-        description: 'Não foi possível gerar o arquivo. Tente novamente.',
+        description: err?.message || 'Não foi possível gerar o arquivo. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

@@ -12,8 +12,8 @@ type Params = Promise<{ eventId: string }>;
 const adminRsvpSchema = z.object({
   userId: z.string().uuid(),
   status: z.enum(["yes", "no"]),
-  preferredPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
-  secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).optional(),
+  preferredPosition: z.enum(["gk", "defender", "midfielder", "forward"]).nullish(),
+  secondaryPosition: z.enum(["gk", "defender", "midfielder", "forward"]).nullish(),
 });
 
 async function promoteFromWaitlist(eventId: string, event: { max_goalkeepers: number; max_players: number }) {

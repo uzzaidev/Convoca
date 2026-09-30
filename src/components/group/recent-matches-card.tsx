@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Trophy as TrophyIcon } from "lucide-react";
 
 type Team = {
@@ -27,6 +28,8 @@ type RecentMatchesCardProps = {
 };
 
 export function RecentMatchesCard({ matches, groupId }: RecentMatchesCardProps) {
+  const [showAll, setShowAll] = React.useState(false);
+
   if (matches.length === 0) {
     return null;
   }
@@ -38,11 +41,11 @@ export function RecentMatchesCard({ matches, groupId }: RecentMatchesCardProps) 
           <TrophyIcon className="h-5 w-5 text-orange-500" />
           Jogos Recentes
         </CardTitle>
-        <CardDescription>Últimos 5 jogos finalizados - clique para ver detalhes</CardDescription>
+        <CardDescription>{showAll ? `Todos os ${matches.length} jogos finalizados da temporada` : "Últimos 5 jogos finalizados"} - clique para ver detalhes</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {matches.map((match) => (
+          {(showAll ? matches : matches.slice(0, 5)).map((match) => (
             <Link
               key={match.id}
               href={`/groups/${groupId}/events/${match.id}`}
@@ -105,6 +108,11 @@ export function RecentMatchesCard({ matches, groupId }: RecentMatchesCardProps) 
             </Link>
           ))}
         </div>
+        {matches.length > 5 && (
+          <Button variant="outline" className="w-full mt-4" onClick={() => setShowAll(!showAll)}>
+            {showAll ? "Mostrar menos" : `Ver todos (${matches.length})`}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

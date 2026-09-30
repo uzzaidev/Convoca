@@ -419,7 +419,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           FROM events e
           LEFT JOIN venues v ON e.venue_id = v.id
           WHERE e.id = ANY(${eventIds})
-          ORDER BY e.starts_at DESC LIMIT 5
+          ORDER BY e.starts_at DESC
         `,
         sql`
           WITH recent_events AS (

@@ -25,6 +25,7 @@ Tabelas disponíveis (PostgreSQL). Todas as UUIDs são TEXT.
 - teams(id, event_id, name, is_winner)
 - team_members(id, team_id, user_id, position)
 - event_actions(id, event_id, actor_user_id, action_type['goal'|'assist'|'own_goal'|'yellow_card'|'red_card'|...], subject_user_id, team_id, minute)
+  ATENÇÃO: subject_user_id = jogador que fez a ação (autor do gol/assistência/cartão). actor_user_id = quem REGISTROU a ação no app (admin), NÃO o jogador. Para gols/assistências/cartões de um jogador, SEMPRE agrupe/filtre por subject_user_id. Filtre o grupo via events.group_id (JOIN events) e ignore events.deleted_at.
 - player_ratings(id, event_id, rater_user_id, rated_user_id, score, tags['mvp'|...])
 - charges(id, group_id, user_id, event_id, type['monthly'|'daily'|'fine'|'other'], amount_cents, due_date, status['pending'|'paid'|'canceled'])
 - wallets(id, owner_type['group'|'user'], owner_id, balance_cents)

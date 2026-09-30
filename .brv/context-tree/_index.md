@@ -1,61 +1,54 @@
 ---
-children_hash: e612f2c887d2783295123de603800abd0a2d5f11f347b981e7052042a2e0f83b
-compression_ratio: 0.2976605276256844
+children_hash: efc4168d49702461fcb1b072c51d5c6069dbf16ae6cd79668256fa3f943fa086
+compression_ratio: 0.30888575458392104
 condensation_order: 3
 covers: [architecture/_index.md, facts/_index.md, security/_index.md]
-covers_token_total: 2009
+covers_token_total: 2127
 summary_level: d3
-token_count: 598
+token_count: 657
 type: summary
 ---
 # Structural Summary of Knowledge Entries
 
 ## Architecture Overview
-The architecture focuses on billing integration and database portability, emphasizing security and migration readiness.
+The architecture focuses on billing and database portability, highlighting significant changes in the Stripe v21 API and credential management across domains.
 
 ### Billing System
-- **Key Changes**:
-  - **Invoice API**: Transitioned from `invoices.retrieveUpcoming()` to `invoices.createPreview()`.
+- **Key Changes**: 
+  - **Invoice API**: Renamed from `invoices.retrieveUpcoming()` to `invoices.createPreview()`.
   - **Subscription Management**: Fields `current_period_start` and `current_period_end` moved to `SubscriptionItem`.
-  - **Promotion Codes**: Updated from `PromotionCode.coupon` to `PromotionCode.promotion.coupon`.
-
-- **Related Topics**:
-  - **Multi Plan Subscription System**: Detailed in `architecture/billing/multi_plan_subscription_system.md`.
-  - **Stripe V21 API Migration**: Documented in `architecture/billing/stripe_v21_api_migration.md`.
+  - **Promotion Codes**: Structure changed from `PromotionCode.coupon` to `PromotionCode.promotion.coupon`.
+- **Migration**: Implementation of a multi-plan subscription system documented in `architecture/billing/multi_plan_subscription_system.md`.
 
 ### Database Architecture
-- **Key Concepts**:
-  - **Provider Abstraction**: Focus on schema portability and credential risks.
-  - **Authentication**: Implemented via NextAuth Credentials using raw SQL against `public.users`.
+- **Provider Abstraction**: Ensures flexibility across different database providers.
+- **Migration Readiness**: Emphasizes updating `DATABASE_URL` and cleaning hardcoded credentials.
+- **Key Findings**: Authentication via NextAuth Credentials, not relying on Supabase SDK.
 
-- **Migration Considerations**:
-  - Update `DATABASE_URL` and migrate schema/data.
-  - Challenges primarily in configuration and legacy scripts.
+### Credential Management
+- **Security Risks**: Hardcoded credentials in backup scripts pose significant security threats, requiring rotation during migrations.
 
 ## Project Knowledge Summary
-The project knowledge captures essential facts about Peladeiros infrastructure, billing, authentication, and database management.
-
-### Domain: Facts
-- **Purpose**: Standalone project facts for easy recall.
-- **Scope**: Includes technology choices, operational facts, and implementation details.
+The project knowledge encapsulates essential facts about the Peladeiros infrastructure and implementation choices.
 
 ### Key Concepts
-- **Infrastructure**:
-  - No Supabase SDK used; authentication via NextAuth with raw SQL.
-  - User creation and password recovery managed through API routes.
+- **Authentication**: Utilizes NextAuth Credentials with custom flows for user management.
+- **Database Management**: Access through a generic PostgreSQL library; migration involves schema/data transfer.
+- **Legacy Scripts**: Existing scripts contain hardcoded credentials needing updates.
 
-### Related Topics
-- **Security**: Risks related to credential exposure in backup scripts.
+### Notable Entries
+- **Exportação de PDF Mobile**: Solutions for mobile PDF export using the Web Share API.
+- **Peladeiros Billing and Stripe Facts**: Consolidates billing architecture facts, including Stripe v21 migration.
 
 ## Security Overview
-The security domain focuses on credential management and exposure mitigation.
+The security domain emphasizes operational security, focusing on credential management and exposure risks.
 
 ### Key Points
-- Effective credential management is crucial during migrations.
-- Hardcoded credentials in backup scripts pose significant security risks.
+- **Credential Management**: Effective management is critical during migrations; hardcoded credentials must be rotated.
+- **Operational Security**: Focuses on secret handling and remediation of credential exposure risks.
 
-### Operations Overview
-- **Focus**: Tracks operational security findings related to credentials and scripts.
-- **Backup Credential Exposure**: Identified risks linked to hardcoded credentials and migration processes.
+### Operations
+- **Backup Credential Exposure**: Identifies risks in backup scripts, recommending rotation of hardcoded credentials post-migration.
 
-This summary encapsulates the critical architectural decisions, security considerations, and project facts, providing a clear pathway for further exploration of detailed entries.
+### Conclusion
+The knowledge entries collectively emphasize the importance of secure credential management, effective billing architecture, and database portability, with detailed documentation for operational practices and migration strategies.

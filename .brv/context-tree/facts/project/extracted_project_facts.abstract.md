@@ -1,0 +1,1 @@
+This document contains a curated collection of factual statements extracted from the provided context.

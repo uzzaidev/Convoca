@@ -1,0 +1,3 @@
+- Curated facts extracted from the provided context.
+- Focus on factual statements for clarity and accuracy.
+- Organized in a structured narrative format.

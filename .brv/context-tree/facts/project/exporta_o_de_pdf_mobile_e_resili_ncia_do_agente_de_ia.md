@@ -2,7 +2,7 @@
 title: Exportação de PDF mobile e Resiliência do Agente de IA
 summary: Soluções de bugs para exportação de PDF mobile com Web Share API e resiliência no streaming do Agente de IA da OpenAI com MCP
 tags: []
-related: []
+related: [facts/project/extracted_project_facts.md, facts/project/project_facts.md]
 keywords: []
 createdAt: '2026-09-18T14:35:51.736Z'
 updatedAt: '2026-09-18T14:35:51.736Z'

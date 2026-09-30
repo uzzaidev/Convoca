@@ -1,67 +1,80 @@
 ---
-children_hash: 2cb7bab0595175e2f062bc37b93ed0fff464b10a7953b2ff1adb11198ee63411
-compression_ratio: 0.38875878220140514
+children_hash: c9db83f1cb6b1f74afa20e072046c015f6e7d105ee3007d6b39e2ced666e15fb
+compression_ratio: 0.37558062375580625
 condensation_order: 2
-covers: [context.md, credential-management-across-domains.md, database-portability-and-secret-hygiene.md, operations/_index.md]
-covers_token_total: 1281
+covers: [context.md, credential-management-across-domains.md, credential-management-risks.md, database-portability-and-secret-hygiene.md, operations/_index.md]
+covers_token_total: 1507
 summary_level: d2
-token_count: 498
+token_count: 566
 type: summary
 ---
 ## Domain: Security
 
 ### Purpose
-- Operational security knowledge focusing on secret handling, credential exposure, and mitigation actions.
+Operational security knowledge focusing on secret handling, credential exposure, and mitigation actions.
 
 ### Scope
-- **Included**: 
-  - Credential management risks
-  - Secret rotation requirements
-  - Operational script security
-  - Exposure remediation notes
-- **Excluded**: 
-  - Feature authorization logic
-  - User-facing security guidance
+**Included:**
+- Credential management risks
+- Secret rotation requirements
+- Operational script security
+- Exposure remediation notes
+
+**Excluded:**
+- Feature authorization logic
+- User-facing security guidance
 
 ### Ownership
-- Peladeiros engineering
+Managed by Peladeiros engineering.
 
 ### Usage
-- For security-relevant operational findings and remediation constraints.
+For documenting security-relevant operational findings and remediation constraints.
 
 ---
 
 ## Credential Management Across Domains
-- **Summary**: Effective credential management is essential for security and portability during provider migrations.
-- **Key Points**:
-  - Hardcoded credentials in backup scripts pose security risks.
-  - Credential rotation and cleanup are necessary during migrations.
+Effective credential management is vital for operational security and database migrations.
+
+### Key Points
+- Hardcoded credentials in backup scripts pose security risks, necessitating their rotation during migrations.
+- Operational leftovers and exposed secrets in backup tooling are significant blockers.
+
+---
+
+## Credential Management Risks
+Secure credential management is essential during database migrations.
+
+### Key Points
+- Hardcoded credentials in backup scripts require rotation to maintain security.
+- Both architecture and security domains emphasize the importance of effective credential management.
 
 ---
 
 ## Database Portability and Secret Hygiene
-- **Summary**: Maintaining database portability requires attention to secret hygiene during migrations.
-- **Key Points**:
-  - Cleaning up hardcoded secrets is crucial for secure database migrations.
-  - Operational credential risks are linked to security operations.
+Maintaining database portability necessitates attention to secret hygiene during migrations.
+
+### Key Points
+- Cleanup of hardcoded secrets is crucial for secure database migrations.
+- Risks associated with operational credentials must be addressed to ensure security.
 
 ---
 
 ## Operations Overview
-- **Focus**: Tracks operational security findings related to credentials and scripts for infrastructure maintenance and migration.
-- **Key Concepts**:
-  - Hardcoded secrets
-  - Backup scripts
-  - Credential rotation
-  - Provider migration risk
+Tracks operational security findings related to credentials and scripts for infrastructure maintenance and migration.
+
+### Key Concepts
+- Hardcoded secrets
+- Backup scripts
+- Credential rotation
+- Provider migration risk
 
 ### Backup Credential Exposure
-- **Task**: Document credential exposure risk in backup scripts.
-- **Key Changes**:
-  - Identified hardcoded credentials in backup scripts.
-  - Linked exposure to provider migration and post-migration rotation.
-- **Flow**: Infrastructure review → inspect scripts → detect credentials → treat as exposure risk → rotate after migration.
-- **Main Issue**: Exposed secrets in operational tooling, requiring remediation across providers. 
+Documents credential exposure risks in backup scripts identified during infrastructure reviews.
+
+### Key Points
+- Hardcoded credentials in backup scripts linked to provider migration must be rotated post-migration.
+- Risk mitigation involves replacing static secrets with environment-based injection or secret management.
 
 ### Facts
-- Hardcoded credentials in backup scripts must be treated as exposed secrets and rotated after migration.
+- Backup scripts for Supabase and Neon contain hardcoded credentials.
+- Credential rotation is recommended after any migration due to exposed secrets in backup scripts.

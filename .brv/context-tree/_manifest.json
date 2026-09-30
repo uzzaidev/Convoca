@@ -3,19 +3,19 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 598,
+      "tokens": 657,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 658,
+      "tokens": 708,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "facts/_index.md",
-      "tokens": 609,
+      "tokens": 590,
       "type": "summary"
     },
     {
@@ -62,6 +62,12 @@
     },
     {
       "importance": 50,
+      "path": "architecture/database-portability-and-security.md",
+      "tokens": 229,
+      "type": "context"
+    },
+    {
+      "importance": 50,
       "path": "facts/context.md",
       "tokens": 120,
       "type": "context"
@@ -73,17 +79,19 @@
       "type": "context"
     },
     {
-      "abstractPath": "facts/project/curate_workflow_rlm_approach.abstract.md",
-      "abstractTokens": 43,
+      "abstractPath": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.abstract.md",
+      "abstractTokens": 38,
       "importance": 50,
-      "path": "facts/project/curate_workflow_rlm_approach.md",
-      "tokens": 43,
+      "path": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md",
+      "tokens": 38,
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/extracted_project_facts.abstract.md",
+      "abstractTokens": 26,
       "importance": 50,
-      "path": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md",
-      "tokens": 190,
+      "path": "facts/project/extracted_project_facts.md",
+      "tokens": 26,
       "type": "context"
     },
     {
@@ -95,6 +103,14 @@
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/rlm_curate_workflow_facts.abstract.md",
+      "abstractTokens": 35,
+      "importance": 50,
+      "path": "facts/project/rlm_curate_workflow_facts.md",
+      "tokens": 35,
+      "type": "context"
+    },
+    {
       "importance": 50,
       "path": "security/context.md",
       "tokens": 136,
@@ -102,8 +118,8 @@
     },
     {
       "importance": 50,
-      "path": "security/credential-management-across-domains.md",
-      "tokens": 236,
+      "path": "security/operations/context.md",
+      "tokens": 93,
       "type": "context"
     },
     {
@@ -117,13 +133,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-09-18T14:35:57.357Z",
+  "generated_at": "2026-09-30T17:18:49.889Z",
   "lane_tokens": {
-    "contexts": 3991,
+    "contexts": 3943,
     "stubs": 441,
-    "summaries": 1865
+    "summaries": 1955
   },
-  "source_fingerprint": "8eff54d12b3033b4e785fd0e706fe4c402b1ca7c5d7f71c4bd3ee0b124a3888e",
-  "total_tokens": 6297,
+  "source_fingerprint": "a84a2267a7334e742d9311328fd655ec6d01029ff135ccfd700ba6e759be64f0",
+  "total_tokens": 6339,
   "version": 1
 }

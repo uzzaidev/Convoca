@@ -1,0 +1,150 @@
+{
+  "completedAt": 1790788729890,
+  "id": "drm-1790788679906",
+  "operations": [
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "facts/project/curate_workflow_rlm_approach.md",
+        "facts/project/rlm_curate_workflow_facts.md"
+      ],
+      "needsReview": true,
+      "outputFile": "facts/project/rlm_curate_workflow_facts.md",
+      "previousTexts": {
+        "facts/project/curate_workflow_rlm_approach.md": "---\nconsolidated_at: '2026-05-16T16:17:53.103Z'\nconsolidated_from: [{date: '2026-05-16T16:17:53.103Z', path: facts/project/rlm_curation_workflow_facts.md, reason: 'These two files document the same RLM curation workflow constraints and are largely overlapping in flow, verification rules, and execution mode. They should be merged into a single canonical workflow entry to eliminate duplication.'}]\nrelated: [facts/project/rlm_curate_workflow_facts.md]\n---\n## Reason\nDocument the RLM curation workflow requirements and verification steps from the provided context, including the precomputed single-pass execution constraints.\n\n## Raw Concept\n**Task:**\nDocument the RLM curation workflow for small contexts and precomputed single-pass contexts.\n\n**Changes:**\n- Use the precomputed recon result to decide on single-pass handling\n- Extract facts from the context without printing raw content\n- Organize facts with deduplication and subject grouping\n- Verify curated results through applied file paths and summary checks\n- Recognized precomputed recon with suggested single-pass mode\n- Captured task constraints for extraction and verification\n- Preserved workflow facts for future curation reference\n\n**Flow:**\nrecon -> single-pass extraction -> dedup/group -> curate -> verify -> record history\n\n**Timestamp:** 2026-05-16T16:01:15.186Z\n\n## Narrative\n### Structure\nThe workflow distinguishes between small single-pass contexts and larger chunked contexts, then applies extraction and organization before curation.\n\n### Dependencies\nUses tools.curation.recon, tools.curation.mapExtract, tools.curation.dedup, tools.curation.groupBySubject, and tools.curate. Depends on the precomputed recon result, task ID, and history/metadata variables supplied by the caller.\n\n### Highlights\nThe provided context explicitly says not to print raw context, not to call recon again, and to verify using result.applied[].filePath. Single-pass mode is explicitly recommended, and verification must rely on applied file paths instead of rereading files.\n\n### Rules\nIMPORTANT: Do NOT print raw context. Do NOT call tools.curation.recon — it has been pre-computed. Proceed directly to extraction. For chunked extraction use tools.curation.mapExtract(). Pass taskId as a bare variable, not a string. Use tools.curation.groupBySubject() and tools.curation.dedup() to organize extractions. Verify via result.applied[].filePath — do NOT call readFile for verification.\n\n## Facts\n- **curation_workflow_recon**: The curation workflow requires recon before processing context. [convention]\n- **curation_workflow_mode**: Single-pass mode should be used when recon suggests a small context. [convention]\n- **curation_workflow_chunked_extraction**: Chunked extraction should use tools.curation.mapExtract when the context is large. [convention]\n- **curation_workflow_fact_processing**: Deduplication and grouping should be applied to extracted facts before curation. [convention]\n- **curation_workflow_verification**: Curate result success must be verified via result.summary and applied file paths. [convention]\n- **curation_context_size**: The current context is a 601-character, 12-line snippet being curated with the RLM approach. [other]\n- **recon_mode**: The task uses precomputed recon with suggestedMode set to single-pass. [other]\n- **verification_rule**: The task requires verification via result.applied[].filePath and forbids readFile for verification. [convention]\n- **curation_mode**: Curate tasks should use the RLM approach with single-pass when suggestedMode is single-pass. [convention]\n- **context_size**: The context size is 1310 characters across 33 lines with 0 messages. [project]\n- **recon_usage**: Reconnaissance was already computed and should not be called again for this task. [convention]"
+      },
+      "reason": "These two files document the same RLM curation workflow constraints and are largely overlapping in flow, verification rules, and execution mode. Merging will eliminate duplication.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "facts/project/extracted_project_facts.md",
+        "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "facts/project/extracted_project_facts.md": "---\ntitle: Extracted Project Facts\nsummary: Curated facts extracted from the provided context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-09-30T17:02:51.391Z'\nupdatedAt: '2026-09-30T17:02:51.391Z'\n---\n## Reason\nCurating extracted factual statements.\n\n## Raw Concept\n**Task:**\nExtract factual statements from context.\n\n## Narrative\n### Structure\nCollection of facts extracted from the provided context.\n",
+        "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md": "---\ntitle: Exportação de PDF mobile e Resiliência do Agente de IA\nsummary: Soluções de bugs para exportação de PDF mobile com Web Share API e resiliência no streaming do Agente de IA da OpenAI com MCP\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-09-18T14:35:51.736Z'\nupdatedAt: '2026-09-18T14:35:51.736Z'\n---\n## Reason\nDocumentando soluções de bugs e resiliência no streaming\n\n## Raw Concept\n**Task:**\nDocumentar soluções de bugs e resiliência\n\n**Timestamp:** 2026-09-18T14:35:51.734Z\n\n## Narrative\n### Structure\nEste documento aborda soluções para exportação de PDF em dispositivos móveis e a resiliência no streaming do agente de IA da OpenAI.\n\n### Highlights\nAborda a integração da Web Share API e as práticas recomendadas para garantir a resiliência.\n"
+      },
+      "reason": "Both files provide factual documentation relevant to the project, with one focusing on extracted facts and the other on specific bug solutions related to PDF export and AI agent resilience.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "facts/project/extracted_project_facts.md",
+        "facts/project/curate_workflow_rlm_approach.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "facts/project/extracted_project_facts.md": "---\ntitle: Extracted Project Facts\nsummary: Curated facts extracted from the provided context.\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-09-30T17:02:51.391Z'\nupdatedAt: '2026-09-30T17:02:51.391Z'\n---\n## Reason\nCurating extracted factual statements.\n\n## Raw Concept\n**Task:**\nExtract factual statements from context.\n\n## Narrative\n### Structure\nCollection of facts extracted from the provided context.\n",
+        "facts/project/curate_workflow_rlm_approach.md": "---\nconsolidated_at: '2026-05-16T16:17:53.103Z'\nconsolidated_from: [{date: '2026-05-16T16:17:53.103Z', path: facts/project/rlm_curation_workflow_facts.md, reason: 'These two files document the same RLM curation workflow constraints and are largely overlapping in flow, verification rules, and execution mode. They should be merged into a single canonical workflow entry to eliminate duplication.'}]\nrelated: [facts/project/rlm_curate_workflow_facts.md]\n---\n## Reason\nDocument the RLM curation workflow requirements and verification steps from the provided context, including the precomputed single-pass execution constraints.\n\n## Raw Concept\n**Task:**\nDocument the RLM curation workflow for small contexts and precomputed single-pass contexts.\n\n**Changes:**\n- Use the precomputed recon result to decide on single-pass handling\n- Extract facts from the context without printing raw content\n- Organize facts with deduplication and subject grouping\n- Verify curated results through applied file paths and summary checks\n- Recognized precomputed recon with suggested single-pass mode\n- Captured task constraints for extraction and verification\n- Preserved workflow facts for future curation reference\n\n**Flow:**\nrecon -> single-pass extraction -> dedup/group -> curate -> verify -> record history\n\n**Timestamp:** 2026-05-16T16:01:15.186Z\n\n## Narrative\n### Structure\nThe workflow distinguishes between small single-pass contexts and larger chunked contexts, then applies extraction and organization before curation.\n\n### Dependencies\nUses tools.curation.recon, tools.curation.mapExtract, tools.curation.dedup, tools.curation.groupBySubject, and tools.curate. Depends on the precomputed recon result, task ID, and history/metadata variables supplied by the caller.\n\n### Highlights\nThe provided context explicitly says not to print raw context, not to call recon again, and to verify using result.applied[].filePath. Single-pass mode is explicitly recommended, and verification must rely on applied file paths instead of rereading files.\n\n### Rules\nIMPORTANT: Do NOT print raw context. Do NOT call tools.curation.recon — it has been pre-computed. Proceed directly to extraction. For chunked extraction use tools.curation.mapExtract(). Pass taskId as a bare variable, not a string. Use tools.curation.groupBySubject() and tools.curation.dedup() to organize extractions. Verify via result.applied[].filePath — do NOT call readFile for verification.\n\n## Facts\n- **curation_workflow_recon**: The curation workflow requires recon before processing context. [convention]\n- **curation_workflow_mode**: Single-pass mode should be used when recon suggests a small context. [convention]\n- **curation_workflow_chunked_extraction**: Chunked extraction should use tools.curation.mapExtract when the context is large. [convention]\n- **curation_workflow_fact_processing**: Deduplication and grouping should be applied to extracted facts before curation. [convention]\n- **curation_workflow_verification**: Curate result success must be verified via result.summary and applied file paths. [convention]\n- **curation_context_size**: The current context is a 601-character, 12-line snippet being curated with the RLM approach. [other]\n- **recon_mode**: The task uses precomputed recon with suggestedMode set to single-pass. [other]\n- **verification_rule**: The task requires verification via result.applied[].filePath and forbids readFile for verification. [convention]\n- **curation_mode**: Curate tasks should use the RLM approach with single-pass when suggestedMode is single-pass. [convention]\n- **context_size**: The context size is 1310 characters across 33 lines with 0 messages. [project]\n- **recon_usage**: Reconnaissance was already computed and should not be called again for this task. [convention]"
+      },
+      "reason": "The extracted project facts may inform the curation workflow, providing context to the factual statements used in the RLM approach.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md",
+        "facts/project/project_facts.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md": "---\ntitle: Exportação de PDF mobile e Resiliência do Agente de IA\nsummary: Soluções de bugs para exportação de PDF mobile com Web Share API e resiliência no streaming do Agente de IA da OpenAI com MCP\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-09-18T14:35:51.736Z'\nupdatedAt: '2026-09-18T14:35:51.736Z'\n---\n## Reason\nDocumentando soluções de bugs e resiliência no streaming\n\n## Raw Concept\n**Task:**\nDocumentar soluções de bugs e resiliência\n\n**Timestamp:** 2026-09-18T14:35:51.734Z\n\n## Narrative\n### Structure\nEste documento aborda soluções para exportação de PDF em dispositivos móveis e a resiliência no streaming do agente de IA da OpenAI.\n\n### Highlights\nAborda a integração da Web Share API e as práticas recomendadas para garantir a resiliência.\n"
+      },
+      "reason": "The PDF export solutions intersect with broader project facts, particularly regarding integration and operational efficiency.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.9,
+      "needsReview": false,
+      "outputFile": "security/credential-management-risks.md",
+      "sources": [
+        "architecture/_index.md",
+        "security/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.85,
+      "needsReview": false,
+      "outputFile": "architecture/database-portability-and-security.md",
+      "sources": [
+        "architecture/_index.md",
+        "security/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_billing_and_stripe_facts.md",
+      "needsReview": false,
+      "reason": "Contains actionable knowledge related to billing and Stripe integration, despite being a draft.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_infrastructure_facts_2026_03_31.md",
+      "needsReview": false,
+      "reason": "Holds relevant infrastructure diagnosis facts that are useful for future references.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/operations/backup_credential_exposure.md",
+      "needsReview": false,
+      "reason": "Documents significant security risks related to hardcoded credentials, which is critical information.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing-system-and-database-portability.md",
+      "needsReview": false,
+      "reason": "Contains important insights on billing and database portability concerns, relevant for ongoing operations.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/credential-management-across-domains.md",
+      "needsReview": false,
+      "reason": "Addresses critical aspects of credential management and security, which remain relevant.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/multi_plan_subscription_system.md",
+      "needsReview": false,
+      "reason": "Details the multi-plan subscription system and its architecture, which is valuable for understanding billing operations.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/stripe_v21_api_migration.md",
+      "needsReview": false,
+      "reason": "Documents essential changes in the Stripe API that impact billing systems, providing necessary knowledge.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/database/provider_migration_diagnosis.md",
+      "needsReview": false,
+      "reason": "Reports on the infrastructure diagnosis and migration readiness, holding actionable insights.",
+      "type": "PRUNE"
+    }
+  ],
+  "startedAt": 1790788679906,
+  "status": "completed",
+  "summary": {
+    "consolidated": 4,
+    "errors": 0,
+    "flaggedForReview": 1,
+    "pruned": 8,
+    "synthesized": 2
+  },
+  "taskId": "1ae53de1-e13b-4407-92ef-86f5d002fa68",
+  "trigger": "agent-idle"
+}

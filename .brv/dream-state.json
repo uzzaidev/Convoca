@@ -1,21 +1,9 @@
 {
-  "curationsSinceDream": 1,
-  "lastDreamAt": "2026-09-18T10:38:07.807Z",
-  "lastDreamLogId": "drm-1789727811571",
-  "pendingMerges": [
-    {
-      "mergeTarget": "facts/project/rlm_curate_workflow_facts.md",
-      "reason": "Content overlaps significantly with rlm_curate_workflow_facts.md; should be merged.",
-      "sourceFile": "facts/project/curate_workflow_rlm_approach.md",
-      "suggestedByDreamId": "drm-1789727811571"
-    }
-  ],
-  "staleSummaryPaths": [
-    {
-      "enqueuedAt": 1789742157328,
-      "path": "facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md"
-    }
-  ],
-  "totalDreams": 4,
+  "curationsSinceDream": 0,
+  "lastDreamAt": "2026-09-30T17:18:49.893Z",
+  "lastDreamLogId": "drm-1790788679906",
+  "pendingMerges": [],
+  "staleSummaryPaths": [],
+  "totalDreams": 5,
   "version": 1
 }

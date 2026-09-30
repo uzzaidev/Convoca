@@ -1,6 +1,7 @@
 ---
 consolidated_at: '2026-05-16T16:17:53.095Z'
 consolidated_from: [{date: '2026-05-16T16:17:53.095Z', path: facts/project/project_facts_snapshot_2026_05_16.md, reason: 'These are overlapping project fact snapshots for the same date and domain, both summarizing the Convoca stack, billing, authentication, database portability, and documentation structure. The snapshot file is a narrower point-in-time derivative of the broader project_facts file, so they should be consolidated to avoid duplication.'}]
+related: [facts/project/exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md]
 ---
 ## Reason
 Curate extracted project facts from RLM context, preserving the broader project fact base and the 2026-05-16 snapshot details.

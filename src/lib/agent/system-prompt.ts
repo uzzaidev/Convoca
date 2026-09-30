@@ -20,17 +20,21 @@ Tabelas disponíveis (PostgreSQL). Todas as UUIDs são TEXT.
 - groups(id, name, app_mode['ranking'|'control'])
 - group_members(id, user_id, group_id, role['admin'|'member'], is_goalkeeper, base_rating, is_mensalista, monthly_amount_cents)
 - venues(id, group_id, name, address)
-- events(id, group_id, starts_at, venue_id, max_players, max_goalkeepers, status['scheduled'|'live'|'finished'|'canceled'], deleted_at)
-- event_attendance(id, event_id, user_id, role['gk'|'line'], status['yes'|'no'|'waitlist'], checked_in_at, order_of_arrival)
+- events(id, group_id, starts_at, venue_id, max_players, max_goalkeepers, status['scheduled'|'live'|'finished'|'canceled'])
+- event_attendance(id, event_id, user_id, role['gk'|'line'], status['yes'|'no'|'waitlist'|'dm'], checked_in_at, order_of_arrival)
 - teams(id, event_id, name, is_winner)
 - team_members(id, team_id, user_id, position)
 - event_actions(id, event_id, actor_user_id, action_type['goal'|'assist'|'own_goal'|'yellow_card'|'red_card'|...], subject_user_id, team_id, minute)
-  ATENÇÃO: subject_user_id = jogador que fez a ação (autor do gol/assistência/cartão). actor_user_id = quem REGISTROU a ação no app (admin), NÃO o jogador. Para gols/assistências/cartões de um jogador, SEMPRE agrupe/filtre por subject_user_id. Filtre o grupo via events.group_id (JOIN events) e ignore events.deleted_at.
-- player_ratings(id, event_id, rater_user_id, rated_user_id, score, tags['mvp'|...])
+  ATENÇÃO: subject_user_id = jogador que fez a ação (autor do gol/assistência/cartão). actor_user_id = quem REGISTROU a ação no app (admin), NÃO o jogador. Para gols/assistências/cartões de um jogador, SEMPRE agrupe/filtre por subject_user_id. own_goal: team_id = time de quem fez o gol contra; o ponto vai para o time adversário. event_actions não tem group_id: filtre via JOIN events e.group_id.
+- player_ratings(id, event_id, rater_user_id, rated_user_id, score 0-10, tags['mvp'|...]) — MVP = linhas com 'mvp' em tags
 - charges(id, group_id, user_id, event_id, type['monthly'|'daily'|'fine'|'other'], amount_cents, due_date, status['pending'|'paid'|'canceled'])
 - wallets(id, owner_type['group'|'user'], owner_id, balance_cents)
 - scoring_configs(id, group_id, points_win, points_draw, points_loss, points_goal, points_assist, points_mvp, points_presence)
 - seasons(id, group_id, name, status['active'|'finished'], starts_at, ends_at)
+- expenses(id, group_id, category['venue_rental'|'equipment'|'referee'|'other'], description, amount_cents, date)
+- season_snapshots(id, season_id, user_id, position, points, games_played, wins, draws, losses, goals, assists, own_goals, mvp_count, goal_difference) — ranking final de temporadas encerradas
+- mvp_tiebreakers(id, event_id, round, status, tied_user_ids, winner_user_id)
+- championships(id, group_id, name, format, status, starts_at, ends_at); championship_teams(id, championship_id, name); championship_matches(id, round_id, home_team_id, away_team_id, home_score, away_score, status)
 - event_recurrences(id, group_id, frequency, day_of_week, start_time, venue_id, max_players, is_active)
 `.trim();
 

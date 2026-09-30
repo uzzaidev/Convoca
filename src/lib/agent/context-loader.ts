@@ -98,7 +98,6 @@ export async function loadGroupContext(
       WHERE e.group_id = ${groupId}
         AND e.status IN ('scheduled', 'live')
         AND e.starts_at >= NOW()
-        AND e.deleted_at IS NULL
       GROUP BY e.id, v.name
       ORDER BY e.starts_at ASC
       LIMIT 7
@@ -116,7 +115,6 @@ export async function loadGroupContext(
       LEFT JOIN event_attendance ea ON ea.event_id = e.id
       WHERE e.group_id = ${groupId}
         AND e.status = 'finished'
-        AND e.deleted_at IS NULL
       GROUP BY e.id, v.name
       ORDER BY e.starts_at DESC
       LIMIT 3
@@ -139,7 +137,7 @@ export async function loadGroupContext(
       ),
       finished_events AS (
         SELECT id FROM events
-        WHERE group_id = ${groupId} AND status = 'finished' AND deleted_at IS NULL
+        WHERE group_id = ${groupId} AND status = 'finished'
       ),
       team_scores AS (
         SELECT
@@ -252,7 +250,7 @@ export async function loadGroupContext(
           `,
           sql<{ balance_cents: string }[]>`
             SELECT balance_cents FROM wallets
-            WHERE group_id = ${groupId}
+            WHERE owner_type = 'group' AND owner_id = ${groupId}
             LIMIT 1
           `,
         ])
@@ -345,7 +343,7 @@ export function formatGroupContext(ctx: GroupContext): string {
       (r, i) =>
         `${i + 1}. ${r.name} — ${r.points} pts | ${r.goals} gols | ${r.assists} assist | ${r.games_played} jogos`
     );
-    parts.push(`RANKING TOP ${ctx.rankings.length}\n${lines.join("\n")}`);
+    parts.push(`RANKING GERAL (todas as temporadas) TOP ${ctx.rankings.length}\n${lines.join("\n")}`);
   }
 
   // Cobranças do usuário

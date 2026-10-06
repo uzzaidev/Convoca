@@ -84,3 +84,6 @@ docs/presentation/
 # Apple private keys
 *.p8
 .env*
+
+# Músicas de referência para os motions (mídia local, não versionar)
+/muscias/

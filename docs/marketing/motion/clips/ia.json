@@ -1,0 +1,45 @@
+{
+ "t0": 2.799,
+ "events": [
+  {
+   "name": "pergunta",
+   "t": 3.421,
+   "box": {
+    "x": 33,
+    "y": 703,
+    "width": 243.7,
+    "height": 44
+   }
+  },
+  {
+   "name": "enviar",
+   "t": 6.597,
+   "box": {
+    "x": 284.7,
+    "y": 703,
+    "width": 72.3,
+    "height": 40
+   }
+  },
+  {
+   "name": "done",
+   "t": 14.475,
+   "box": null
+  },
+  {
+   "name": "zoom",
+   "t": 14.785,
+   "box": {
+    "x": 81,
+    "y": 208,
+    "width": 228.3,
+    "height": 20
+   }
+  },
+  {
+   "name": "end",
+   "t": 17.196,
+   "box": null
+  }
+ ]
+}

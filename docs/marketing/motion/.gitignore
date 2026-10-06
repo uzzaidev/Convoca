@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+.auth/
+_rec/
+# mídia gerada/pesada: fica só local (refaça com rec.mjs, audio.mjs e exportar.mjs)
+*.mp4
+*.webm
+*.wav
+*.mp3

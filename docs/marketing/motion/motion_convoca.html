@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convoca Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#050b14; --fg:#f5f3ee; --dim:#7d8796; --line:#1d2a3b;
+    --acc:#22c55e; /* verde Convoca — única cor de destaque */ --acc-d:#16a34a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; background:var(--bg); overflow:hidden; }
+  body { color:var(--fg); font-family:"DM Sans", system-ui, sans-serif; cursor:pointer; }
+
+  /* Palco fixo 1920x1080, escalado para caber na janela */
+  #stage { position:absolute; left:50%; top:50%; width:1920px; height:1080px; overflow:hidden;
+    background:radial-gradient(ellipse 65% 60% at 62% 50%, #0f2a1c 0%, #08131f 45%, #050b14 78%); }
+  #grid { position:absolute; inset:-80px; opacity:.55; will-change:transform;
+    background-image:radial-gradient(#1f3346 1px, transparent 1.2px); background-size:40px 40px; }
+  /* marcação de campo bem apagada atrás do celular */
+  #pitch { position:absolute; left:1340px; top:540px; width:760px; height:760px; margin:-380px 0 0 -380px;
+    border:2px solid rgba(34,197,94,.07); border-radius:50%; }
+  #pitch::after { content:""; position:absolute; left:50%; top:-400px; bottom:-400px; border-left:2px solid rgba(34,197,94,.06); }
+
+  .chrome { position:absolute; font:500 15px "JetBrains Mono", monospace; color:var(--dim);
+    letter-spacing:.08em; text-transform:uppercase; z-index:5; display:flex; align-items:center; gap:12px; }
+  .chrome img { width:26px; height:26px; border-radius:7px; }
+  #brand { left:80px; top:46px; }
+  #by { right:80px; top:46px; text-transform:none; letter-spacing:.04em; }
+  .uzz { display:inline-flex; align-items:center; gap:10px; }
+  .uzz img { height:30px; width:auto; border-radius:0; }
+  .uzz b { font:700 20px "DM Sans", sans-serif; color:var(--fg); letter-spacing:0; }
+  #outro .uzz { margin-top:46px; font:500 20px "JetBrains Mono", monospace; color:var(--dim); }
+  #outro .uzz img { height:44px; } #outro .uzz b { font-size:30px; }
+  #bar { position:absolute; left:80px; right:80px; bottom:36px; height:2px; background:var(--line); z-index:5; }
+  #bar i { display:block; height:100%; width:100%; background:var(--acc); transform:scaleX(0); transform-origin:left; }
+
+  .scene { position:absolute; inset:0; perspective:2000px; visibility:hidden; }
+
+  /* Título: nasce gigante no centro, depois vai para a coluna da esquerda */
+  .hwrap { position:absolute; left:120px; right:120px; top:540px; text-align:center; z-index:3; will-change:transform; }
+  .head { font-family:"Bebas Neue", Impact, sans-serif; font-size:230px; line-height:.9; letter-spacing:.005em; text-transform:uppercase; }
+  .label { font:500 30px "JetBrains Mono", monospace; color:var(--acc); letter-spacing:.14em; margin-bottom:26px; }
+  .w { display:inline-block; overflow:hidden; vertical-align:top; padding:.04em .03em 0; }
+  .w > .wi { display:inline-block; position:relative; will-change:transform; }
+  .hlbg { position:absolute; inset:.02em -.06em .04em; background:var(--acc-d); transform:scaleX(0); transform-origin:left; }
+  .hltx { position:relative; }
+
+  /* Celular: tela 390x844 (= viewport gravada, escala 1:1) + moldura */
+  .cam { position:absolute; left:1133px; top:106px; width:414px; height:868px;
+    transform-style:preserve-3d; will-change:transform; }
+  .phone { position:absolute; inset:0; border-radius:60px; background:#0a0a0a; padding:12px;
+    box-shadow:0 0 0 2px #2b2f36, 0 60px 120px -30px rgba(34,197,94,.30), inset 0 0 0 1px #3a3f47; will-change:transform; }
+  .screen { position:relative; width:390px; height:844px; border-radius:48px; overflow:hidden; background:#f7f4ee; }
+  .zoomer { position:absolute; inset:0; will-change:transform; }
+  .zoomer video { width:100%; height:100%; display:block; object-fit:fill; }
+  .island { position:absolute; left:50%; top:11px; width:112px; height:32px; margin-left:-56px; border-radius:20px; background:#000; z-index:2; }
+  /* eco = só o contorno do aparelho: rastro leve */
+  .ghost { position:absolute; inset:0; border-radius:60px; border:1.5px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.03); opacity:0; will-change:transform; }
+
+  /* toque do dedo */
+  .touch { position:absolute; left:-24px; top:-24px; width:48px; height:48px; border-radius:50%; z-index:6;
+    background:rgba(255,255,255,.55); border:2px solid rgba(255,255,255,.9); box-shadow:0 6px 18px rgba(0,0,0,.35);
+    visibility:hidden; /* aparece só quando o primeiro toque se aproxima (autoAlpha) */ }
+  .ripple { position:absolute; left:-30px; top:-30px; width:60px; height:60px; border-radius:50%;
+    border:3px solid var(--acc); z-index:6; opacity:0; }
+  .chip { position:absolute; left:0; top:0; z-index:7; white-space:nowrap; padding:12px 20px 12px 17px;
+    font:700 20px "DM Sans", sans-serif; color:var(--fg);
+    background:#0b1622; border:1px solid #2a3b4f; border-radius:999px; visibility:hidden; transform-origin:0 0;
+    box-shadow:0 14px 34px rgba(0,0,0,.45); }
+  .chip::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%;
+    background:var(--acc); margin-right:11px; vertical-align:1px; }
+
+  #intro, #outro { position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; }
+  #intro .line { width:560px; height:3px; background:var(--acc); transform:scaleX(0); }
+  #intro p, #outro p { font:500 20px "JetBrains Mono", monospace; color:var(--dim);
+    letter-spacing:.2em; text-transform:uppercase; margin-top:28px; }
+  #outro { visibility:hidden; }
+  #outro .head { font-size:260px; }
+  #outro img { width:150px; height:150px; border-radius:34px; margin-bottom:34px; box-shadow:0 30px 80px -20px rgba(34,197,94,.55); }
+  #outro .url { color:var(--acc); margin-top:14px; letter-spacing:.08em; text-transform:none; }
+  /* Formato celular (?portrait): palco 1080x1920, título no topo, aparelho maior embaixo */
+  .portrait #stage { width:1080px; height:1920px;
+    background:radial-gradient(ellipse 80% 55% at 50% 62%, #0f2a1c 0%, #08131f 45%, #050b14 80%); }
+  .portrait #pitch { left:540px; top:1180px; }
+  .portrait .hwrap { left:50px; right:50px; top:960px; }
+  .portrait .rig { position:absolute; left:271px; top:640px; transform:scale(1.3); transform-origin:0 0; perspective:2000px; }
+  .portrait .rig .cam { left:0; top:0; }
+  #hint { position:absolute; right:80px; bottom:56px; font:400 13px "JetBrains Mono", monospace; color:#2c3a4b; z-index:5; }
+  .render #hint { display:none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="pitch"></div>
+  <div id="brand" class="chrome"><img src="assets/icone-convoca-512.png" alt="">Convoca</div>
+  <!-- assets/uzzai-logo.png é opcional: sem o arquivo fica só o nome -->
+  <div id="by" class="chrome uzz">um produto <img src="assets/uzzai-logo.png" alt="" onerror="this.remove()"><b>UzzAi</b></div>
+  <div id="intro"><div class="line"></div><p>Apresentando</p></div>
+  <div id="scenes"></div>
+  <div id="outro">
+    <img src="assets/icone-convoca-512.png" alt="">
+    <div class="head"></div>
+    <p>Do convite ao ranking</p>
+    <p class="url">convoca.uzzai.com.br</p>
+    <div class="uzz">um produto <img src="assets/uzzai-logo.png" alt="" onerror="this.remove()"><b>UzzAi</b></div>
+  </div>
+  <div id="bar"><i></i></div>
+  <div id="hint">clique = replay com som · espaço = pausa</div>
+  <audio id="trilha" preload="auto"></audio>
+</div>
+
+<!-- clips.js e clips/*.webm saem de rec.mjs (gravação real do app logado) -->
+<script src="clips.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+/* Cada cena toca um clipe real do app. labels = balão em cada toque (nome do evento no
+   clips/<clip>.json); punch = toque onde o conteúdo da tela dá zoom. Cena cujo clipe
+   ainda não foi gravado é pulada. */
+const ALL_SCENES = [
+  { tag:"Seus grupos", text:"Seus jogos, *num lugar só.*", clip:"inicio",
+    enter:"rise", exit:"through", punch:null, // o toque navega: zoom cairia no skeleton
+    labels:{ grupo:"Pelada do Parque" } },
+  { tag:"Presença", text:"Confirmou? *Tá dentro.*", clip:"confirmar",
+    enter:"zoom", exit:"whip", punch:"confirmar",
+    labels:{ posicao:"Escolha sua posição", confirmar:"Presença confirmada" } },
+  { tag:"Sorteio", text:"Times *equilibrados* num toque.", clip:"sorteio",
+    enter:"pop", exit:"spin", punch:"sortear",
+    labels:{ aba:"Times", sortear:"Sortear times", confirmar:"Sorteio feito" } },
+  { tag:"Ao vivo", text:"Cada gol, *em tempo real.*", clip:"ao-vivo",
+    enter:"flip", exit:"fall", punch:"jogador",
+    labels:{ aba:"Partida", iniciar:"Apito inicial", gol:"Gol!", jogador:"Pedro Costa", confirmar:"Placar atualizado" } },
+  { tag:"Votação", text:"O craque, *a galera escolhe.*", clip:"craque",
+    enter:"pullback", exit:"shrink", punch:"voto",
+    labels:{ aba:"Votação", voto:"Craque da partida", salvar:"Voto registrado" } },
+  { tag:"Ranking", text:"Ranking que *ninguém contesta.*", clip:"ranking",
+    enter:"rise", exit:"through", punch:"art",
+    labels:{ geral:"Classificação", art:"Artilharia", gar:"Garçons", gol:"Goleiros" } },
+  { tag:"Assistente IA", text:"Pergunte. *A IA responde.*", clip:"ia",
+    enter:"zoom", exit:"whip", punch:null, // zoom na resposta: evento "zoom" do clipe
+    labels:{ pergunta:"Quantos gols eu fiz?", enviar:"Enviar" } },
+  { tag:"Financeiro", text:"Quem pagou, *quem deve.*", clip:"pagamentos",
+    enter:"flip", exit:"shrink", punch:"filtro",
+    labels:{ filtro:"Filtrar status", opcao:"Pendentes" } },
+];
+const Q = new URLSearchParams(location.search);
+// Cortes p/ Instagram (assets/musica-football.mp3: drop em 15.6 s, batida final em 54.38 s).
+// marks: { índice da cena: segundo em que ela começa, end: segundo do logo } — os clipes aceleram
+// ou desaceleram para cair nessas marcas. music: de que segundo da música o vídeo começa.
+const CUTS = {
+  60: { scenes: ["inicio", "confirmar", "sorteio", "ao-vivo", "ranking", "ia"], marks: { 2: 15.6, end: 54.38 }, music: 0 },
+  30: { scenes: ["ao-vivo", "ranking", "ia"], marks: { end: 27 }, music: 14.6 },
+  15: { scenes: ["ia"], marks: { end: 11.5 }, music: 14.6 },
+};
+const CUT_ID = CUTS[Q.get("cut")] ? Q.get("cut") : "60", CUT = CUTS[CUT_ID]; // padrão: 60 s (cabe na música)
+const SCENES = CUT.scenes.map(n => ALL_SCENES.find(s => s.clip === n))
+  .filter(s => s && window.CLIPS && CLIPS[s.clip]);
+// Ritmo: vídeo quase em tempo real; espera de rede (toque -> "done") acelerada, sem corte.
+const SPEED = { base: 1.15, slide: 1.6, busy: 4 };
+const WIN_IN = .8, EXIT = .75, INTRO = 1.0, OUTRO = 3.0;
+const K = 1, PAD = 12;   // viewport gravada (390x844) -> tela do celular, e moldura
+const RENDER = Q.has("render");
+if (RENDER) document.body.classList.add("render");
+const PORTRAIT = Q.has("portrait");
+if (PORTRAIT) document.body.classList.add("portrait");
+const [SW, SH] = PORTRAIT ? [1080, 1920] : [1920, 1080];
+// título depois de encolher: à esquerda do aparelho (paisagem) ou no topo (retrato)
+const HEAD_TO = PORTRAIT ? { x: 0, y: -660, scale: .5 } : { x: -440, scale: .5 };
+
+const stage = document.getElementById("stage");
+const fit = () => stage.style.transform = RENDER ? "translate(-50%,-50%)" :
+  `translate(-50%,-50%) scale(${Math.min(innerWidth / SW, innerHeight / SH)})`;
+addEventListener("resize", fit); fit();
+
+// trechos do clipe com velocidade própria: [início, fim, velocidade] em segundos do vídeo
+function segments(c, mult = 1) {
+  const ev = c.events, end = ev[ev.length - 1].t, cuts = [];
+  ev.forEach((e, k) => {
+    if (e.name.endsWith(":start")) {
+      const f = ev.find(x => x.name === e.name.replace(":start", ":end"));
+      if (f) cuts.push([e.t, f.t, SPEED.slide]);
+    } else if (e.name === "done") {
+      const click = ev.slice(0, k).reverse().find(x => x.box && !x.name.includes(":"));
+      if (click) cuts.push([click.t + .25, e.t, SPEED.busy]);
+    }
+  });
+  cuts.sort((a, b) => a[0] - b[0]);
+  const segs = []; let cur = c.t0;
+  for (const [a, b, s] of cuts) {
+    if (a > cur) segs.push([cur, a, SPEED.base]);
+    if (b > Math.max(a, cur)) segs.push([Math.max(a, cur), b, s]);
+    cur = Math.max(cur, b);
+  }
+  if (end > cur) segs.push([cur, end, SPEED.base]);
+  let acc = 0;
+  return segs.map(([a, b, s]) => { s *= mult; const g = { a, b, s, ta: acc }; acc += (b - a) / s; g.tb = acc; return g; });
+}
+const durOf = (segs) => segs[segs.length - 1].tb;
+const vt = (segs, dt) => {           // tempo de timeline (desde o início do vídeo) -> tempo do vídeo
+  if (dt <= 0) return segs[0].a;
+  for (const g of segs) if (dt <= g.tb) return g.a + (dt - g.ta) * g.s;
+  return segs[segs.length - 1].b;
+};
+const tt = (segs, v) => {            // tempo do vídeo -> tempo de timeline
+  for (const g of segs) if (v <= g.b) return g.ta + Math.max(0, v - g.a) / g.s;
+  return durOf(segs);
+};
+
+// "*trecho com várias palavras*" vira destaque em verde
+const words = (text) => { let on = false; return text.split(" ").map(t => {
+  const open = t.startsWith("*"); if (open) on = true;
+  const hl = on, txt = t.replace(/\*/g, "");
+  if (t.endsWith("*")) on = false;
+  return `<span class="w"><span class="wi">${hl ? `<span class="hlbg"></span><span class="hltx">${txt}</span>` : txt}</span></span>`;
+}).join(" "); };
+
+// multiplicador de velocidade por cena para o corte cair nas marcas da música
+function speedMults() {
+  const m = SCENES.map(() => 1);
+  const nat = SCENES.map(s => durOf(segments(CLIPS[s.clip])));
+  const keys = Object.keys(CUT.marks).filter(k => k !== "end").map(Number).sort((a, b) => a - b);
+  const bounds = [[0, INTRO], ...keys.map(k => [k, CUT.marks[k]]), [SCENES.length, CUT.marks.end]];
+  for (let j = 0; j + 1 < bounds.length; j++) {
+    const [a, ta] = bounds[j], [z, tz] = bounds[j + 1];
+    const vid = nat.slice(a, z).reduce((x, y) => x + y, 0);
+    for (let i = a; i < z; i++) m[i] = vid / (tz - ta - (z - a) * (WIN_IN + EXIT));
+  }
+  return m;
+}
+const MULTS = speedMults();
+
+const scenesEl = document.getElementById("scenes");
+let clock = INTRO;
+const built = SCENES.map((s, i) => {
+  const c = CLIPS[s.clip], segs = segments(c, MULTS[i]);
+  const evs = c.events.filter(e => e.box);
+  const el = document.createElement("section");
+  el.className = "scene";
+  el.innerHTML = `<div class="rig"><div class="cam">${'<div class="ghost"></div>'.repeat(3)}
+      <div class="phone"><div class="screen"><div class="zoomer"><video src="clips/${s.clip}.webm" muted playsinline preload="auto"></video></div>
+        <div class="island"></div></div></div>
+      <div class="touch"></div><div class="ripple"></div>${evs.map(() => '<div class="chip"></div>').join("")}
+    </div></div>
+    <div class="hwrap"><div class="label">${s.tag.toUpperCase()}</div>
+    <div class="head">${words(s.text)}</div></div>`;
+  scenesEl.appendChild(el);
+  const q = (sel) => [...el.querySelectorAll(sel)];
+  const phone = el.querySelector(".phone");
+  const t = clock, vStart = t + WIN_IN, vEnd = vStart + durOf(segs), end = vEnd + EXIT;
+  clock = end;
+  return { el, s, c, segs, evs, t, vStart, vEnd, end, ghosts: q(".ghost"), layers: [phone, ...q(".ghost")],
+    cam: el.querySelector(".cam"), zoomer: el.querySelector(".zoomer"), video: el.querySelector("video"),
+    touch: el.querySelector(".touch"), ripple: el.querySelector(".ripple"), chips: q(".chip"),
+    hwrap: el.querySelector(".hwrap"), label: el.querySelector(".label"),
+    ws: q(".wi"), hlbg: q(".hlbg") };
+});
+const TOTAL = clock + OUTRO;
+document.querySelector("#outro .head").innerHTML = words("*Convoca*");
+
+const tl = gsap.timeline({ paused: true, defaults: { ease: "expo.out" } });
+// deixas de som (audio.mjs sintetiza a trilha e os efeitos a partir daqui)
+const CUES = [];
+const cue = (t, type) => CUES.push({ t: Math.round(t * 1000) / 1000, type });
+
+// Eco: aparelho real lidera, contornos fantasma vêm atrás e somem
+function echo(b, from, to, t, dur, ease, entering) {
+  tl.fromTo(b.layers, from, { ...to, duration: dur, ease, stagger: .055, immediateRender: entering }, t)
+    .fromTo(b.ghosts, { opacity: entering ? .7 : 0 },
+      { opacity: entering ? 0 : .6, duration: entering ? dur * .9 : .12, stagger: .055,
+        ease: "power2.out", immediateRender: false }, t);
+  if (!entering) tl.to(b.ghosts, { opacity: 0, duration: .25 }, t + dur * .8);
+}
+
+const pt = (e) => ({ x: PAD + (e.box.x + e.box.width / 2) * K, y: PAD + (e.box.y + e.box.height / 2) * K });
+
+const ENTER = {
+  rise:  (b, t) => echo(b, { y: 700, rotationX: 55, scale: .85, autoAlpha: 0 },
+    { y: 0, rotationX: 0, scale: 1, autoAlpha: 1 }, t, 1.0, "back.out(1.3)", true),
+  zoom:  (b, t) => echo(b, { scale: .1, rotation: -14, autoAlpha: 0 },
+    { scale: 1, rotation: 0, autoAlpha: 1 }, t, .95, "expo.out", true),
+  pop:   (b, t) => echo(b, { scale: .3, y: 300, autoAlpha: 0 },
+    { scale: 1, y: 0, autoAlpha: 1 }, t, 1.1, "elastic.out(1, .65)", true),
+  flip:  (b, t) => echo(b, { rotationY: -95, x: 500, transformOrigin: "100% 50%", autoAlpha: 0 },
+    { rotationY: 0, x: 0, autoAlpha: 1 }, t, 1.0, "expo.out", true),
+  // aparelho entra e o conteúdo recua de um zoom forte no primeiro toque
+  pullback: (b, t) => {
+    const p = pt(b.evs[0]);
+    echo(b, { scale: .9, autoAlpha: 0 }, { scale: 1, autoAlpha: 1 }, t, .6, "expo.out", true);
+    tl.set(b.zoomer, { transformOrigin: `${p.x - PAD}px ${p.y - PAD}px` }, t)
+      .fromTo(b.zoomer, { scale: 2.6 }, { scale: 1, duration: 1.2, ease: "expo.inOut", immediateRender: false }, t);
+  },
+};
+
+const EXITS = {
+  through: (b, t) => echo(b, {}, { scale: 2.4, autoAlpha: 0 }, t, .7, "expo.in", false),
+  whip:    (b, t) => echo(b, {}, { x: 1100, rotationY: -30 }, t, .7, "expo.in", false),
+  spin:    (b, t) => echo(b, {}, { rotation: 25, scale: .2, x: 300, autoAlpha: 0 }, t, .7, "expo.in", false),
+  fall:    (b, t) => echo(b, {}, { y: 1100, rotationX: -50, autoAlpha: 0 }, t, .7, "expo.in", false),
+  shrink:  (b, t) => echo(b, {}, { scale: .04, rotation: -25, autoAlpha: 0 }, t, .7, "expo.in", false),
+};
+
+// Dedo, toque, balão e zoom seguindo os eventos gravados
+function interactions(b) {
+  if (!b.evs.length) return;
+  const at = (e) => b.vStart + tt(b.segs, e.t);
+  const first = pt(b.evs[0]);
+  tl.fromTo(b.touch, { x: first.x + 220, y: first.y + 260, autoAlpha: 0, scale: 1 },
+    { x: first.x, y: first.y, autoAlpha: 1, duration: .5, ease: "power3.out", immediateRender: false },
+    Math.max(b.vStart, at(b.evs[0]) - .55));
+  let prev = b.evs[0];
+  b.evs.forEach((e, k) => {
+    const p = pt(e), te = at(e), base = e.name.split(":")[0], isEnd = e.name.endsWith(":end");
+    if (base === "zoom") {  // só câmera: aproxima o conteúdo marcado, sem toque
+      cue(te - .4, "zoom");
+      tl.set(b.zoomer, { transformOrigin: `${p.x - PAD}px ${p.y - PAD}px` }, te - .4)
+        .to(b.zoomer, { scale: 1.5, duration: .6, ease: "power3.inOut" }, te - .4)
+        .to(b.zoomer, { scale: 1, duration: .6, ease: "power3.inOut" }, Math.max(te + .4, b.vEnd - .7));
+      return;
+    }
+    if (isEnd) {        // arraste: acompanha o dedo
+      tl.to(b.touch, { x: p.x, y: p.y, duration: te - at(prev), ease: "none" }, at(prev));
+    } else {
+      if (k > 0) {
+        const d = Math.min(.5, te - at(prev));
+        tl.to(b.touch, { x: p.x, y: p.y, duration: d, ease: "power3.inOut" }, te - d);
+      }
+      if (k === 0 || base === b.s.punch) cue(te - .04, "tap"); // clique só às vezes
+      tl.to(b.touch, { scale: .7, duration: .08, yoyo: true, repeat: 1 }, te - .04)
+        .set(b.ripple, { x: p.x, y: p.y }, te - .04)
+        .fromTo(b.ripple, { scale: .2, opacity: 1 }, { scale: 2, opacity: 0, duration: .6, ease: "power2.out", immediateRender: false }, te - .04);
+      const text = b.s.labels[base];
+      if (text) {
+        const chip = b.chips[k], left = p.x > 230;   // balão para fora da tela quando dá
+        chip.textContent = text;
+        tl.set(chip, { x: left ? p.x - 26 : p.x + 26, y: p.y + 24, xPercent: left ? -100 : 0,
+            transformOrigin: left ? "100% 0" : "0 0", visibility: "visible" }, te)
+          .fromTo(chip, { scale: 0, rotation: left ? 8 : -8 }, { scale: 1, rotation: 0, duration: .5, ease: "back.out(2.6)", immediateRender: false }, te)
+          .to(chip, { scale: 0, duration: .25, ease: "back.in(2)" }, te + 1.5)
+          .set(chip, { visibility: "hidden" }, te + 1.75);
+      }
+      if (base === b.s.punch) {   // zoom no conteúdo, centrado no toque (o toque fica parado)
+        cue(te - .4, "zoom");
+        tl.set(b.zoomer, { transformOrigin: `${p.x - PAD}px ${p.y - PAD}px` }, te - .4)
+          .to(b.zoomer, { scale: 1.4, duration: .55, ease: "power3.inOut" }, te - .4)
+          .to(b.zoomer, { scale: 1, duration: .7, ease: "power3.inOut" }, te + 1.4);
+      }
+    }
+    prev = e;
+  });
+  tl.to(b.touch, { x: "+=220", y: "+=260", autoAlpha: 0, duration: .5, ease: "power3.in" }, b.vEnd - .3);
+}
+
+// Ao vivo: o vídeo toca sozinho e só troca de velocidade nas fronteiras dos trechos.
+// No modo render, renderAt() posiciona cada quadro exatamente (sem play).
+const playing = new Set();
+function startClip(b) {
+  if (RENDER) return;
+  b.video.currentTime = b.c.t0;
+  b.video.playbackRate = b.segs[0].s;
+  b.video.play().catch(() => {});
+  playing.add(b.video);
+}
+function stopClip(b) { b.video.pause(); playing.delete(b.video); }
+
+// Intro
+tl.to("#intro .line", { scaleX: 1, duration: .6, ease: "expo.inOut" }, 0)
+  .from("#intro p", { y: 20, autoAlpha: 0, duration: .5 }, .15)
+  .to("#intro .line", { scaleX: 0, duration: .35, ease: "expo.in" }, INTRO - .4)
+  .to("#intro p", { autoAlpha: 0, y: -16, duration: .3, ease: "expo.in" }, INTRO - .4)
+  .to("#grid", { x: 40 * Math.round(TOTAL / 6), y: 40 * Math.round(TOTAL / 6), duration: TOTAL, ease: "none" }, 0)
+  .fromTo("#pitch", { rotation: 0 }, { rotation: 40, duration: TOTAL, ease: "none" }, 0);
+
+built.forEach((b, i) => {
+  const t = b.t;
+  tl.call(() => { b.video.pause(); b.video.currentTime = b.c.t0; }, null, Math.max(0, t - 1))
+    .set(b.el, { visibility: "visible" }, t)
+    // 1) título gigante no centro, palavra por palavra
+    .fromTo(b.hwrap, { yPercent: -50, x: 0, y: 0, scale: 1 }, { yPercent: -50, duration: 0 }, t)
+    .fromTo(b.label, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .5 }, t)
+    .fromTo(b.ws, { yPercent: 120, rotation: 6 }, { yPercent: 0, rotation: 0, duration: .7, stagger: .07 }, t + .05)
+    .to(b.hlbg, { scaleX: 1, duration: .35, ease: "expo.inOut" }, t + .4)
+    // 2) título vai para a esquerda e encolhe; celular entra à direita; vídeo começa
+    .to(b.hwrap, { ...HEAD_TO, duration: .75, ease: "expo.inOut" }, t + .72)
+    .call(() => startClip(b), null, b.vStart);
+  b.segs.slice(1).forEach(g => tl.call(() => { if (!RENDER) b.video.playbackRate = g.s; }, null, b.vStart + g.ta));
+  tl.call(() => b.video.pause(), null, b.vEnd);
+  cue(t, "title"); cue(t + WIN_IN - .05, "whoosh"); cue(b.end - .72, "whoosh");
+  ENTER[b.s.enter](b, t + WIN_IN - .05);
+  tl.fromTo(b.cam, { rotationY: -8, rotationX: 4, y: 16 }, { rotationY: 6, rotationX: -2, y: -10, duration: b.end - b.vStart, ease: "sine.inOut" }, b.vStart);
+  interactions(b);
+  // 3) saída: palavras sobem, aparelho sai com eco
+  tl.to(b.ws, { yPercent: -120, duration: .45, stagger: .035, ease: "expo.in" }, b.end - .8)
+    .to(b.label, { autoAlpha: 0, duration: .3 }, b.end - .8);
+  EXITS[b.s.exit](b, b.end - .72);
+  tl.call(() => stopClip(b), null, b.end)
+    .set(b.el, { visibility: "hidden" }, b.end + .2);
+});
+
+// Outro
+const o = clock;
+cue(o - .1, "impact");
+tl.set("#outro", { visibility: "visible" }, o - .1)
+  .from("#outro img", { scale: 0, rotation: -120, duration: .9, ease: "back.out(2)" }, o - .1)
+  .fromTo("#outro .wi", { yPercent: 120 }, { yPercent: 0, duration: .9, stagger: .1 }, o + .15)
+  .to("#outro .hlbg", { scaleX: 1, duration: .45, ease: "expo.inOut" }, o + .6)
+  .from("#outro p", { autoAlpha: 0, y: 14, duration: .6, stagger: .15 }, o + .7)
+  .from("#outro .uzz", { autoAlpha: 0, y: 14, duration: .6 }, o + 1.1)
+  .set({}, {}, TOTAL);
+
+const bar = document.querySelector("#bar i");
+tl.eventCallback("onUpdate", () => bar.style.transform = `scaleX(${tl.progress()})`);
+
+const ready = Promise.all(built.map(b => new Promise(r => {
+  if (b.video.readyState >= 2) return r();
+  b.video.addEventListener("loadeddata", r, { once: true });
+  b.video.addEventListener("error", r, { once: true });
+})));
+
+// Export quadro a quadro (exportar.mjs): posiciona timeline e vídeos no instante t
+window.MOTION = { total: TOTAL, ready, cues: CUES, intro: INTRO, outro: o, scenes: built.map(b => b.t),
+  music: CUT.music, cut: CUT_ID, mults: MULTS,
+  async renderAt(t) {
+    tl.seek(t); // sem disparar os call() de vídeo: aqui o vídeo é posicionado à mão
+    await Promise.all(built.map(b => {
+      if (t < b.t - .2 || t > b.end + .2) return null;
+      const target = vt(b.segs, t - b.vStart);
+      if (Math.abs(b.video.currentTime - target) < 1e-3) return null;
+      return new Promise(r => { b.video.addEventListener("seeked", r, { once: true }); b.video.currentTime = target; });
+    }));
+  } };
+
+if (!RENDER) {
+  // trilha (audio.mjs) acompanha a timeline; o navegador só libera som depois de um clique
+  const trilha = document.getElementById("trilha");
+  trilha.src = `trilha_${CUT_ID}.wav`; // gerada por audio.mjs
+  const playAudio = () => { trilha.currentTime = tl.time(); trilha.play().catch(() => {}); };
+  ready.then(() => { tl.play(0); playAudio(); });
+  addEventListener("click", () => { built.forEach(stopClip); tl.restart(); playAudio(); });
+  addEventListener("keydown", e => {
+    if (e.code !== "Space") return;
+    e.preventDefault();
+    tl.paused(!tl.paused());
+    playing.forEach(v => tl.paused() ? v.pause() : v.play());
+    tl.paused() ? trilha.pause() : playAudio();
+  });
+}
+</script>
+</body>
+</html>

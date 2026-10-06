@@ -1,0 +1,40 @@
+{
+ "t0": 4.155,
+ "events": [
+  {
+   "name": "scroll",
+   "t": 6.571,
+   "box": null
+  },
+  {
+   "name": "filtro",
+   "t": 7.511,
+   "box": {
+    "x": 41,
+    "y": 641,
+    "width": 150,
+    "height": 40
+   }
+  },
+  {
+   "name": "opcao",
+   "t": 8.475,
+   "box": {
+    "x": 46,
+    "y": 722,
+    "width": 142,
+    "height": 32
+   }
+  },
+  {
+   "name": "scroll",
+   "t": 10.92,
+   "box": null
+  },
+  {
+   "name": "end",
+   "t": 11.723,
+   "box": null
+  }
+ ]
+}

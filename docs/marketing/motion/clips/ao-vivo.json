@@ -1,0 +1,50 @@
+{
+ "t0": 4.481,
+ "events": [
+  {
+   "name": "aba",
+   "t": 5.122,
+   "box": {
+    "x": 195,
+    "y": 376,
+    "width": 87.5,
+    "height": 24
+   }
+  },
+  {
+   "name": "jogador",
+   "t": 7.413,
+   "box": {
+    "x": 46,
+    "y": 635,
+    "width": 300,
+    "height": 32
+   }
+  },
+  {
+   "name": "gol",
+   "t": 8.18,
+   "box": {
+    "x": 41,
+    "y": 562,
+    "width": 94.7,
+    "height": 80
+   }
+  },
+  {
+   "name": "done",
+   "t": 10.029,
+   "box": null
+  },
+  {
+   "name": "scroll",
+   "t": 12.649,
+   "box": null
+  },
+  {
+   "name": "end",
+   "t": 13.852,
+   "box": null
+  }
+ ]
+}

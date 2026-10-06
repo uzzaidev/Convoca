@@ -1,0 +1,16 @@
+{
+  "name": "convoca-motion",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "rec": "node rec.mjs",
+    "export": "node exportar.mjs"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "playwright-core": "^1.56.0"
+  },
+  "allowScripts": {
+    "ffmpeg-static@5.3.0": true
+  }
+}

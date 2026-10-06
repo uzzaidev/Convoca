@@ -1,0 +1,40 @@
+{
+ "t0": 6.203,
+ "events": [
+  {
+   "name": "posicao",
+   "t": 6.929,
+   "box": {
+    "x": 201,
+    "y": 693,
+    "width": 148,
+    "height": 96
+   }
+  },
+  {
+   "name": "confirmar",
+   "t": 7.97,
+   "box": {
+    "x": 41,
+    "y": 412,
+    "width": 308,
+    "height": 20
+   }
+  },
+  {
+   "name": "done",
+   "t": 14.383,
+   "box": null
+  },
+  {
+   "name": "scroll",
+   "t": 16.492,
+   "box": null
+  },
+  {
+   "name": "end",
+   "t": 17.996,
+   "box": null
+  }
+ ]
+}

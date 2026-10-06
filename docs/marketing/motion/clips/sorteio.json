@@ -1,0 +1,55 @@
+{
+ "t0": 4.612,
+ "events": [
+  {
+   "name": "aba",
+   "t": 5.237,
+   "box": {
+    "x": 107.5,
+    "y": 376,
+    "width": 87.5,
+    "height": 24
+   }
+  },
+  {
+   "name": "sortear",
+   "t": 6.595,
+   "box": {
+    "x": 113.2,
+    "y": 430,
+    "width": 260.8,
+    "height": 36
+   }
+  },
+  {
+   "name": "confirmar",
+   "t": 7.445,
+   "box": {
+    "x": 25,
+    "y": 434,
+    "width": 340,
+    "height": 40
+   }
+  },
+  {
+   "name": "done",
+   "t": 20.981,
+   "box": null
+  },
+  {
+   "name": "scroll",
+   "t": 23.293,
+   "box": null
+  },
+  {
+   "name": "scroll",
+   "t": 25.609,
+   "box": null
+  },
+  {
+   "name": "end",
+   "t": 26.413,
+   "box": null
+  }
+ ]
+}

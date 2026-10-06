@@ -1,0 +1,35 @@
+{
+ "t0": 10.548,
+ "events": [
+  {
+   "name": "scroll",
+   "t": 12.569,
+   "box": null
+  },
+  {
+   "name": "scroll",
+   "t": 14.476,
+   "box": null
+  },
+  {
+   "name": "grupo",
+   "t": 15.031,
+   "box": {
+    "x": 33,
+    "y": 441.3,
+    "width": 324,
+    "height": 57
+   }
+  },
+  {
+   "name": "done",
+   "t": 17.871,
+   "box": null
+  },
+  {
+   "name": "end",
+   "t": 19.278,
+   "box": null
+  }
+ ]
+}

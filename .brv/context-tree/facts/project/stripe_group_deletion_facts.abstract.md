@@ -1,0 +1,1 @@
+This document outlines the Stripe group deletion process, emphasizing the need to cancel subscriptions before deleting a group to ensure proper billing management.

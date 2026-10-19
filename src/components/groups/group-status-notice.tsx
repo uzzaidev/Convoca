@@ -62,7 +62,18 @@ export function GroupStatusNotice({
   return (
     <Alert className="border-amber-200 bg-amber-50 mb-6">
       <AlertTitle>Status do grupo: {getGroupStatusLabel(status)}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
+      <AlertDescription className="mt-2 space-y-3">
+        <p>{message}</p>
+        {isAdmin && groupId && (
+          <div className="pt-1">
+            <Button asChild size="sm" variant="outline" className="border-amber-400 text-amber-900 hover:bg-amber-100">
+              <Link href={`/groups/${groupId}/settings`}>
+                Configurações e Assinatura →
+              </Link>
+            </Button>
+          </div>
+        )}
+      </AlertDescription>
     </Alert>
   );
 }

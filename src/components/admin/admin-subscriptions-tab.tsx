@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,7 @@ type AdminSubscription = {
   id: string;
   group_id: string;
   group_name: string;
+  group_deleted_at: string | null;
   user_name: string;
   user_email: string;
   stripe_subscription_id: string;
@@ -207,7 +208,14 @@ export function AdminSubscriptionsTab() {
                   return (
                     <TableRow key={sub.id}>
                       <TableCell>
-                        <div className="font-medium">{sub.group_name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{sub.group_name}</span>
+                          {sub.group_deleted_at && (
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                              Grupo Excluído
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground font-mono">
                           {sub.stripe_subscription_id}
                         </div>

@@ -54,7 +54,7 @@ if (a.stills) {
   console.log(`${total.toFixed(1)} s no total; exportando ${t0}–${t1.toFixed(1)} s -> ${n} quadros a ${fps} fps`);
   // trilha: mesmo trecho da música que o trecho do vídeo, fade in 1 s / out 2 s, volume normalizado p/ redes
   const audio = a.audio ? ["-ss", String(Number(a.aoffset) + t0), "-i", a.audio, "-map", "0:v", "-map", "1:a",
-    "-af", "loudnorm=I=-14:TP=-1", // fades já vêm da trilha_<corte>.wav
+    // sem filtro: a trilha_<corte>.wav já sai mixada, com folga p/ o pico do AAC e com os fades
     "-ar", "48000", "-c:a", "aac", "-b:a", "192k", "-shortest"] : [];
   const ff = spawn(ffmpeg, ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps), "-i", "-", ...audio,
     "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out],

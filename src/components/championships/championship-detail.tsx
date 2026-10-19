@@ -676,6 +676,7 @@ function MatchResultModal({
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [goalEntry, setGoalEntry] = useState<GoalEntry | null>(null);
 
   useEffect(() => {
@@ -685,6 +686,7 @@ function MatchResultModal({
       setError("");
       setEditMode(false);
       setConfirmCancel(false);
+      setConfirmDelete(false);
       setGoalEntry(null);
     }
   }, [match]);
@@ -755,6 +757,25 @@ function MatchResultModal({
     } finally {
       setLoading(false);
       setConfirmCancel(false);
+    }
+  }
+
+  async function handleDeleteMatch() {
+    if (!match) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(
+        `/api/groups/${groupId}/championships/${championshipId}/matches/${match.id}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erro ao excluir partida");
+      onSaved(); onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro de conexão");
+    } finally {
+      setLoading(false);
+      setConfirmDelete(false);
     }
   }
 
@@ -867,7 +888,7 @@ function MatchResultModal({
           </div>
 
           {/* Registro de gol por jogador (apenas durante partida em andamento) */}
-          {isPlaying && isAdmin && !confirmCancel && (
+          {isPlaying && isAdmin && !confirmCancel && !confirmDelete && (
             <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
               {!goalEntry ? (
                 <div className="flex gap-2">
@@ -968,11 +989,39 @@ function MatchResultModal({
             </div>
           )}
 
+          {/* Confirmação inline de exclusão */}
+          {confirmDelete && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+              <p className="text-sm font-medium text-destructive">Excluir esta partida permanentemente?</p>
+              <p className="text-xs text-muted-foreground">
+                A partida e todos os gols/estatísticas vinculados serão removidos permanentemente da classificação e da artilharia.
+              </p>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)} className="flex-1">
+                  Voltar
+                </Button>
+                <Button size="sm" variant="destructive" onClick={handleDeleteMatch} disabled={loading} className="flex-1">
+                  {loading ? "..." : "Excluir Partida"}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
-          {!confirmCancel && (
+          {!confirmCancel && !confirmDelete && (
           <DialogFooter className="flex-col gap-2 sm:flex-row">
             {showEdit && (
               <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Excluir
+                </Button>
                 <Button variant="outline" onClick={onClose} className="sm:flex-1">Fechar</Button>
                 <Button variant="outline" onClick={() => setEditMode(true)} className="sm:flex-1">
                   <Pencil className="h-3.5 w-3.5 mr-1.5" />Corrigir
@@ -982,10 +1031,17 @@ function MatchResultModal({
             {isScheduled && (
               <>
                 {isAdmin && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto">
-                    Cancelar partida
-                  </Button>
+                  <div className="flex items-center gap-1 sm:mr-auto">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      Cancelar
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="Excluir partida permanentemente">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 )}
                 <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
                 <Button
@@ -1003,10 +1059,17 @@ function MatchResultModal({
             {isPlaying && (
               <>
                 {isAdmin && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto">
-                    Cancelar partida
-                  </Button>
+                  <div className="flex items-center gap-1 sm:mr-auto">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      Cancelar
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="Excluir partida permanentemente">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 )}
                 <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
                 <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
@@ -1016,6 +1079,18 @@ function MatchResultModal({
             )}
             {isFinished && editMode && (
               <>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmDelete(true)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    Excluir
+                  </Button>
+                )}
                 <Button type="button" variant="outline" onClick={() => setEditMode(false)} className="sm:flex-1">Cancelar</Button>
                 <Button type="button" onClick={handleSaveScore} disabled={loading} className="sm:flex-1">
                   {loading ? "Salvando..." : "Salvar Correção"}

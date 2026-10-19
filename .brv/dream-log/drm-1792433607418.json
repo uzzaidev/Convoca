@@ -1,0 +1,73 @@
+{
+  "completedAt": 1792433631274,
+  "id": "drm-1792433607418",
+  "operations": [
+    {
+      "action": "KEEP",
+      "file": "architecture/billing-system-and-database-portability.md",
+      "needsReview": false,
+      "reason": "Contains actionable knowledge regarding the billing system's architecture and database portability concerns.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_billing_and_stripe_facts.md",
+      "needsReview": false,
+      "reason": "Captures important project facts related to billing and Stripe integration that are useful for future reference.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "facts/project/peladeiros_infrastructure_facts_2026_03_31.md",
+      "needsReview": false,
+      "reason": "Records valuable factual statements from the infrastructure diagnosis that can assist in debugging and architectural recall.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/credential-management-across-domains.md",
+      "needsReview": false,
+      "reason": "Addresses critical security considerations for credential management during provider migrations.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "security/operations/backup_credential_exposure.md",
+      "needsReview": false,
+      "reason": "Documents credential exposure risks in backup scripts, which is essential for maintaining security.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/multi_plan_subscription_system.md",
+      "needsReview": false,
+      "reason": "Describes the implemented multi-plan subscription system and its architecture, providing useful details.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/billing/stripe_v21_api_migration.md",
+      "needsReview": false,
+      "reason": "Documents critical changes in the Stripe v21 API that affect billing and subscription workflows, which are necessary for maintenance.",
+      "type": "PRUNE"
+    },
+    {
+      "action": "KEEP",
+      "file": "architecture/database/provider_migration_diagnosis.md",
+      "needsReview": false,
+      "reason": "Contains important information on database provider migration readiness and associated risks.",
+      "type": "PRUNE"
+    }
+  ],
+  "startedAt": 1792433607418,
+  "status": "completed",
+  "summary": {
+    "consolidated": 0,
+    "errors": 0,
+    "flaggedForReview": 0,
+    "pruned": 8,
+    "synthesized": 0
+  },
+  "taskId": "a2402781-1b4c-4915-bfde-a53e0e3496d1",
+  "trigger": "agent-idle"
+}

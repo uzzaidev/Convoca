@@ -199,6 +199,28 @@ export async function DELETE(
       adminErrorMessage: "Apenas admins podem deletar eventos",
     });
 
+    const isPermanent =
+      new URL(request.url).searchParams.get("permanent") === "true";
+
+    if (isPermanent) {
+      await sql`
+        UPDATE championship_matches
+        SET event_id = NULL, updated_at = NOW()
+        WHERE event_id = ${eventId}
+      `;
+
+      await sql`
+        DELETE FROM events
+        WHERE id = ${eventId}
+      `;
+
+      logger.info({ eventId, userId: user.id }, "Event permanently deleted");
+
+      return NextResponse.json({
+        message: "Partida excluída permanentemente",
+      });
+    }
+
     await sql`
       UPDATE events
       SET status = 'canceled', updated_at = NOW()
@@ -212,8 +234,9 @@ export async function DELETE(
     });
   } catch (error) {
     return handleRouteError(error, {
-      logMessage: "Error canceling event",
-      fallbackMessage: "Erro ao cancelar evento",
+      logMessage: "Error canceling/deleting event",
+      fallbackMessage: "Erro ao cancelar ou excluir evento",
     });
   }
 }
+

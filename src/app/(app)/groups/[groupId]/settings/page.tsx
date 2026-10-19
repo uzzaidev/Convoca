@@ -20,6 +20,7 @@ export default async function GroupSettingsPage({ params }: RouteParams) {
   try {
     const group = await requireGroupAccess(groupId, user, {
       minRole: "admin",
+      requireActiveGroup: false,
       adminErrorMessage: "Apenas admins podem acessar as configuracoes",
     });
 

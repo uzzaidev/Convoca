@@ -164,6 +164,7 @@ export function EventTabs({
       <TabsContent value="match" className="mt-6">
         <LiveMatchTab
           eventId={eventId}
+          groupId={groupId}
           teams={teams}
           isAdmin={isAdmin}
           eventStatus={eventStatus}

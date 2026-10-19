@@ -190,6 +190,17 @@ export function GroupBillingTab({ groupId }: { groupId: string }) {
           <CardTitle>Assinatura</CardTitle>
           <CardDescription>Este grupo não possui uma assinatura ativa.</CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openPortal}
+            disabled={portalLoading}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            {portalLoading ? "Abrindo..." : "Gerenciar cobranças no Stripe"}
+          </Button>
+        </CardContent>
       </Card>
     );
   }

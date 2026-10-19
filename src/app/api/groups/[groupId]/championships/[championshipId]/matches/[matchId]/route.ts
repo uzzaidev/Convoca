@@ -168,7 +168,7 @@ export async function PATCH(
         RETURNING *
       `;
       if (cancelled.event_id) {
-        await sql`UPDATE events SET status = 'cancelled', updated_at = NOW() WHERE id = ${cancelled.event_id}`;
+        await sql`UPDATE events SET status = 'canceled', updated_at = NOW() WHERE id = ${cancelled.event_id}`;
       }
       logger.info({ matchId, userId: user.id }, "Championship match cancelled");
       return NextResponse.json({ match: cancelled });
@@ -325,3 +325,52 @@ export async function PATCH(
     return NextResponse.json({ error: "Erro ao registrar resultado" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Params }
+) {
+  try {
+    const { groupId, championshipId, matchId } = await params;
+    const user = await requireAuth();
+    await requireGroupAccess(groupId, user, { minRole: "admin" });
+
+    const [match] = await sql`
+      SELECT cm.id, cm.event_id
+      FROM championship_matches cm
+      JOIN championship_rounds cr ON cr.id = cm.round_id
+      JOIN championship_phases cp ON cp.id = cr.phase_id
+      JOIN championships c ON c.id = cp.championship_id
+      WHERE cm.id = ${matchId}
+        AND cp.championship_id = ${championshipId}
+        AND c.group_id = ${groupId}
+    `;
+
+    if (!match) {
+      return NextResponse.json({ error: "Partida não encontrada" }, { status: 404 });
+    }
+
+    await sql`DELETE FROM championship_matches WHERE id = ${matchId}`;
+
+    if (match.event_id) {
+      await sql`DELETE FROM events WHERE id = ${match.event_id}`;
+    }
+
+    logger.info({ matchId, championshipId, userId: user.id }, "Championship match deleted");
+
+    return NextResponse.json({
+      ok: true,
+      message: "Partida excluída com sucesso",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("autenticado")) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+    if (error instanceof GroupAccessError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
+    logger.error(error, "Error deleting championship match");
+    return NextResponse.json({ error: "Erro ao excluir partida" }, { status: 500 });
+  }
+}
+

@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
 import logger from "@/lib/logger";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
+import { getStripe } from "@/lib/stripe";
 
 type Params = Promise<{ groupId: string }>;
 
@@ -95,12 +96,46 @@ export async function DELETE(
       return NextResponse.json({ error: "Grupo não encontrado" }, { status: 404 });
     }
 
+    // Cancelar quaisquer assinaturas ativas deste grupo no Stripe antes de excluir
+    const activeSubs = await sql`
+      SELECT id, stripe_subscription_id
+      FROM group_subscriptions
+      WHERE group_id = ${groupId}
+        AND status NOT IN ('canceled', 'incomplete_expired')
+    `;
+
+    for (const sub of activeSubs) {
+      if (sub.stripe_subscription_id) {
+        try {
+          await getStripe().subscriptions.cancel(sub.stripe_subscription_id as string);
+        } catch (stripeErr) {
+          logger.warn(
+            { stripeErr, groupId, stripeSubscriptionId: sub.stripe_subscription_id },
+            "Failed to cancel Stripe subscription during group deletion"
+          );
+        }
+      }
+      await sql`
+        UPDATE group_subscriptions
+        SET status = 'canceled',
+            canceled_at = NOW(),
+            grace_until = NULL,
+            updated_at = NOW()
+        WHERE id = ${sub.id}
+      `;
+    }
+
     await sql`
-      UPDATE groups SET deleted_at = NOW(), updated_at = NOW()
+      UPDATE groups
+      SET deleted_at = NOW(),
+          status = 'inactive',
+          status_reason = 'Grupo excluído pelo administrador',
+          status_updated_at = NOW(),
+          updated_at = NOW()
       WHERE id = ${groupId} AND deleted_at IS NULL
     `;
 
-    logger.info({ groupId, userId: user.id }, "Group soft-deleted");
+    logger.info({ groupId, userId: user.id, canceledSubscriptions: activeSubs.length }, "Group soft-deleted and subscriptions canceled");
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Error && error.message.includes("autenticado")) {

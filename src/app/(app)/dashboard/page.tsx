@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { GroupsCard } from "@/components/dashboard/groups-card";
 import { UpcomingEventsCard } from "@/components/dashboard/upcoming-events-card";
 import { PendingPaymentsCard } from "@/components/dashboard/pending-payments-card";
+import { ManageStripeButton } from "@/components/billing/manage-stripe-button";
 import { PitchBackground } from "@/components/ui/pitch-background";
-import { Plus, Users, MapPin, Clock, ArrowRight, Calendar } from "lucide-react";
+import { Plus, Users, MapPin, Clock, ArrowRight, Calendar, AlertTriangle } from "lucide-react";
 import { type GroupStatus } from "@/lib/group-status";
 import { DashboardTour } from "@/components/tour/DashboardTour";
 
@@ -61,6 +62,29 @@ export default async function DashboardPage() {
 
   let groups: Group[] = [];
   let upcomingEvents: Event[] = [];
+  let hasStripeCustomer = false;
+  let orphanedActiveSubsCount = 0;
+
+  try {
+    const [billingInfo] = await sql`
+      SELECT
+        u.stripe_customer_id,
+        (
+          SELECT COUNT(*)::int
+          FROM group_subscriptions gs
+          INNER JOIN groups g ON gs.group_id = g.id
+          WHERE gs.user_id = ${user.id}
+            AND gs.status IN ('active', 'trialing', 'past_due')
+            AND g.deleted_at IS NOT NULL
+        ) as orphaned_subs
+      FROM users u
+      WHERE u.id = ${user.id}
+    `;
+    hasStripeCustomer = !!billingInfo?.stripe_customer_id;
+    orphanedActiveSubsCount = Number(billingInfo?.orphaned_subs ?? 0);
+  } catch (error) {
+    console.error("Error fetching user billing info:", error);
+  }
 
   try {
     const groupsRaw = await sql`
@@ -127,6 +151,23 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl px-4 py-6 sm:py-8">
+        {orphanedActiveSubsCount > 0 && (
+          <div className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div className="text-sm">
+                <p className="font-semibold">
+                  Você possui {orphanedActiveSubsCount} assinatura{orphanedActiveSubsCount > 1 ? "s" : ""} ativa{orphanedActiveSubsCount > 1 ? "s" : ""} vinculada{orphanedActiveSubsCount > 1 ? "s" : ""} a grupo{orphanedActiveSubsCount > 1 ? "s" : ""} excluído{orphanedActiveSubsCount > 1 ? "s" : ""}.
+                </p>
+                <p className="text-amber-800">
+                  Clique ao lado para acessar o portal do Stripe e gerenciar ou cancelar suas cobranças.
+                </p>
+              </div>
+            </div>
+            <ManageStripeButton label="Cancelar / Gerenciar no Stripe" variant="default" />
+          </div>
+        )}
+
         {/* Greeting + actions */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -145,6 +186,9 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {hasStripeCustomer && (
+              <ManageStripeButton />
+            )}
             <Button asChild variant="outline" data-tour="entrar-grupo">
               <Link href="/groups/join" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />

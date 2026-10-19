@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { Calendar, Clock, MapPin, Users, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { EventTabs } from "@/components/events/event-tabs";
+import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 
 type RouteParams = {
@@ -226,22 +227,30 @@ export default async function EventDetailPage({ params }: RouteParams) {
                 </div>
               )}
             </div>
-            <Badge
-              variant={
-                event.status === "finished"
-                  ? "default"
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  event.status === "finished"
+                    ? "default"
+                    : event.status === "live"
+                    ? "destructive"
+                    : "secondary"
+                }
+                className="bg-white/20 border-white/30 text-white"
+              >
+                {event.status === "finished"
+                  ? "Finalizado"
                   : event.status === "live"
-                  ? "destructive"
-                  : "secondary"
-              }
-              className="bg-white/20 border-white/30 text-white"
-            >
-              {event.status === "finished"
-                ? "Finalizado"
-                : event.status === "live"
-                ? "Ao vivo"
-                : "Agendado"}
-            </Badge>
+                  ? "Ao vivo"
+                  : "Agendado"}
+              </Badge>
+              {isAdmin && (
+                <DeleteEventButton
+                  eventId={eventId}
+                  groupId={event.group_id}
+                />
+              )}
+            </div>
           </div>
 
           {/* Barra de progresso */}

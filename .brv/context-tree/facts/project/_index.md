@@ -1,41 +1,69 @@
 ---
-children_hash: e032a45cd7bbcfe7399f97274ed3f6980f815656f8d8eed61bbad7ad10aeadd4
-compression_ratio: 0.1500501002004008
+children_hash: e11e82ff22440c4bd2ac62baa40c4f5e7c0da5345a55f1c2324af924e07c3d04
+compression_ratio: 0.13282132369550487
 condensation_order: 1
-covers: [context.md, exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md, extracted_project_facts.md, peladeiros_billing_and_stripe_facts.md, peladeiros_infrastructure_facts_2026_03_31.md, project_facts.md, rlm_curate_workflow_facts.md]
-covers_token_total: 3992
+covers: [context.md, exporta_o_de_pdf_mobile_e_resili_ncia_do_agente_de_ia.md, extracted_project_facts.md, peladeiros_billing_and_stripe_facts.md, peladeiros_infrastructure_facts_2026_03_31.md, project_facts.md, rlm_curate_workflow_facts.md, stripe_group_deletion_facts.md]
+covers_token_total: 4427
 summary_level: d1
-token_count: 599
+token_count: 588
 type: summary
 ---
-# Project Knowledge Summary
+# Structural Summary of Knowledge Entries
 
-## Overview
-The project knowledge captures key facts about the Peladeiros infrastructure, implementation choices, and various operational aspects, providing a structured overview for future reference.
+## Project Overview
+- Captures point-in-time factual statements about Peladeiros infrastructure and implementation choices.
+- Key concepts include:
+  - **supabase_sdk_usage**
+  - **auth_implementation**
+  - **signup_flow**
+  - **password_recovery**
+  - **database_client**
+  - **provider_migration**
+  - **postgres_features**
+  - **legacy_backup_scripts**
+  - **hardcoded_backup_credentials**
+- Related topics: 
+  - **architecture/database** - detailed migration diagnosis
+  - **security/operations** - secret exposure risk
 
-## Key Concepts
-- **Supabase SDK Usage**: The application does not utilize the Supabase SDK for authentication or storage.
-- **Authentication Implementation**: Uses NextAuth Credentials with custom flows for signup and password recovery.
-- **Database Client**: Access is managed through a generic PostgreSQL library.
-- **Provider Migration**: Migration involves changing the DATABASE_URL and transferring schema/data.
-- **Legacy Backup Scripts**: Existing scripts contain hardcoded credentials that require rotation post-migration.
+## Exportação de PDF Mobile e Resiliência do Agente de IA
+- Documents solutions for bugs in mobile PDF export using Web Share API and resilience in streaming for OpenAI's IA agent.
+- Highlights integration practices for resilience.
 
-## Related Topics
-- **Architecture/Database**: Detailed migration diagnosis related to database management.
-- **Security/Operations**: Risks associated with credential exposure in backup tools.
+## Extracted Project Facts
+- Curates factual statements extracted from project context.
+- Serves as a collection of key facts for future reference.
 
-## Notable Entries
-- **Exportação de PDF Mobile e Resiliência do Agente de IA**: Documents solutions for mobile PDF export using the Web Share API and resilience strategies for the OpenAI agent.
-- **Extracted Project Facts**: Curated collection of factual statements from the project context, providing a foundation for future recall.
-- **Peladeiros Billing and Stripe Facts**: Consolidates billing architecture facts, including Stripe v21 migration details and subscription management.
-- **Peladeiros Infrastructure Facts (2026-03-31)**: Records infrastructure diagnostics, emphasizing the absence of SDK coupling and the use of custom authentication flows.
-- **Project Facts**: Captures overarching project facts, including tech stack, database portability, and documentation structure.
+## Peladeiros Billing and Stripe Facts
+- Captures durable project facts related to billing and Stripe integration.
+- Key changes include:
+  - Migration facts for Stripe v21
+  - Multi-plan subscription architecture
+  - Windows SWC build diagnostics
+- Highlights include:
+  - API path changes and billing architecture details.
 
-## Highlights
-- The project employs PostgreSQL for its database, ensuring portability across different providers.
-- Billing architecture supports multi-plan subscriptions with fallback mechanisms for Stripe pricing.
-- Authentication flows are designed to be flexible and secure, utilizing custom logic for user management.
-- Documentation is organized into domain-specific entries rather than a single monolithic document, enhancing clarity and accessibility.
+## Peladeiros Infrastructure Facts (2026-03-31)
+- Records factual statements from infrastructure diagnosis.
+- Key facts:
+  - No Supabase SDK usage in auth/storage.
+  - Custom authentication flows using NextAuth Credentials.
+  - Database access through generic PostgreSQL library.
+  - Existence of hardcoded credentials in backup scripts.
 
-## Dependencies
-- The knowledge entries depend on the integrity of referenced files and scripts, ensuring they reflect the current state of the system as of their respective timestamps.
+## Project Facts
+- Consolidates high-level project facts including:
+  - **database**: PostgreSQL with portable features.
+  - **billing**: Multi-plan subscriptions with optional planId.
+  - **authentication**: Custom flows using NextAuth Credentials.
+  - **documentation_structure**: Organized into domain docs.
+- Captures key entities and operational rules.
+
+## RLM Curate Workflow Facts
+- Merges details from overlapping files documenting RLM curation workflow constraints.
+
+## Stripe Group Deletion Facts
+- Details the deletion process for groups and associated Stripe subscriptions.
+- Highlights:
+  - Soft-deleting a group requires canceling active subscriptions.
+  - API endpoints involved in group deletion and billing implications.

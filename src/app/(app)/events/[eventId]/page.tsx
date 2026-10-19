@@ -9,6 +9,7 @@ import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
 import { EventRsvpForm } from "@/components/events/event-rsvp-form";
 import { EventTabs } from "@/components/events/event-tabs";
 import { AdminPlayerManager } from "@/components/events/admin-player-manager";
+import { DeleteEventButton } from "@/components/events/delete-event-button";
 import Link from "next/link";
 import { requireGroupAccess, GroupAccessError } from "@/lib/group-access";
 import { EventTour } from "@/components/tour/EventTour";
@@ -219,22 +220,30 @@ export default async function EventRsvpPage({ params }: RouteParams) {
                 </div>
               )}
             </div>
-            <Badge
-              variant={
-                event.status === "finished"
-                  ? "default"
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  event.status === "finished"
+                    ? "default"
+                    : event.status === "live"
+                    ? "destructive"
+                    : "secondary"
+                }
+                className="w-fit"
+              >
+                {event.status === "finished"
+                  ? "Finalizado"
                   : event.status === "live"
-                  ? "destructive"
-                  : "secondary"
-              }
-              className="w-fit"
-            >
-              {event.status === "finished"
-                ? "Finalizado"
-                : event.status === "live"
-                ? "Ao vivo"
-                : "Agendado"}
-            </Badge>
+                  ? "Ao vivo"
+                  : "Agendado"}
+              </Badge>
+              {isAdmin && (
+                <DeleteEventButton
+                  eventId={eventId}
+                  groupId={event.group_id}
+                />
+              )}
+            </div>
           </div>
 
           {/* Barra de progresso discreta */}

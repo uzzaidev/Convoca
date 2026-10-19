@@ -16,13 +16,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { DeleteEventButton } from "./delete-event-button";
 
 type MatchControlsProps = {
   eventId: string;
   eventStatus: string;
+  groupId?: string;
 };
 
-export function MatchControls({ eventId, eventStatus }: MatchControlsProps) {
+export function MatchControls({ eventId, eventStatus, groupId }: MatchControlsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -190,6 +192,16 @@ export function MatchControls({ eventId, eventStatus }: MatchControlsProps) {
                   Reabrir Jogo para Edição
                 </Button>
               </div>
+            )}
+
+            {groupId && (
+              <DeleteEventButton
+                eventId={eventId}
+                groupId={groupId}
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10 sm:ml-auto"
+              />
             )}
           </div>
         </CardContent>

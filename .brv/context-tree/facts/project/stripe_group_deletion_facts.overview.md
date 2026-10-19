@@ -1,0 +1,6 @@
+- Overview of the Stripe group deletion process and its billing implications.
+- Emphasizes the importance of canceling subscriptions before group deletion.
+- Details API endpoints involved in the deletion process.
+- Highlights the handling of inactive or pending payment groups for admins.
+- Discusses the management of Stripe subscriptions through the dashboard.
+- Covers the implications of event and match deletion on related data.

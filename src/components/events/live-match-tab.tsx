@@ -35,6 +35,7 @@ type MatchAction = {
 
 type LiveMatchTabProps = {
   eventId: string;
+  groupId?: string;
   teams: Team[];
   isAdmin: boolean;
   eventStatus: string;
@@ -42,6 +43,7 @@ type LiveMatchTabProps = {
 
 export function LiveMatchTab({
   eventId,
+  groupId,
   teams,
   isAdmin,
   eventStatus,
@@ -112,6 +114,7 @@ export function LiveMatchTab({
       {isAdmin && (
         <MatchControls
           eventId={eventId}
+          groupId={groupId}
           eventStatus={eventStatus}
         />
       )}

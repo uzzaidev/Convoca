@@ -3,7 +3,7 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 657,
+      "tokens": 550,
       "type": "summary"
     },
     {
@@ -15,7 +15,7 @@
     {
       "order": 2,
       "path": "facts/_index.md",
-      "tokens": 590,
+      "tokens": 620,
       "type": "summary"
     },
     {
@@ -111,6 +111,14 @@
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/stripe_group_deletion_facts.abstract.md",
+      "abstractTokens": 41,
+      "importance": 50,
+      "path": "facts/project/stripe_group_deletion_facts.md",
+      "tokens": 41,
+      "type": "context"
+    },
+    {
       "importance": 50,
       "path": "security/context.md",
       "tokens": 136,
@@ -133,13 +141,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-09-30T17:18:49.889Z",
+  "generated_at": "2026-10-19T18:13:51.273Z",
   "lane_tokens": {
-    "contexts": 3943,
+    "contexts": 3984,
     "stubs": 441,
-    "summaries": 1955
+    "summaries": 1878
   },
-  "source_fingerprint": "a84a2267a7334e742d9311328fd655ec6d01029ff135ccfd700ba6e759be64f0",
-  "total_tokens": 6339,
+  "source_fingerprint": "520dba561592963f99bcdfb99f3d7bba82f959c628ff1aabe367ed8fe5c7c796",
+  "total_tokens": 6303,
   "version": 1
 }

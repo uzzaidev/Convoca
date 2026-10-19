@@ -1,0 +1,120 @@
+{
+  "voz": "Felipe Leao",
+  "voice_id": "ZgmYvdcrNoefQ4HErYZN",
+  "model": "eleven_multilingual_v2",
+  "formato": "wav 48 kHz mono, fala no inicio, cauda 0.2s",
+  "takes": [
+    {
+      "arquivo": "01_jogos_t1.wav",
+      "texto": "Seus jogos, sua galera... tudo organizado num lugar só.",
+      "teto_s": 4.0,
+      "fala_s": 2.972,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "01_jogos_t2.wav",
+      "texto": "Seus jogos, sua galera... tudo organizado num lugar só.",
+      "teto_s": 4.0,
+      "fala_s": 3.808,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "02_confirmar_t1.wav",
+      "texto": "Chegou o convite? Confirmou presença, tá dentro do jogo.",
+      "teto_s": 5.0,
+      "fala_s": 2.926,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "02_confirmar_t2.wav",
+      "texto": "Chegou o convite? Confirmou presença, tá dentro do jogo.",
+      "teto_s": 5.0,
+      "fala_s": 2.74,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "03_sorteio_t1.wav",
+      "texto": "Sorteio de times equilibrados, num toque só. Acabou a discussão.",
+      "teto_s": 4.0,
+      "fala_s": 3.529,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "03_sorteio_t2.wav",
+      "texto": "Sorteio de times equilibrados, num toque só. Acabou a discussão.",
+      "teto_s": 4.0,
+      "fala_s": 3.344,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "04_aovivo_t1.wav",
+      "texto": "Gol, assistência e placar: tudo registrado em tempo real.",
+      "teto_s": 4.0,
+      "fala_s": 3.529,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "04_aovivo_t2.wav",
+      "texto": "Gol, assistência e placar: tudo registrado em tempo real.",
+      "teto_s": 4.0,
+      "fala_s": 3.622,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "05_ranking_t1.wav",
+      "texto": "Um ranking justo, com os números de todo mundo. Ninguém contesta.",
+      "teto_s": 4.0,
+      "fala_s": 3.901,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "05_ranking_t2.wav",
+      "texto": "Um ranking justo, com os números de todo mundo. Ninguém contesta.",
+      "teto_s": 4.0,
+      "fala_s": 3.437,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "06_ia_t1.wav",
+      "texto": "Ficou na dúvida? Pergunta pra IA. Ela responde na hora.",
+      "teto_s": 4.0,
+      "fala_s": 2.926,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "06_ia_t2.wav",
+      "texto": "Ficou na dúvida? Pergunta pra IA. Ela responde na hora.",
+      "teto_s": 4.0,
+      "fala_s": 3.019,
+      "speed": 0.98,
+      "cabe": true
+    },
+    {
+      "arquivo": "07_assinatura_t1.wav",
+      "texto": "Convoca. Do convite ao ranking.",
+      "teto_s": 2.5,
+      "fala_s": 2.322,
+      "speed": 1.0,
+      "cabe": true
+    },
+    {
+      "arquivo": "07_assinatura_t2.wav",
+      "texto": "Convoca. Do convite ao ranking.",
+      "teto_s": 2.5,
+      "fala_s": 1.95,
+      "speed": 0.98,
+      "cabe": true
+    }
+  ]
+}

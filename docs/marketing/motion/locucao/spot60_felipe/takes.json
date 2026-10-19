@@ -1,0 +1,106 @@
+{
+  "voz": "Felipe Leao",
+  "voice_id": "ZgmYvdcrNoefQ4HErYZN",
+  "model": "eleven_multilingual_v2",
+  "formato": "wav 48 kHz mono, 0.5s silencio antes e depois",
+  "takes": [
+    {
+      "arquivo": "01_jogos_t1.wav",
+      "texto": "Seus jogos, num lugar só.",
+      "fala_s": 1.533,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "01_jogos_t2.wav",
+      "texto": "Seus jogos, num lugar só.",
+      "fala_s": 1.44,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "02_confirmar_t1.wav",
+      "texto": "Confirmou? Tá dentro.",
+      "fala_s": 1.393,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "02_confirmar_t2.wav",
+      "texto": "Confirmou? Tá dentro.",
+      "fala_s": 1.161,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "03_sorteio_t1.wav",
+      "texto": "Times equilibrados. Num toque.",
+      "fala_s": 1.95,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "03_sorteio_t2.wav",
+      "texto": "Times equilibrados. Num toque.",
+      "fala_s": 1.858,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "04_aovivo_t1.wav",
+      "texto": "Cada gol, em tempo real.",
+      "fala_s": 1.533,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "04_aovivo_t2.wav",
+      "texto": "Cada gol, em tempo real.",
+      "fala_s": 1.486,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "05_ranking_t1.wav",
+      "texto": "Ranking que ninguém contesta.",
+      "fala_s": 1.718,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "05_ranking_t2.wav",
+      "texto": "Ranking que ninguém contesta.",
+      "fala_s": 1.625,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "06_ia_t1.wav",
+      "texto": "Pergunte. A IA responde.",
+      "fala_s": 1.672,
+      "speed": 1.05,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "06_ia_t2.wav",
+      "texto": "Pergunte. A IA responde.",
+      "fala_s": 1.486,
+      "speed": 1.02,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "07_assinatura_t1.wav",
+      "texto": "Convoca. Do convite ao ranking.",
+      "fala_s": 1.904,
+      "speed": 1.2,
+      "cabe_em_2s": true
+    },
+    {
+      "arquivo": "07_assinatura_t2.wav",
+      "texto": "Convoca. Do convite ao ranking.",
+      "fala_s": 1.579,
+      "speed": 1.178,
+      "cabe_em_2s": true
+    }
+  ]
+}

@@ -21,13 +21,19 @@ const EDGE = process.env.EDGE || "C:/Program Files (x86)/Microsoft/Edge/Applicat
 const MUSIC = path.join(HERE, "assets", "musica-football.mp3");
 const SR = 44100;
 const cuts = process.argv.slice(2).length ? process.argv.slice(2) : ["60", "30", "15"];
+// Locução (só no corte de 60 s): take escolhido de cada frase, na ordem das cenas + assinatura no logo.
+const VOZ_DIR = path.join(HERE, "locucao", "spot60_felipe_ext_emo"); // frases estendidas
+const VOZ = ["01_jogos_t1", "02_confirmar_t1", "03_sorteio_t2", "04_aovivo_t2", "05_ranking_t1", "06_ia_t2", "07_assinatura_t2"]; // takes com mais variação de entonação
+const VOZ_LEAD = .15; // a fala começa logo depois do título aparecer
+const VOZ_GAIN = 1.4; // volume da voz na mixagem
+const MUS_GAIN = .4;  // volume da música
 
 const browser = await chromium.launch({ executablePath: EDGE });
 for (const cut of cuts) {
   const page = await browser.newPage();
   await page.goto(pathToFileURL(path.join(HERE, "motion_convoca.html")).href + `?render&cut=${cut}`);
   await page.waitForFunction("window.MOTION !== undefined");
-  const M = await page.evaluate("({ total: MOTION.total, cues: MOTION.cues, music: MOTION.music, outro: MOTION.outro })");
+  const M = await page.evaluate("({ total: MOTION.total, cues: MOTION.cues, music: MOTION.music, outro: MOTION.outro, scenes: MOTION.scenes })");
   await page.close();
 
   const N = Math.ceil(M.total * SR);
@@ -58,13 +64,32 @@ for (const cut of cuts) {
   };
   for (const c of M.cues) FX[c.type]?.(c.t);
 
-  // mixagem: música com fade in curto e fade out no fim do vídeo; efeitos por cima
+  // locução: cada take entra no início da sua cena (o último no logo); pula o silêncio inicial do arquivo
+  const VL = new Float32Array(N), duck = new Float32Array(N);
+  if (cut === "60" && fs.existsSync(VOZ_DIR)) {
+    const starts = [...M.scenes, M.outro];
+    VOZ.forEach((name, k) => {
+      const file = [".wav", ".mp3"].map(e => path.join(VOZ_DIR, name + e)).find(f => fs.existsSync(f));
+      const raw = execFileSync(ffmpeg, ["-v", "error", "-i", file,
+        "-af", "silenceremove=start_periods=1:start_threshold=-40dB", "-f", "f32le", "-ac", "1", "-ar", String(SR), "-"]);
+      const v = new Float32Array(raw.buffer, raw.byteOffset, raw.length / 4);
+      const i0 = Math.round((starts[k] + VOZ_LEAD) * SR);
+      for (let i = 0; i < v.length && i0 + i < N; i++) { VL[i0 + i] += v[i]; duck[i0 + i] = 1; }
+    });
+    // envelope do "ducking": abaixa a música enquanto tem voz (ataque 0.12 s, soltura 0.35 s)
+    let env = 0;
+    const att = 1 - Math.exp(-1 / (.12 * SR)), rel = 1 - Math.exp(-1 / (.35 * SR));
+    for (let i = 0; i < N; i++) { env += (duck[i] - env) * (duck[i] > env ? att : rel); duck[i] = env; }
+    console.log(`  locução: ${VOZ.length} frases`);
+  }
+
+  // mixagem: música com fade in curto e fade out no fim do vídeo; efeitos e voz por cima
   const fadeOut = Math.min(2.5, M.total - M.outro);
   const out = Buffer.alloc(44 + N * 4);
   for (let i = 0; i < N; i++) {
-    const t = i / SR, g = Math.min(1, t / .15, (M.total - t) / fadeOut) * .8;
+    const t = i / SR, g = Math.min(1, t / .15, (M.total - t) / fadeOut) * MUS_GAIN * (1 - .6 * duck[i]);
     for (const [ch, fx] of [[0, FL], [1, FR]]) {
-      const v = Math.tanh((mus[2 * i + ch] ?? 0) * g + fx[i] * .8);
+      const v = Math.tanh((mus[2 * i + ch] ?? 0) * g + fx[i] * .8 + VL[i] * VOZ_GAIN);
       out.writeInt16LE(Math.round(v * .95 * 32767), 44 + (2 * i + ch) * 2);
     }
   }

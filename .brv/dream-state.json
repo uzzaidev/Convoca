@@ -1,9 +1,14 @@
 {
-  "curationsSinceDream": 0,
+  "curationsSinceDream": 1,
   "lastDreamAt": "2026-10-19T18:13:51.275Z",
   "lastDreamLogId": "drm-1792433607418",
   "pendingMerges": [],
-  "staleSummaryPaths": [],
+  "staleSummaryPaths": [
+    {
+      "enqueuedAt": 1792434926628,
+      "path": "facts/project/stripe_subscription_lifecycle/stripe_subscription_lifecycle_and_notifications.md"
+    }
+  ],
   "totalDreams": 6,
   "version": 1
 }

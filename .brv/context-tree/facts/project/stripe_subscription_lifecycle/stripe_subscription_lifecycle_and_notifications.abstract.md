@@ -1,0 +1,1 @@
+This document outlines the lifecycle of Stripe subscriptions, including user notifications and group deletion processes.

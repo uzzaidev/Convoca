@@ -92,7 +92,15 @@ export async function getGroupAccessContext(
       g.created_by,
       g.created_at,
       g.updated_at,
-      g.status,
+      -- Paywall: an "active" group only stays active with a live Stripe sub or manual grace
+      CASE
+        WHEN g.status = 'active' AND NOT EXISTS (
+          SELECT 1 FROM group_subscriptions gs
+          WHERE gs.group_id = g.id
+            AND (gs.status IN ('active', 'trialing') OR gs.grace_until > NOW())
+        ) THEN 'pending_payment'
+        ELSE g.status
+      END AS status,
       g.status_reason,
       g.status_updated_at,
       g.status_updated_by,

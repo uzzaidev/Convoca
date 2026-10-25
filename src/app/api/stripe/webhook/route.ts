@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { sql } from "@/db/client";
-import { syncSubscriptionStatus } from "@/lib/subscription";
+import { syncStripeSubscription } from "@/lib/subscription";
 import { sendSubscriptionRenewalReminderEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/mobile/fcm";
 import logger from "@/lib/logger";
@@ -40,22 +40,30 @@ export async function POST(request: NextRequest) {
 
   try {
     switch (event.type) {
+      // Eventos que mudam o estado da assinatura: sempre re-busca no Stripe
+      // (ordem de entrega nao e garantida, entao nao confiamos no payload)
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(session);
+        const subscriptionId = typeof session.subscription === "string"
+          ? session.subscription
+          : session.subscription?.id;
+        if (subscriptionId) await syncStripeSubscription(subscriptionId);
         break;
       }
 
       case "customer.subscription.created":
-      case "customer.subscription.updated": {
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+      case "customer.subscription.paused":
+      case "customer.subscription.resumed": {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdate(subscription);
+        await syncStripeSubscription(subscription.id);
         break;
       }
 
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionDeleted(subscription);
+      case "invoice.paid": {
+        const subscriptionId = getInvoiceSubscriptionId(event.data.object as Stripe.Invoice);
+        if (subscriptionId) await syncStripeSubscription(subscriptionId);
         break;
       }
 
@@ -91,118 +99,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const groupId = session.metadata?.group_id;
-  const userId = session.metadata?.user_id;
-  const subscriptionId = session.subscription as string;
-  const customerId = session.customer as string;
-
-  if (!groupId || !userId || !subscriptionId) {
-    logger.warn({ session: session.id }, "Checkout session missing metadata");
-    return;
-  }
-
-  // Verificar se já existe registro
-  const [existing] = await sql`
-    SELECT id FROM group_subscriptions
-    WHERE stripe_subscription_id = ${subscriptionId}
-  `;
-
-  if (!existing) {
-    // Buscar detalhes da assinatura
-    const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
-    const item = subscription.items.data[0];
-
-    // Resolver plan_id a partir dos metadados ou do stripe_price_id
-    const metadataPlanId = session.metadata?.plan_id || subscription.metadata?.plan_id;
-    const stripePriceId = item?.price?.id || null;
-
-    let planId: string | null = null;
-    if (metadataPlanId) {
-      planId = metadataPlanId;
-    } else if (stripePriceId) {
-      const [matchedPlan] = await sql`
-        SELECT id FROM subscription_plans
-        WHERE stripe_price_id = ${stripePriceId}
-        LIMIT 1
-      `;
-      if (matchedPlan) planId = matchedPlan.id;
-    }
-
-    await sql`
-      INSERT INTO group_subscriptions (
-        group_id, user_id, stripe_subscription_id, stripe_customer_id,
-        status, current_period_start, current_period_end, trial_end,
-        plan_id, stripe_price_id
-      ) VALUES (
-        ${groupId},
-        ${userId},
-        ${subscriptionId},
-        ${customerId},
-        ${subscription.status},
-        ${item ? new Date(item.current_period_start * 1000).toISOString() : null}::timestamp,
-        ${item ? new Date(item.current_period_end * 1000).toISOString() : null}::timestamp,
-        ${subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null}::timestamp,
-        ${planId},
-        ${stripePriceId}
-      )
-    `;
-  }
-
-  // Ativar o grupo
-  await sql`
-    UPDATE groups
-    SET status = 'active',
-        status_reason = NULL,
-        status_updated_at = NOW()
-    WHERE id = ${groupId}
-      AND status IN ('pending', 'pending_payment')
-  `;
-
-  logger.info(
-    { groupId, userId, subscriptionId },
-    "Group subscription activated via checkout"
-  );
-}
-
-async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
-  const item = subscription.items.data[0];
-  await syncSubscriptionStatus(
-    subscription.id,
-    subscription.status,
-    item?.current_period_start,
-    item?.current_period_end,
-    subscription.trial_end,
-    subscription.canceled_at
-  );
-
-  logger.info(
-    { subscriptionId: subscription.id, status: subscription.status },
-    "Subscription updated"
-  );
-}
-
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const item = subscription.items.data[0];
-  await syncSubscriptionStatus(
-    subscription.id,
-    "canceled",
-    item?.current_period_start,
-    item?.current_period_end,
-    subscription.trial_end,
-    subscription.canceled_at ?? Math.floor(Date.now() / 1000)
-  );
-
-  logger.info(
-    { subscriptionId: subscription.id },
-    "Subscription canceled"
+function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  return (
+    (invoice.parent?.subscription_details?.subscription as string | null) ??
+    ((invoice as unknown as { subscription?: string }).subscription ?? null)
   );
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId =
-    invoice.parent?.subscription_details?.subscription as string | null;
+  const subscriptionId = getInvoiceSubscriptionId(invoice);
   if (!subscriptionId) return;
+
+  await syncStripeSubscription(subscriptionId);
 
   const [sub] = await sql`
     SELECT group_id FROM group_subscriptions
@@ -218,9 +126,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 }
 
 async function handleUpcomingInvoice(invoice: Stripe.Invoice) {
-  const subscriptionId =
-    (invoice.parent?.subscription_details?.subscription as string | null) ??
-    ((invoice as unknown as { subscription?: string }).subscription ?? null);
+  const subscriptionId = getInvoiceSubscriptionId(invoice);
   if (!subscriptionId) return;
 
   const amountDue = invoice.amount_due ?? 0;

@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { sql } from "@/db/client";
+import logger from "@/lib/logger";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { RecentMatchesCard } from "@/components/group/recent-matches-card";
 import { UpcomingEventsCard } from "@/components/group/upcoming-events-card";
 import { Settings, Plus, ChevronLeft, DollarSign, MapPin, Clock, ArrowRight, Trophy } from "lucide-react";
 import { getGroupAccessContext } from "@/lib/group-access";
+import { syncGroupSubscriptionsForUser } from "@/lib/subscription";
 import { GroupStatusBadge } from "@/components/groups/group-status-badge";
 import { GroupStatusNotice } from "@/components/groups/group-status-notice";
 import { GroupTour } from "@/components/tour/GroupTour";
@@ -43,7 +45,7 @@ function relativeDays(iso: string): string {
 
 type RouteParams = {
   params: Promise<{ groupId: string }>;
-  searchParams: Promise<{ seasonId?: string }>;
+  searchParams: Promise<{ seasonId?: string; payment?: string }>;
 };
 
 type UpcomingEvent = {
@@ -150,7 +152,14 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
   }
 
   const { groupId } = await params;
-  const { seasonId } = await searchParams;
+  const { seasonId, payment } = await searchParams;
+
+  // Voltou do checkout: sincroniza com o Stripe antes do webhook chegar
+  if (payment === "success") {
+    await syncGroupSubscriptionsForUser(groupId, user.id).catch((error) =>
+      logger.error({ error, groupId }, "Error syncing subscription after checkout")
+    );
+  }
 
   // Buscar informações do grupo
   const group = await getGroupAccessContext(groupId, user);

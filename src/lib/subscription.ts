@@ -1,5 +1,6 @@
 import { sql } from "@/db/client";
 import { getStripe } from "@/lib/stripe";
+import logger from "@/lib/logger";
 
 export type SubscriptionStatus =
   | "active"
@@ -105,66 +106,116 @@ export async function getOrCreateStripeCustomer(
 }
 
 /**
- * Atualiza o status da assinatura do grupo a partir do Stripe
+ * Busca a assinatura atual no Stripe e grava no banco (upsert).
+ * Fonte unica de sincronizacao: webhook, retorno do checkout e cron de reconciliacao
+ * chamam esta funcao, em vez de confiar no payload/ordem dos eventos.
  */
-export async function syncSubscriptionStatus(
-  stripeSubscriptionId: string,
-  status: string,
-  currentPeriodStart?: number,
-  currentPeriodEnd?: number,
-  trialEnd?: number | null,
-  canceledAt?: number | null
-) {
+export async function syncStripeSubscription(stripeSubscriptionId: string) {
+  const subscription = await getStripe().subscriptions.retrieve(stripeSubscriptionId);
+  const item = subscription.items.data[0];
   const toTimestamp = (epoch?: number | null) =>
     epoch ? new Date(epoch * 1000).toISOString() : null;
 
+  const [existing] = await sql`
+    SELECT group_id, user_id FROM group_subscriptions
+    WHERE stripe_subscription_id = ${subscription.id}
+  `;
+  const groupId = (existing?.group_id as string | undefined) || subscription.metadata?.group_id;
+  const userId = (existing?.user_id as string | undefined) || subscription.metadata?.user_id;
+
+  if (!groupId || !userId) {
+    logger.warn({ subscriptionId: subscription.id }, "Stripe subscription without group/user metadata");
+    return null;
+  }
+
+  const stripePriceId = item?.price?.id || null;
+  let planId: string | null = subscription.metadata?.plan_id || null;
+  if (!planId && stripePriceId) {
+    const [matchedPlan] = await sql`
+      SELECT id FROM subscription_plans WHERE stripe_price_id = ${stripePriceId} LIMIT 1
+    `;
+    planId = (matchedPlan?.id as string | undefined) ?? null;
+  }
+
+  const customerId =
+    typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
+  const status = subscription.status;
+
   await sql`
-    UPDATE group_subscriptions
-    SET
-      status = ${status},
-      current_period_start = COALESCE(${toTimestamp(currentPeriodStart)}::timestamp, current_period_start),
-      current_period_end = COALESCE(${toTimestamp(currentPeriodEnd)}::timestamp, current_period_end),
-      trial_end = ${toTimestamp(trialEnd)}::timestamp,
-      canceled_at = ${toTimestamp(canceledAt)}::timestamp,
+    INSERT INTO group_subscriptions (
+      group_id, user_id, stripe_subscription_id, stripe_customer_id,
+      status, current_period_start, current_period_end, trial_end, canceled_at,
+      plan_id, stripe_price_id
+    ) VALUES (
+      ${groupId}, ${userId}, ${subscription.id}, ${customerId},
+      ${status},
+      ${toTimestamp(item?.current_period_start)}::timestamp,
+      ${toTimestamp(item?.current_period_end)}::timestamp,
+      ${toTimestamp(subscription.trial_end)}::timestamp,
+      ${toTimestamp(subscription.canceled_at)}::timestamp,
+      ${planId}, ${stripePriceId}
+    )
+    ON CONFLICT (stripe_subscription_id) DO UPDATE SET
+      status = EXCLUDED.status,
+      current_period_start = COALESCE(EXCLUDED.current_period_start, group_subscriptions.current_period_start),
+      current_period_end = COALESCE(EXCLUDED.current_period_end, group_subscriptions.current_period_end),
+      trial_end = EXCLUDED.trial_end,
+      canceled_at = EXCLUDED.canceled_at,
+      plan_id = COALESCE(EXCLUDED.plan_id, group_subscriptions.plan_id),
+      stripe_price_id = COALESCE(EXCLUDED.stripe_price_id, group_subscriptions.stripe_price_id),
       updated_at = NOW()
-    WHERE stripe_subscription_id = ${stripeSubscriptionId}
   `;
 
-  // Se cancelou ou falhou, inativar o grupo
-  if (["canceled", "unpaid", "incomplete_expired", "past_due"].includes(status)) {
-    const [sub] = await sql`
-      SELECT group_id FROM group_subscriptions
-      WHERE stripe_subscription_id = ${stripeSubscriptionId}
+  // Se cancelou ou falhou, inativar o grupo (a menos que outra assinatura do grupo siga valida)
+  if (["canceled", "unpaid", "incomplete_expired", "past_due", "paused"].includes(status)) {
+    const reason = status === "past_due"
+      ? "Pagamento pendente — atualize seu método de pagamento"
+      : "Assinatura cancelada ou pagamento não realizado";
+    await sql`
+      UPDATE groups
+      SET status = 'inactive',
+          status_reason = ${reason},
+          status_updated_at = NOW()
+      WHERE id = ${groupId}
+        AND status = 'active'
+        AND NOT EXISTS (
+          SELECT 1 FROM group_subscriptions gs
+          WHERE gs.group_id = ${groupId}
+            AND gs.stripe_subscription_id <> ${subscription.id}
+            AND (gs.status IN ('active', 'trialing') OR gs.grace_until > NOW())
+        )
     `;
-    if (sub) {
-      const reason = status === "past_due"
-        ? "Pagamento pendente — atualize seu método de pagamento"
-        : "Assinatura cancelada ou pagamento não realizado";
-      await sql`
-        UPDATE groups
-        SET status = 'inactive',
-            status_reason = ${reason},
-            status_updated_at = NOW()
-        WHERE id = ${sub.group_id}
-      `;
-    }
   }
 
   // Se voltou a ficar ativo, reativar o grupo
   if (["active", "trialing"].includes(status)) {
-    const [sub] = await sql`
-      SELECT group_id FROM group_subscriptions
-      WHERE stripe_subscription_id = ${stripeSubscriptionId}
+    await sql`
+      UPDATE groups
+      SET status = 'active',
+          status_reason = NULL,
+          status_updated_at = NOW()
+      WHERE id = ${groupId}
+        AND status IN ('pending', 'pending_payment', 'inactive')
     `;
-    if (sub) {
-      await sql`
-        UPDATE groups
-        SET status = 'active',
-            status_reason = NULL,
-            status_updated_at = NOW()
-        WHERE id = ${sub.group_id}
-          AND status IN ('pending', 'pending_payment', 'inactive')
-      `;
-    }
+  }
+
+  return { groupId, status };
+}
+
+/**
+ * Sincroniza as assinaturas de um grupo direto do Stripe (ex.: retorno do checkout,
+ * quando o usuario volta antes do webhook chegar).
+ */
+export async function syncGroupSubscriptionsForUser(groupId: string, userId: string) {
+  const [user] = await sql`SELECT stripe_customer_id FROM users WHERE id = ${userId}`;
+  if (!user?.stripe_customer_id) return;
+
+  const { data } = await getStripe().subscriptions.list({
+    customer: user.stripe_customer_id as string,
+    status: "all",
+    limit: 10,
+  });
+  for (const sub of data.filter((s) => s.metadata?.group_id === groupId)) {
+    await syncStripeSubscription(sub.id);
   }
 }

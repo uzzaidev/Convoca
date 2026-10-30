@@ -128,8 +128,8 @@
     },
     {
       "importance": 50,
-      "path": "security/context.md",
-      "tokens": 136,
+      "path": "project_management/mvp_calculation/mvp_calculation_consistency.md",
+      "tokens": 197,
       "type": "context"
     },
     {
@@ -143,13 +143,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-10-30T16:04:10.160Z",
+  "generated_at": "2026-10-30T16:19:44.123Z",
   "lane_tokens": {
-    "contexts": 3921,
+    "contexts": 3982,
     "stubs": 441,
     "summaries": 1878
   },
-  "source_fingerprint": "d1eb86e628cdd9d698dfb5e4f61519588b5cd1dd7c4dbd0d380edf005368817e",
-  "total_tokens": 6240,
+  "source_fingerprint": "39ce2a30a8ce2bb3ee6c530c2c25eba46298a3b4afea3936ff3ccd56d24b1c19",
+  "total_tokens": 6301,
   "version": 1
 }

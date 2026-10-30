@@ -1,0 +1,5 @@
+- Documents the MVP calculation process in Convoca.
+- Establishes a consistent methodology for MVP calculation.
+- Describes the flow from MVP votes to tie resolution and awarding.
+- Highlights the importance of accurate event data and player ratings.
+- Ensures fairness in MVP awards with clear tie-breaking criteria.

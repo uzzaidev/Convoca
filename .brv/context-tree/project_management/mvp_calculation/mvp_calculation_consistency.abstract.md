@@ -1,0 +1,1 @@
+This document outlines the consistent methodology for calculating MVP votes, including tie-breaking rules to ensure fairness in awards.

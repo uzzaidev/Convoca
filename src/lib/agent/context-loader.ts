@@ -139,6 +139,30 @@ export async function loadGroupContext(
         SELECT id FROM events
         WHERE group_id = ${groupId} AND status = 'finished'
       ),
+      event_mvp_winners AS (
+        SELECT pv.rated_user_id AS user_id, pv.event_id
+        FROM (
+          SELECT rated_user_id, event_id, COUNT(*) AS vote_count
+          FROM player_ratings
+          WHERE 'mvp' = ANY(tags) AND event_id IN (SELECT id FROM finished_events)
+          GROUP BY rated_user_id, event_id
+        ) pv
+        WHERE NOT EXISTS (
+          SELECT 1 FROM player_ratings pr_other
+          WHERE 'mvp' = ANY(pr_other.tags)
+            AND pr_other.event_id = pv.event_id
+            AND pr_other.rated_user_id != pv.rated_user_id
+          GROUP BY pr_other.rated_user_id
+          HAVING COUNT(*) >= pv.vote_count
+        )
+        AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+        UNION
+        SELECT winner_user_id AS user_id, event_id
+        FROM mvp_tiebreakers
+        WHERE event_id IN (SELECT id FROM finished_events)
+          AND winner_user_id IS NOT NULL
+          AND status IN ('completed', 'admin_decided')
+      ),
       team_scores AS (
         SELECT
           t.id AS team_id,
@@ -184,7 +208,7 @@ export async function loadGroupContext(
           COUNT(DISTINCT pm.event_id) FILTER (WHERE pm.result = 'loss') AS losses,
           COUNT(DISTINCT eact_g.id) AS goals,
           COUNT(DISTINCT eact_a.id) AS assists,
-          COUNT(DISTINCT pr.id) FILTER (WHERE 'mvp' = ANY(pr.tags)) AS mvp_count
+          COUNT(DISTINCT emw.event_id) AS mvp_count
         FROM group_members gm
         JOIN users u ON u.id = gm.user_id
         LEFT JOIN event_attendance ea ON ea.user_id = gm.user_id
@@ -196,8 +220,8 @@ export async function loadGroupContext(
         LEFT JOIN event_actions eact_a ON eact_a.subject_user_id = gm.user_id
           AND eact_a.action_type = 'assist'
           AND eact_a.event_id IN (SELECT id FROM finished_events)
-        LEFT JOIN player_ratings pr ON pr.rated_user_id = gm.user_id
-          AND pr.event_id IN (SELECT id FROM finished_events)
+        LEFT JOIN event_mvp_winners emw ON emw.user_id = gm.user_id
+
         WHERE gm.group_id = ${groupId}
         GROUP BY u.name
       )

@@ -119,9 +119,17 @@
       "type": "context"
     },
     {
+      "abstractPath": "facts/project/stripe_subscription_lifecycle/stripe_subscription_lifecycle_and_notifications.abstract.md",
+      "abstractTokens": 30,
       "importance": 50,
       "path": "facts/project/stripe_subscription_lifecycle/stripe_subscription_lifecycle_and_notifications.md",
-      "tokens": 223,
+      "tokens": 30,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "security/context.md",
+      "tokens": 136,
       "type": "context"
     },
     {
@@ -135,13 +143,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-10-19T18:35:26.664Z",
+  "generated_at": "2026-10-30T16:04:10.160Z",
   "lane_tokens": {
-    "contexts": 3978,
+    "contexts": 3921,
     "stubs": 441,
     "summaries": 1878
   },
-  "source_fingerprint": "f6b13ce7b99b6c176b32e421984c3b42c23abb6b72dcfaa4957d35847eeb6c98",
-  "total_tokens": 6297,
+  "source_fingerprint": "d1eb86e628cdd9d698dfb5e4f61519588b5cd1dd7c4dbd0d380edf005368817e",
+  "total_tokens": 6240,
   "version": 1
 }

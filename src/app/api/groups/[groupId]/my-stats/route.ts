@@ -223,7 +223,12 @@ export async function GET(
 
     const tags: Record<string, number> = {};
     (tagsQuery as unknown as Array<{ tag: string; count: string }>).forEach((tag) => {
-      tags[tag.tag] = parseInt(tag.count);
+      if (tag.tag === "mvp") {
+        const mvpWins = parseInt(userStats.mvp_count) || 0;
+        if (mvpWins > 0) tags.mvp = mvpWins;
+      } else {
+        tags[tag.tag] = parseInt(tag.count);
+      }
     });
 
     return NextResponse.json({

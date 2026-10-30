@@ -479,6 +479,32 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
             INNER JOIN teams t ON tm.team_id = t.id
             WHERE t.event_id = ANY(${eventIds})
           ),
+          event_mvp_winners AS (
+            -- Vencedor claro (sem empate e sem tiebreaker): jogador com mais votos na partida
+            SELECT pv.rated_user_id as user_id, pv.event_id
+            FROM (
+              SELECT rated_user_id, event_id, COUNT(*) as vote_count
+              FROM player_ratings
+              WHERE 'mvp' = ANY(tags) AND event_id = ANY(${eventIds})
+              GROUP BY rated_user_id, event_id
+            ) pv
+            WHERE NOT EXISTS (
+              SELECT 1 FROM player_ratings pr_other
+              WHERE 'mvp' = ANY(pr_other.tags)
+                AND pr_other.event_id = pv.event_id
+                AND pr_other.rated_user_id != pv.rated_user_id
+              GROUP BY pr_other.rated_user_id
+              HAVING COUNT(*) >= pv.vote_count
+            )
+            AND NOT EXISTS (SELECT 1 FROM mvp_tiebreakers WHERE event_id = pv.event_id)
+            UNION
+            -- Vencedor do tiebreaker resolvido
+            SELECT winner_user_id as user_id, event_id
+            FROM mvp_tiebreakers
+            WHERE event_id = ANY(${eventIds})
+              AND winner_user_id IS NOT NULL
+              AND status IN ('completed', 'admin_decided')
+          ),
           game_results AS (
             SELECT
               pg.user_id,
@@ -520,7 +546,7 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
             (SELECT COUNT(*) FROM player_games WHERE user_id = u.id)::int as games,
             (SELECT COUNT(*) FROM event_actions ea WHERE ea.subject_user_id = u.id AND ea.event_id = ANY(${eventIds}) AND ea.action_type = 'goal')::int as goals,
             (SELECT COUNT(*) FROM event_actions ea WHERE ea.subject_user_id = u.id AND ea.event_id = ANY(${eventIds}) AND ea.action_type = 'assist')::int as assists,
-            (SELECT COUNT(*) FROM player_ratings pr WHERE pr.rated_user_id = u.id AND pr.event_id = ANY(${eventIds}) AND 'mvp' = ANY(pr.tags))::int as mvps,
+            (SELECT COUNT(DISTINCT emw.event_id) FROM event_mvp_winners emw WHERE emw.user_id = u.id)::int as mvps,
             (SELECT COUNT(*) FROM game_results gr WHERE gr.user_id = u.id AND gr.team_goals > gr.opponent_goals)::int as wins,
             (SELECT COUNT(*) FROM game_results gr WHERE gr.user_id = u.id AND gr.team_goals < gr.opponent_goals)::int as losses,
             (SELECT COUNT(*) FROM game_results gr WHERE gr.user_id = u.id AND gr.team_goals = gr.opponent_goals)::int as draws,
@@ -591,9 +617,15 @@ export default async function GroupPage({ params, searchParams }: RouteParams) {
           myStats.losses = parseInt((winLoss[0] as any).losses) || 0;
         }
         (tagsResult as unknown as Array<{ tag: string; count: string }>).forEach((t) => {
-          myStats.tags[t.tag] = parseInt(t.count);
-          if (t.tag === 'mvp') myStats.mvpCount = parseInt(t.count);
+          if (t.tag !== 'mvp') {
+            myStats.tags[t.tag] = parseInt(t.count);
+          }
         });
+        const myRankingEntry = (rankingData as unknown as Array<{ id: string; mvps: number }>).find((p) => p.id === user.id);
+        myStats.mvpCount = Number(myRankingEntry?.mvps ?? 0);
+        if (myStats.mvpCount > 0) {
+          myStats.tags['mvp'] = myStats.mvpCount;
+        }
       }
 
       generalRanking = (rankingData as any[]).map((player) => ({

@@ -3,13 +3,13 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 550,
+      "tokens": 569,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "architecture/_index.md",
-      "tokens": 708,
+      "tokens": 797,
       "type": "summary"
     },
     {
@@ -58,6 +58,12 @@
       "importance": 50,
       "path": "architecture/database/context.md",
       "tokens": 101,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/database-portability-and-secret-hygiene.md",
+      "tokens": 223,
       "type": "context"
     },
     {
@@ -119,20 +125,6 @@
       "type": "context"
     },
     {
-      "abstractPath": "facts/project/stripe_subscription_lifecycle/stripe_subscription_lifecycle_and_notifications.abstract.md",
-      "abstractTokens": 30,
-      "importance": 50,
-      "path": "facts/project/stripe_subscription_lifecycle/stripe_subscription_lifecycle_and_notifications.md",
-      "tokens": 30,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "project_management/mvp_calculation/mvp_calculation_consistency.md",
-      "tokens": 197,
-      "type": "context"
-    },
-    {
       "path": "_archived/architecture/billing/billing-changes-are-constrained-by-stripe-api-compatibility.stub.md",
       "tokens": 278,
       "type": "stub"
@@ -143,13 +135,13 @@
       "type": "stub"
     }
   ],
-  "generated_at": "2026-10-30T16:19:44.123Z",
+  "generated_at": "2026-10-30T16:36:18.379Z",
   "lane_tokens": {
-    "contexts": 3982,
+    "contexts": 3978,
     "stubs": 441,
-    "summaries": 1878
+    "summaries": 1986
   },
-  "source_fingerprint": "39ce2a30a8ce2bb3ee6c530c2c25eba46298a3b4afea3936ff3ccd56d24b1c19",
-  "total_tokens": 6301,
+  "source_fingerprint": "03d3dad3009f7c72a78c38785970e38dfb350b01c2d15569f8a66c99c834cde8",
+  "total_tokens": 6405,
   "version": 1
 }
